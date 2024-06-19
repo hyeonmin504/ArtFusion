@@ -25,6 +25,8 @@ public class User {
     private String email;
     private String password;
     private String nickName;
+    @Enumerated(value = EnumType.STRING)
+    private UserLevel userLevel;
     private LocalDateTime joinDate;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
