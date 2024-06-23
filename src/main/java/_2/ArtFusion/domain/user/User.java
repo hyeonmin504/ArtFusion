@@ -42,4 +42,8 @@ public class User {
     public void setIsLikePost(IsLikePost isLikePost) {
         this.isLikePost = isLikePost;
     }
+
+    public User(String nickName) {
+        this.nickName = nickName;
+    }
 }
