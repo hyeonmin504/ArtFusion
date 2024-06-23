@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.storyboard;
 import _2.ArtFusion.domain.Character.Characters;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
+import _2.ArtFusion.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StoryBoard {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "story_id")
     private Long id;
 
@@ -47,4 +48,7 @@ public class StoryBoard {
         this.storyPost = storyPost;
     }
 
+    public StoryBoard(String title) {
+        this.title = title;
+    }
 }
