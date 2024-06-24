@@ -25,7 +25,6 @@ public class User {
     private String name;
     private String email;
     private String password;
-    @Size(max = 1)
     private String nickName;
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
