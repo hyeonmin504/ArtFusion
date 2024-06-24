@@ -22,7 +22,8 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({IllegalArgumentException.class,
+    @ExceptionHandler({
+            IllegalArgumentException.class,
             MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class,
             ConstraintViolationException.class,
