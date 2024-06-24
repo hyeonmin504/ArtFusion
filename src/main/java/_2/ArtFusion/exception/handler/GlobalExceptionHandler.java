@@ -1,6 +1,7 @@
 package _2.ArtFusion.exception.handler;
 
 import _2.ArtFusion.controller.ResponseForm;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -18,33 +21,10 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    /**
-     * 사용자 잘못된 입력 요청 예외 처리
-     * @param ex
-     * @param request
-     * @return
-     */
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ResponseForm<Map<String, Object>>> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
-
-        ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, body, ex.getMessage());
-        return new ResponseEntity<>(responseForm, HttpStatus.BAD_REQUEST);
-    }
-
-    /**
-     * 공통 예외 처리
-     * @param ex
-     * @param request
-     * @return
-     */
-    @ExceptionHandler({MissingServletRequestParameterException.class})
+    @ExceptionHandler({IllegalArgumentException.class,
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class,
+            ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ResponseForm<Map<String, Object>>> handleBadRequest(Exception ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
@@ -55,15 +35,25 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, body, ex.getMessage());
+        log.info("error={}",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * 서버 에러
-     * @param ex
-     * @param request
-     * @return
-     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ResponseForm<Map<String, Object>>> handleNotFound(Exception ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+
+        ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.NOT_FOUND, body, ex.getMessage());
+        log.info("error={}",ex);
+        return new ResponseEntity<>(responseForm, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ResponseForm<Map<String, Object>>> handleGenericException(Exception ex, WebRequest request) {
@@ -75,6 +65,7 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, body, "An unexpected error occurred.");
+        log.info("error={}",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -53,7 +53,7 @@ public class StoryPost {
         this.isLikePost = isLikePost;
     }
 
-    public StoryPost(String summary, String hashTag, String coverImg,User user, StoryBoard storyBoard) {
+    public StoryPost(String summary, String hashTag, String coverImg, User user, StoryBoard storyBoard) {
         this.summary = summary;
         this.hashTag = hashTag;
         this.coverImg = coverImg;
