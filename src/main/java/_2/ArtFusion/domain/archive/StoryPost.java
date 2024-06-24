@@ -23,6 +23,7 @@ public class StoryPost {
     //해쉬 태그는 여러개를 ","를 통해 이어서 저장하는 방식으로 진행
     private String hashTag;
     private LocalDateTime createDate;
+    private String coverImg;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private User user;
@@ -50,5 +51,13 @@ public class StoryPost {
     // 연관 관계를 위한 setter
     public void setIsLikePost(IsLikePost isLikePost) {
         this.isLikePost = isLikePost;
+    }
+
+    public StoryPost(String summary, String hashTag, String coverImg, User user, StoryBoard storyBoard) {
+        this.summary = summary;
+        this.hashTag = hashTag;
+        this.coverImg = coverImg;
+        this.user =user;
+        this.storyBoard = storyBoard;
     }
 }

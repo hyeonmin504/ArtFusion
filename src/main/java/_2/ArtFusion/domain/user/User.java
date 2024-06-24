@@ -4,6 +4,7 @@ import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.IsLikePost;
 import _2.ArtFusion.domain.archive.StoryPost;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class User {
     private String password;
     private String nickName;
     @Enumerated(value = EnumType.STRING)
-    private UserLevel userLevel;
+    private UserRole role;
     private LocalDateTime joinDate;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -41,5 +42,9 @@ public class User {
     // 연관 관계를 위한 setter
     public void setIsLikePost(IsLikePost isLikePost) {
         this.isLikePost = isLikePost;
+    }
+
+    public User(String nickName) {
+        this.nickName = nickName;
     }
 }

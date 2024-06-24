@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.storyboard;
 import _2.ArtFusion.domain.Character.Characters;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
+import _2.ArtFusion.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,14 +17,15 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StoryBoard {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "story_id")
     private Long id;
 
     @Column(length = 40000)
     private String promptKor;
     private String title;
-    private String style;
+    @Enumerated(value = EnumType.STRING)
+    private Style style;
     @Enumerated(value = EnumType.STRING)
     private GenerateType generateType;
     //장르는 여러개를 ","를 통해 이어서 저장하는 방식으로 진행
@@ -47,4 +49,11 @@ public class StoryBoard {
         this.storyPost = storyPost;
     }
 
+    public StoryBoard(String promptKor, String title, Style style, GenerateType generateType, String genre) {
+        this.promptKor = promptKor;
+        this.title = title;
+        this.style = style;
+        this.generateType = generateType;
+        this.genre = genre;
+    }
 }
