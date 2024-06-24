@@ -1,6 +1,9 @@
-package _2.ArtFusion.repository.query;
+package _2.ArtFusion.repository.query.Imple;
 
+import _2.ArtFusion.controller.archiveApiController.ArchiveController;
 import _2.ArtFusion.controller.archiveApiController.ArchiveDataForm;
+import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
+import _2.ArtFusion.repository.query.ArchiveRepositoryQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +13,13 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+
+import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
 
 @Repository
 @RequiredArgsConstructor
-public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery{
+public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
 
     private final EntityManager em;
 
@@ -34,5 +40,19 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery{
         boolean hasNext = resultList.size() == pageable.getPageSize();
 
         return new SliceImpl<>(resultList, pageable, hasNext);
+    }
+
+    @Override
+    public Optional<DetailArchiveDataForm> findDetailArchiveForm(Long storyId) {
+        DetailArchiveDataForm detailArchiveDataForm = em.createQuery(
+                        "select new _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm" +
+                                "(s.id, u.nickName, p.createDate, p.hashTag) " +
+                                "from StoryBoard s " +
+                                "join s.storyPost p " +
+                                "join p.user u " +
+                                "where s.id =:storyId", DetailArchiveDataForm.class)
+                .setParameter("storyId", storyId)
+                .getSingleResult();
+        return Optional.ofNullable(detailArchiveDataForm);
     }
 }

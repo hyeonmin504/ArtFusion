@@ -4,6 +4,7 @@ import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.IsLikePost;
 import _2.ArtFusion.domain.archive.StoryPost;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,9 +25,10 @@ public class User {
     private String name;
     private String email;
     private String password;
+    @Size(max = 1)
     private String nickName;
     @Enumerated(value = EnumType.STRING)
-    private UserLevel userLevel;
+    private UserRole role;
     private LocalDateTime joinDate;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

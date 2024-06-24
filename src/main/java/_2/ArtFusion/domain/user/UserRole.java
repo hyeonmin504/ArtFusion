@@ -1,5 +1,5 @@
 package _2.ArtFusion.domain.user;
 
-public enum UserLevel {
+public enum UserRole {
     BASIC,PRO
 }
