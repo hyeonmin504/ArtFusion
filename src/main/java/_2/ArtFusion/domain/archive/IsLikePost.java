@@ -1,6 +1,5 @@
 package _2.ArtFusion.domain.archive;
 
-import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

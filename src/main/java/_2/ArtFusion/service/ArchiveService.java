@@ -1,24 +1,19 @@
 package _2.ArtFusion.service;
-import _2.ArtFusion.controller.archiveApiController.ArchiveDataForm;
+
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
-import _2.ArtFusion.domain.storyboard.CaptureImage;
-import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.repository.ArchiveRepository;
 import _2.ArtFusion.repository.CaptureImageRepository;
-import _2.ArtFusion.repository.StoryBoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
 
@@ -28,7 +23,6 @@ public class ArchiveService {
 
     private final ArchiveRepository archiveRepository;
     private final CaptureImageRepository captureImageRepository;
-    private final StoryBoardRepository storyBoardRepository;
 
     @Transactional(readOnly = true)
     public AllArchivesResponse getArchiveList(Pageable pageable) {

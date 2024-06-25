@@ -1,7 +1,6 @@
 package _2.ArtFusion.repository.query.Imple;
 
-import _2.ArtFusion.controller.archiveApiController.ArchiveController;
-import _2.ArtFusion.controller.archiveApiController.ArchiveDataForm;
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
 import _2.ArtFusion.repository.query.ArchiveRepositoryQuery;
 import jakarta.persistence.EntityManager;
@@ -15,8 +14,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
-
 @Repository
 @RequiredArgsConstructor
 public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
@@ -26,7 +23,7 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
     @Override
     public Slice<ArchiveDataForm> findAllArchiveForm(Pageable pageable) {
         TypedQuery<ArchiveDataForm> query = em.createQuery(
-                "select new _2.ArtFusion.controller.archiveApiController.ArchiveDataForm" +
+                "select new _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm" +
                         "(p.id, p.coverImg, b.title, p.summary, u.nickName, p.hashTag) " +
                         "from StoryPost p " +
                         "join p.storyBoard b " +

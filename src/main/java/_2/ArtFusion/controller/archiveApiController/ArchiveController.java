@@ -1,6 +1,7 @@
 package _2.ArtFusion.controller.archiveApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.service.ArchiveService;

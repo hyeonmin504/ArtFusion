@@ -4,7 +4,6 @@ import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.IsLikePost;
 import _2.ArtFusion.domain.archive.StoryPost;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

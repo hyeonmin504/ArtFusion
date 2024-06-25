@@ -1,4 +1,4 @@
-package _2.ArtFusion.controller.archiveApiController;
+package _2.ArtFusion.controller.archiveApiController.archiveform;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
