@@ -1,6 +1,6 @@
 package _2.ArtFusion.repository.query;
 
-import _2.ArtFusion.controller.archiveApiController.ArchiveDataForm;
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;

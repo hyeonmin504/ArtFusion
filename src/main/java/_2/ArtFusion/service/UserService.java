@@ -1,13 +1,10 @@
 package _2.ArtFusion.service;
 
-import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
-import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.ast.Not;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

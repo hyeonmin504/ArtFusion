@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.Character;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +28,14 @@ public class Characters {
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "story_id")
     private StoryBoard storyBoard;
+
+    @Builder
+    public Characters(String characterPrompt,  Gender gender, String name,StoryBoard storyBoard) {
+        this.characterPrompt = characterPrompt;
+        this.gender = gender;
+        this.name = name;
+        setStoryBoard(storyBoard);
+    }
 
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {
