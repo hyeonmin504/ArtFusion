@@ -3,9 +3,9 @@ package _2.ArtFusion.domain.storyboard;
 import _2.ArtFusion.domain.Character.Characters;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
-import _2.ArtFusion.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -49,11 +49,24 @@ public class StoryBoard {
         this.storyPost = storyPost;
     }
 
+    /**
+     * 테스트용
+     */
     public StoryBoard(String promptKor, String title, Style style, GenerateType generateType, String genre) {
         this.promptKor = promptKor;
         this.title = title;
         this.style = style;
         this.generateType = generateType;
         this.genre = genre;
+    }
+
+    @Builder
+    public StoryBoard(String promptKor, String title, Style style, GenerateType generateType, String genre, int wishCutCount) {
+        this.promptKor = promptKor;
+        this.title = title;
+        this.style = style;
+        this.generateType = generateType;
+        this.genre = genre;
+        this.wishCutCount = wishCutCount;
     }
 }

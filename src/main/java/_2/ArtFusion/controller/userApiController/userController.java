@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -37,10 +36,10 @@ public class userController {
 
             UserDataForm userDataForm = new UserDataForm(findUser.getId(),findUser.getNickName(),findUser.getEmail(),findUser.getRole().toString());
 
-            return new ResponseForm(HttpStatus.OK,userDataForm,"Ok");
+            return new ResponseForm<>(HttpStatus.OK,userDataForm,"Ok");
         } catch (NotFoundUserException e) {
             log.info("error={}",e);
-            return new ResponseForm(HttpStatus.NOT_FOUND,null,e.getMessage());
+            return new ResponseForm<>(HttpStatus.NOT_FOUND,null,e.getMessage());
         }
     }
 
@@ -48,13 +47,10 @@ public class userController {
     public ResponseForm emailValidation(@RequestParam String email) {
         try {
             Boolean b = userService.emailValidation(email);
-            return new ResponseForm(HttpStatus.OK,null,"200 ok");
-        } catch (InvalidFormatException e){
+            return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
+        } catch (InvalidFormatException | ExistsUserException e){
             log.info("error={}",e);
-            return new ResponseForm(HttpStatus.BAD_REQUEST,null,e.getMessage());
-        } catch (ExistsUserException e) {
-            log.info("error={}",e);
-            return new ResponseForm(HttpStatus.BAD_REQUEST, null, e.getMessage());
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST,null,e.getMessage());
         }
     }
 
@@ -64,10 +60,10 @@ public class userController {
         try {
 
             //로그아웃이 성공적으로 완료된 경우
-            return new ResponseForm(HttpStatus.OK,null,"로그아웃 완료");
+            return new ResponseForm<>(HttpStatus.OK,null,"로그아웃 완료");
         } catch (NotFoundUserException e) {
             log.info("error=");
-            return new ResponseForm(HttpStatus.NOT_FOUND, null, e.getMessage());
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         }
     }
 

@@ -7,8 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
-
 @Repository
 @RequiredArgsConstructor
 public class CaptureImageRepositoryQueryImpl implements CaptureImageRepositoryQuery {
