@@ -40,35 +40,25 @@ public class TemporaryStoryController {
             //request 폼 데이터를 StoryBoard, Character 엔티티에 맵핑 후 저장
             StoryBoard savedStory = storyBoardService.generateStoryBoardAndCharacter(form);
 
-            //입력받은 스토리보드를 통해 장면 별 이미지 생성
+            //입력받은 스토리보드를 gpt rest api 요청
             List<SceneFormat> sceneFormats = sceneFormatService.ScenesFormatting(savedStory);
 
             //장면 마다 이미지 생성 후 저장
-            Long storyId = openaiService.generateImage(sceneFormats);
-
-            /**
-             * 저장된 데이터를 불러오는 로직
-             */
-            StoryBoard generatedStoryBoard = storyBoardRepository.findById(storyId).orElseThrow(
-                    () -> new NotFoundContentsException("해당 작품 생성중 오류가 발생했습니다")
-            );
-
-            List<SceneFormat> sceneFormat = generatedStoryBoard.getSceneFormats();
-            log.info("sceneFormat.size={}",sceneFormat.size());
+            List<SceneFormat> scenes = openaiService.generateImage(sceneFormats);
 
             /**
              * 생성된 장면들을 폼으로 변환 하는 로직
              */
             List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
 
-            for (SceneFormat format : sceneFormat) {
+            for (SceneFormat format : scenes) {
                 log.info("sceneFormat 생성");
                 SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getTemporaryImage().getId(),
                         format.getTemporaryImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
                 sceneFormatForms.add(sceneFormatForm);
             }
 
-            StoryBoardForm storyBoardForm = new StoryBoardForm(generatedStoryBoard.getId(),sceneFormatForms);
+            StoryBoardForm storyBoardForm = new StoryBoardForm(savedStory.getId(),sceneFormatForms);
 
             String message = "Scene data retrieved successfully";
 

@@ -1,8 +1,10 @@
 package _2.ArtFusion.service;
 
 import _2.ArtFusion.domain.scene.SceneFormat;
+import _2.ArtFusion.domain.scene.TemporaryPhotoStorage;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.repository.SceneFormatRepository;
+import _2.ArtFusion.repository.TemporaryPhotoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,11 +21,16 @@ import java.util.regex.Pattern;
 public class OpenAiService {
 
     private final SceneFormatRepository sceneFormatRepository;
+    private final TemporaryPhotoRepository temporaryPhotoRepository;
 
     @Transactional
-    public Long generateImage(List<SceneFormat> sceneFormatList) {
+    public List<SceneFormat> generateImage(List<SceneFormat> sceneFormatList) {
+        for (SceneFormat sceneFormat : sceneFormatList) {
+            TemporaryPhotoStorage storage = new TemporaryPhotoStorage("url",sceneFormat);
+            temporaryPhotoRepository.save(storage);
+        }
 
-        return 1L;
+        return sceneFormatList;
     }
 
     public List<SceneFormat> promptFormatToGptApi(StoryBoard storyBoard) {
