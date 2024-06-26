@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.user;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.IsLikePost;
 import _2.ArtFusion.domain.archive.StoryPost;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -36,6 +37,7 @@ public class User {
     private List<StoryPost> storyPost = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Comment> comment = new ArrayList<>();
 
     // 연관 관계를 위한 setter
