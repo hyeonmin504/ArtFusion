@@ -24,13 +24,11 @@ public class OpenAiService {
     private final TemporaryPhotoRepository temporaryPhotoRepository;
 
     @Transactional
-    public List<SceneFormat> generateImage(List<SceneFormat> sceneFormatList) {
+    public void generateImage(List<SceneFormat> sceneFormatList) {
         for (SceneFormat sceneFormat : sceneFormatList) {
             TemporaryPhotoStorage storage = new TemporaryPhotoStorage("url",sceneFormat);
             temporaryPhotoRepository.save(storage);
         }
-
-        return sceneFormatList;
     }
 
     public List<SceneFormat> promptFormatToGptApi(StoryBoard storyBoard) {

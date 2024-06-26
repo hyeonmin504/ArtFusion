@@ -3,6 +3,8 @@ package _2.ArtFusion.domain.user;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.IsLikePost;
 import _2.ArtFusion.domain.archive.StoryPost;
+import _2.ArtFusion.domain.storyboard.StoryBoard;
+import _2.ArtFusion.repository.query.StoryBoardRepositoryQuery;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -37,6 +39,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comment = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StoryBoard> storyBoards = new ArrayList<>();
 
     // 연관 관계를 위한 setter
     public void setIsLikePost(IsLikePost isLikePost) {

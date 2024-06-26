@@ -29,8 +29,8 @@ public class StoryBoardService {
     private final CharacterRepository characterRepository;
 
     @Transactional
-    public StoryBoard generateStoryBoardAndCharacter(GenerateTemporaryForm form) {
-        StoryBoard storyBoard = convertStoryBoard(form);
+    public StoryBoard generateStoryBoardAndCharacter(GenerateTemporaryForm form, User user) {
+        StoryBoard storyBoard = convertStoryBoard(form,user);
 
         List<Characters> characters = convertCharacter(form.getCharacters(), storyBoard);
 
