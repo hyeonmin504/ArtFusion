@@ -2,7 +2,12 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
+import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.exception.NotFoundContentsException;
+import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.SceneFormatRepository;
+import _2.ArtFusion.repository.StoryBoardRepository;
+import _2.ArtFusion.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,8 +20,36 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SceneFormatService {
 
-    private final SceneFormatRepository sceneFormatRepository;
+    private final StoryBoardRepository storyBoardRepository;
     private final OpenAiService openAiService;
+    private final UserRepository userRepository;
+    private final SceneFormatRepository sceneFormatRepository;
+
+    @Transactional(readOnly = true)
+    public StoryBoard getSceneFormatData(Long userId,Long storyId) {
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundUserException("유저를 찾을 수 없습니다")
+        );
+
+        //해당 유저의 스토리보드가 맞는지 확인
+        boolean existStory = storyBoardRepository.findStoryBoardByUser(user, storyId);
+
+        if (!existStory) {
+            //존재하지 않을 경우
+            throw new NotFoundContentsException("해당 유저의 스토리보드를 찾을 수 없습니다");
+        }
+        StoryBoard storyBoard = storyBoardRepository.findById(storyId).orElseThrow();
+
+        List<SceneFormat> scenes = sceneFormatRepository.findScenesByStoryBoard(storyBoard);
+        for (SceneFormat scene : scenes) {
+            log.info("scene.getId()={}",scene.getId());
+        }
+
+        storyBoard.setSceneFormats(scenes);
+
+        return storyBoard;
+    }
 
     /**
      * 스토리 보드를 폼 형태로 받으면
