@@ -7,10 +7,12 @@ import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
+import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.UserRepository;
 import _2.ArtFusion.service.OpenAiService;
 import _2.ArtFusion.service.SceneFormatService;
 import _2.ArtFusion.service.StoryBoardService;
+import jakarta.persistence.NoResultException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -36,17 +38,17 @@ public class TemporaryStoryController {
     public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId) {
         //예시로 유저 id가 1L인 사람이 요청 했을 경우 test 데이터
         User user = userRepository.findById(1L).get();
-
-        //SceneFormat 데이터를 가저오기
-        StoryBoard storyBoard = sceneFormatService.getSceneFormatData(user.getId(),storyId);
-
-        log.info("storyBoard={}",storyBoard);
-
-        /**
-         * 해당 작품을 폼으로 변환 하는 로직
-         */
-        List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
         try {
+            //SceneFormat 데이터를 가저오기
+            StoryBoard storyBoard = sceneFormatService.getSceneFormatData(user.getId(),storyId);
+
+            log.info("storyBoard={}",storyBoard);
+
+            /**
+             * 해당 작품을 폼으로 변환 하는 로직
+             */
+            List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
+
             for (SceneFormat format : storyBoard.getSceneFormats()) {
                 log.info("sceneFormat 생성");
                 SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getTemporaryImage().getId(),
@@ -56,11 +58,12 @@ public class TemporaryStoryController {
 
             StoryBoardForm storyBoardForm = new StoryBoardForm(storyBoard.getId(),sceneFormatForms);
 
-            return new ResponseForm<>(HttpStatus.OK, storyBoardForm,"작품 이미지 생성 및 저장 완료");
+            return new ResponseForm<>(HttpStatus.OK, storyBoardForm,"Scene data retrieved successfully");
+        } catch (NoResultException | NotFoundUserException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         }
-
     }
 
     @PostMapping("/story/temporary")
@@ -83,7 +86,7 @@ public class TemporaryStoryController {
 
             return new ResponseForm<>(HttpStatus.OK,null,"작품 이미지 생성 및 저장 완료");
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         }
     }
 
