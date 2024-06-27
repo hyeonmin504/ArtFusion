@@ -27,6 +27,7 @@ public class OpenAiService {
     public void generateImage(List<SceneFormat> sceneFormatList) {
         for (SceneFormat sceneFormat : sceneFormatList) {
             TemporaryPhotoStorage storage = new TemporaryPhotoStorage("url",sceneFormat);
+            log.info("storage={}",storage.getUrl());
             temporaryPhotoRepository.save(storage);
         }
     }
