@@ -15,6 +15,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +61,24 @@ public class GlobalExceptionHandler {
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.NOT_FOUND, body, "올바른 경로가 아닙니다");
         log.info("error={}",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({
+            ConnectException.class,
+            SocketTimeoutException.class,
+            UnknownHostException.class
+    })
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<ResponseForm<Map<String, Object>>> handleNetworkException(Exception ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        body.put("error", "Service Unavailable");
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+
+        ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, body, "네트워크 문제로 인해 서비스를 다시 이용해주세요.");
+        log.info("error={}", ex);
+        return new ResponseEntity<>(responseForm, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @ExceptionHandler(Exception.class)

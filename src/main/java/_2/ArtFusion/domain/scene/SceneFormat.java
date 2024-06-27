@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.scene;
 import _2.ArtFusion.domain.openai.SceneData;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,10 +17,14 @@ public class SceneFormat {
     @Column(name = "scene_id")
     private Long id;
 
+    @Size(max = 4000)
     private String description;
+    @Size(max = 60000)
     private String scenePromptEn;
     private int sceneSequence;
+    @Size(max = 4000)
     private String dialogue;
+    @Size(max = 4000)
     private String background;
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
