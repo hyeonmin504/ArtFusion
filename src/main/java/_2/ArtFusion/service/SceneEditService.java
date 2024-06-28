@@ -1,9 +1,13 @@
 package _2.ArtFusion.service;
 
 import _2.ArtFusion.controller.editStorycontroller.editForm.ContentEditForm;
+import _2.ArtFusion.controller.editStorycontroller.editForm.DetailEditForm;
+import _2.ArtFusion.domain.openai.SceneData;
 import _2.ArtFusion.domain.scene.SceneFormat;
+import _2.ArtFusion.domain.scene.TemporaryPhotoStorage;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.SceneFormatRepository;
+import _2.ArtFusion.repository.TemporaryPhotoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,10 +21,11 @@ public class SceneEditService {
     private final SceneFormatRepository sceneFormatRepository;
     private final OpenAiService openAiService;
     private final SceneFormatService sceneFormatService;
+    private final TemporaryPhotoRepository temporaryPhotoRepository;
     
     @Transactional
-    public void contentEdit(ContentEditForm form) {
-        SceneFormat scene = sceneFormatRepository.findById(form.getSceneId()).orElseThrow(
+    public void contentEdit(ContentEditForm form,Long sceneId) {
+        SceneFormat scene = sceneFormatRepository.findById(sceneId).orElseThrow(
                 () -> new NotFoundContentsException("해당 장면을 찾을 수 없습니다")
         );
 
@@ -50,5 +55,25 @@ public class SceneEditService {
         );
         //장면 생성및 저장
         openAiService.generateImage(scene);
+    }
+
+    @Transactional
+    public void detailEdit(DetailEditForm form,Long sceneId) {
+        SceneFormat scene = sceneFormatRepository.findById(sceneId).orElseThrow(
+                () -> new NotFoundContentsException("해당 장면을 찾을 수 없습니다")
+        );
+
+        TemporaryPhotoStorage storage = temporaryPhotoRepository.findById(form.getImageId()).orElseThrow(
+                () -> new NotFoundContentsException("해당 이미지를 찾을 수 없습니다")
+        );
+
+        //해당 Url을 이미지 데이터로 바꾼 후 데이터로서 달리에 요청
+
+
+        //sceneData를 통해 이미지 변환 요청
+        openAiService.variationImage(form.getSceneModifyPrompt());
+
+        //저장
+
     }
 }
