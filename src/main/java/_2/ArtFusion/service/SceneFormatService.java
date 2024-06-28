@@ -90,7 +90,7 @@ public class SceneFormatService {
      * @return List<SceneFormat>
      */
     @Transactional
-    private List<SceneFormat> combineToPromptAndTransEnglish(List<SceneFormat> sceneFormats) {
+    public List<SceneFormat> combineToPromptAndTransEnglish(List<SceneFormat> sceneFormats) {
         log.info("combineToPromptAndTransEnglish start");
         String promptKor;
 
@@ -103,6 +103,21 @@ public class SceneFormatService {
             sceneFormat.setScenePromptEn(scenePromptEn);
         }
         return sceneFormats;
+    }
+
+    @Transactional
+    public SceneFormat combineToPromptAndTransEnglish(SceneFormat sceneFormat) {
+        log.info("combineToPromptAndTransEnglish start");
+        String promptKor;
+
+        //내부 로직을 통해 promptKor 생성
+        promptKor = sceneFormat.getDescription() + sceneFormat.getBackground();
+
+        String scenePromptEn = convertToPromptEnglish(promptKor);
+
+        sceneFormat.setScenePromptEn(scenePromptEn);
+
+        return sceneFormat;
     }
 
     /**

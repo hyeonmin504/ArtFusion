@@ -36,8 +36,10 @@ public class GenerateStoryController {
             imageService.uploadImage(image,storyBoard);
 
             return new ResponseForm<>(HttpStatus.OK, null,"이미지 저장 완료");
+        } catch (NotFoundContentsException e) {
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null,e.getMessage());
         } catch (NotFoundUserException e) {
-            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null,"이미지 저장 완료");
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null,"유저를 찾을 수 없습니다");
         } catch (IOException e) {
             return new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, null,"저장중 오류가 발생했습니다");
         }

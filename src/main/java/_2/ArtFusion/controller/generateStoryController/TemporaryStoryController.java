@@ -82,7 +82,10 @@ public class TemporaryStoryController {
             List<SceneFormat> sceneFormats = sceneFormatService.ScenesFormatting(savedStory);
 
             //장면 마다 이미지 생성 후 저장
-            openaiService.generateImage(sceneFormats);
+            for (SceneFormat sceneFormat : sceneFormats) {
+                openaiService.generateImage(sceneFormat);
+            }
+
 
             return new ResponseForm<>(HttpStatus.OK,null,"작품 이미지 생성 및 저장 완료");
         } catch (NotFoundContentsException e) {
