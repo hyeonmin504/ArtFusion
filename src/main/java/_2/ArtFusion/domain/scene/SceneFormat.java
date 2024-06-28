@@ -54,6 +54,12 @@ public class SceneFormat {
         this.scenePromptEn = scenePromptEn;
     }
 
+    public void editContentForm(String description, String background, String dialogue) {
+        this.description = description;
+        this.background = background;
+        this.dialogue = dialogue;
+    }
+
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {
         this.storyBoard = storyBoard;
