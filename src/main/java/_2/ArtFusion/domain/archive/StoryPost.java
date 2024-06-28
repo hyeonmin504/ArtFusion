@@ -2,7 +2,6 @@ package _2.ArtFusion.domain.archive;
 
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -60,5 +59,13 @@ public class StoryPost {
         this.coverImg = coverImg;
         this.user =user;
         this.storyBoard = storyBoard;
+    }
+
+    public StoryPost(String summary) {
+        this.summary = summary;
+    }
+
+    public static StoryPost createStoryPost(String summary) {
+        return new StoryPost(summary);
     }
 }

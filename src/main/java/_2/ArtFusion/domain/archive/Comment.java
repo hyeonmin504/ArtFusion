@@ -35,8 +35,8 @@ public class Comment {
         this.createDate = LocalDateTime.now();
         this.textBody = textBody;
         this.orderNumber = orderNumber;
-        this.user = user;
-        this.storyPost = storyPost;
+        setUser(user);
+        setStoryPost(storyPost);
     }
 
     // -- 연관 관계 세팅 메서드 -- //

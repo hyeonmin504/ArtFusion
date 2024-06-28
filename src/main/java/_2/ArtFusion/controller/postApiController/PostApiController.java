@@ -4,15 +4,12 @@ import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.CommentService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,6 +45,20 @@ public class PostApiController {
         }
     }
 
+    // 댓글 저장
+    @PostMapping("/comment/{storyId}")
+    public ResponseForm saveComments(@RequestHeader("access-token") String token, @RequestBody @Validated getCommentForm form){
+        //테스트 유저
+        Long userId = 1L;
+        try {
+            commentService.saveComments(form, userId);
+
+            return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
+        } catch (NotFoundContentsException e) {
+            return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+        }
+    }
+
     @Data
     @AllArgsConstructor
     public static class CommentForm {
@@ -56,5 +67,13 @@ public class PostApiController {
         private LocalDateTime createDate;
         private int orderNumber;
         private String nickName;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class getCommentForm{
+        @NotEmpty
+        private String textBody;
     }
 }
