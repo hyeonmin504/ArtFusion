@@ -7,11 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 @AllArgsConstructor
 public class ContentEditForm {
-    @NotNull
-    private Long sceneId;
     private String background;
     @NotEmpty
     private String description;
