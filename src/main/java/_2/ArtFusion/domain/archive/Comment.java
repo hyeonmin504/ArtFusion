@@ -38,7 +38,6 @@ public class Comment {
         setUser(user);
         setStoryPost(storyPost);
     }
-
     // -- 연관 관계 세팅 메서드 -- //
     public void setUser(User user) {
         this.user = user;

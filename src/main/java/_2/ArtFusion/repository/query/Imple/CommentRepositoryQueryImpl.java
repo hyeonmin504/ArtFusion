@@ -26,4 +26,14 @@ public class CommentRepositoryQueryImpl implements CommentRepositoryQuery {
                 .setParameter("storyPost", storyPost)
                 .getResultList();
     }
+
+    @Override
+    public Integer getMaxOrderNumber(StoryPost storyPost) {
+        return em.createQuery(
+                        "select max(c.orderNumber) from Comment c " +
+                                "where c.storyPost = :storyPost", Integer.class)
+                .setParameter("storyPost", storyPost)
+                .getSingleResult();
+
+    }
 }

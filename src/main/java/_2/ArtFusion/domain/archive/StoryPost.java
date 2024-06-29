@@ -65,7 +65,7 @@ public class StoryPost {
         this.summary = summary;
     }
 
-    public static StoryPost createStoryPost(String summary) {
-        return new StoryPost(summary);
+    public static StoryPost createStoryPost(String summery) {
+        return new StoryPost(summery);
     }
 }
