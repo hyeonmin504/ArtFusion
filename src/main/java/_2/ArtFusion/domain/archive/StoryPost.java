@@ -60,4 +60,12 @@ public class StoryPost {
         this.user =user;
         this.storyBoard = storyBoard;
     }
+
+    public StoryPost(String summary) {
+        this.summary = summary;
+    }
+
+    public static StoryPost createStoryPost(String summery) {
+        return new StoryPost(summery);
+    }
 }
