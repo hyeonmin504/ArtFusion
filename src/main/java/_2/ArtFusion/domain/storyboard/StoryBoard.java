@@ -3,17 +3,16 @@ package _2.ArtFusion.domain.storyboard;
 import _2.ArtFusion.domain.Character.Characters;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
+import _2.ArtFusion.domain.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StoryBoard {
 
@@ -44,9 +43,17 @@ public class StoryBoard {
     @OneToMany(mappedBy = "storyBoard")
     private List<CaptureImage> captureImage = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    private User user;
+
     // 연관 관계를 위한 setter
     public void setStoryPost(StoryPost storyPost) {
         this.storyPost = storyPost;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+        user.getStoryBoards().add(this);
     }
 
     /**
@@ -61,12 +68,13 @@ public class StoryBoard {
     }
 
     @Builder
-    public StoryBoard(String promptKor, String title, Style style, GenerateType generateType, String genre, int wishCutCount) {
+    public StoryBoard(String promptKor, String title, Style style, GenerateType generateType, String genre, int wishCutCount, User user) {
         this.promptKor = promptKor;
         this.title = title;
         this.style = style;
         this.generateType = generateType;
         this.genre = genre;
         this.wishCutCount = wishCutCount;
+        setUser(user);
     }
 }

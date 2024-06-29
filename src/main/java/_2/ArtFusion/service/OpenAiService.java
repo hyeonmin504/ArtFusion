@@ -1,5 +1,6 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.domain.openai.SceneData;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.scene.TemporaryPhotoStorage;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
@@ -24,13 +25,17 @@ public class OpenAiService {
     private final TemporaryPhotoRepository temporaryPhotoRepository;
 
     @Transactional
-    public List<SceneFormat> generateImage(List<SceneFormat> sceneFormatList) {
-        for (SceneFormat sceneFormat : sceneFormatList) {
-            TemporaryPhotoStorage storage = new TemporaryPhotoStorage("url",sceneFormat);
-            temporaryPhotoRepository.save(storage);
-        }
+    public void generateImage(SceneFormat sceneFormat) {
+        TemporaryPhotoStorage storage = new TemporaryPhotoStorage(sceneFormat.getBackground() + "url",sceneFormat);
 
-        return sceneFormatList;
+
+        log.info("storage={}",storage.getUrl());
+        TemporaryPhotoStorage save = temporaryPhotoRepository.save(storage);
+    }
+
+    @Transactional
+    public void variationImage(String editPrompt) {
+
     }
 
     public List<SceneFormat> promptFormatToGptApi(StoryBoard storyBoard) {

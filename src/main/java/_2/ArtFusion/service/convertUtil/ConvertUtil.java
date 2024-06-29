@@ -6,6 +6,7 @@ import _2.ArtFusion.domain.Character.Gender;
 import _2.ArtFusion.domain.storyboard.GenerateType;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.storyboard.Style;
+import _2.ArtFusion.domain.user.User;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class ConvertUtil {
      * @param form
      * @return
      */
-    public static StoryBoard convertStoryBoard(GenerateTemporaryForm form) {
+    public static StoryBoard convertStoryBoard(GenerateTemporaryForm form, User user) {
         log.info("convertStoryBoard start");
         return StoryBoard.builder()
                 .title(form.getTitle())
@@ -30,6 +31,7 @@ public class ConvertUtil {
                 .generateType(convertToGenerateTypeEnum(form.getGenerateType()))
                 .genre(convertToGenre(form.getGenre()))
                 .wishCutCount(form.getWishCutCnt())
+                .user(user)
                 .build();
     }
 
