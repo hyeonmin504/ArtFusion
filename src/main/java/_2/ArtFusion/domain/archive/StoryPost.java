@@ -28,7 +28,7 @@ public class StoryPost {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private User user;
 
-    @OneToOne(mappedBy = "storyPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "storyPost", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private IsLikePost isLikePost;
 
     @OneToMany(mappedBy = "storyPost", cascade = CascadeType.ALL, orphanRemoval = true)
