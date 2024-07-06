@@ -2,7 +2,8 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.controller.editStorycontroller.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStorycontroller.editForm.DetailEditForm;
-import _2.ArtFusion.domain.openai.SceneData;
+import _2.ArtFusion.controller.editStorycontroller.editForm.SceneSeqForm;
+import _2.ArtFusion.controller.editStorycontroller.editForm.SequenceForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.scene.TemporaryPhotoStorage;
 import _2.ArtFusion.exception.NotFoundContentsException;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -75,5 +78,21 @@ public class SceneEditService {
 
         //저장
 
+    }
+
+    @Transactional
+    public void sequenceEdit(SceneSeqForm form) {
+        List<SequenceForm> sequenceForms = form.getScene();
+
+        for (SequenceForm sequenceForm : sequenceForms) {
+            SceneFormat sceneFormat = sceneFormatRepository.findById(sequenceForm.getSceneId()).orElseThrow(
+                    () -> new NotFoundContentsException(sequenceForm.getNewSceneSeq() + "번 째 장면을 찾을 수 없습니다")
+            );
+
+            //저장된 장면의 순서가 요청받은 장면의 순서가 다를 경우만 변경감지 저장
+            if (sequenceForm.getNewSceneSeq() != sceneFormat.getSceneSequence()) {
+                sceneFormat.changeSequence(sequenceForm.getNewSceneSeq());
+            }
+        }
     }
 }
