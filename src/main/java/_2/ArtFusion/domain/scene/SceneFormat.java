@@ -60,6 +60,10 @@ public class SceneFormat {
         this.dialogue = dialogue;
     }
 
+    public void changeSequence(int sceneSequence) {
+        this.sceneSequence = sceneSequence;
+    }
+
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {
         this.storyBoard = storyBoard;

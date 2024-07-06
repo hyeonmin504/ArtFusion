@@ -28,7 +28,7 @@ public class StoryPost {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private User user;
 
-    @OneToOne(mappedBy = "storyPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "storyPost", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private IsLikePost isLikePost;
 
     @OneToMany(mappedBy = "storyPost", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -59,5 +59,13 @@ public class StoryPost {
         this.coverImg = coverImg;
         this.user =user;
         this.storyBoard = storyBoard;
+    }
+
+    public StoryPost(String summary) {
+        this.summary = summary;
+    }
+
+    public static StoryPost createStoryPost(String summery) {
+        return new StoryPost(summery);
     }
 }
