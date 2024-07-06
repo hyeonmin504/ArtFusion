@@ -2,8 +2,11 @@ package _2.ArtFusion.controller.postApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.archive.Comment;
+import _2.ArtFusion.domain.archive.IsLikePost;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.CommentService;
+import _2.ArtFusion.service.LikeService;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +25,10 @@ import java.util.List;
 public class PostApiController {
 
     private final CommentService commentService;
+    private final LikeService likeService;
+
+
+
 
     /**
      * 저장된 댓글 데이터 모두 가져오기
@@ -78,6 +85,32 @@ public class PostApiController {
                 .build();
     }
 
+//    @PostMapping ("/likes")
+//    public ResponseForm isLikeStatusApi(@RequestHeader("access-token") String token, @PathVariable Long postId, Long userId) {
+//        Long userId = 1L;
+//        LikeService.
+//
+//
+//    }
+
+    /**
+     * 좋아요 기능 API
+     * @param postId -> 현재 post
+     * @return
+     */
+    @PostMapping("/likes/{postId}")
+    public ResponseForm likeApi(@RequestHeader("access-token") String token, @PathVariable Long postId){
+        //테스트 유저
+        Long userId = 1L;
+        try {
+            //서비스 호출하여 댓글 저장
+            likeService.isLikeStatus(postId,userId);
+            return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
+        } catch (NotFoundContentsException e) {
+            return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+        }
+    }
+
     @Data
     @Builder
     @AllArgsConstructor
@@ -94,4 +127,8 @@ public class PostApiController {
         @NotEmpty
         private String textBody;
     }
+
+
+
+
 }
