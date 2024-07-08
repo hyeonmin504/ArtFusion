@@ -81,7 +81,7 @@ public class PostApiController {
                 .textBody(comment.getTextBody())
                 .createDate(comment.getCreateDate())
                 .orderNumber(comment.getOrderNumber())
-                .nickName(comment.getUser().getNickName())
+                .nickName(comment.getUser().getNickname())
                 .build();
     }
 
