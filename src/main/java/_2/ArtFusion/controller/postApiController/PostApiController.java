@@ -85,13 +85,6 @@ public class PostApiController {
                 .build();
     }
 
-//    @PostMapping ("/likes")
-//    public ResponseForm isLikeStatusApi(@RequestHeader("access-token") String token, @PathVariable Long postId, Long userId) {
-//        Long userId = 1L;
-//        LikeService.
-//
-//
-//    }
 
     /**
      * 좋아요 기능 API
