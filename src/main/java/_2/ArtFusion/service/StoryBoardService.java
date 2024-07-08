@@ -57,8 +57,5 @@ public class StoryBoardService {
             captureImageRepository.save(captureImage);
             commentRepository.save(comment);
         }
-
-
-
     }
 }

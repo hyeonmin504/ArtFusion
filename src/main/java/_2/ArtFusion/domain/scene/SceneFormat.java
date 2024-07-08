@@ -31,7 +31,7 @@ public class SceneFormat {
     @JoinColumn(name = "story_id")
     private StoryBoard storyBoard;
 
-    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     @JoinColumn(name = "image_id")
     private TemporaryPhotoStorage temporaryImage;
 

@@ -33,7 +33,12 @@ public class GenerateStoryController {
             StoryBoard storyBoard = storyBoardRepository.findById(storyId).orElseThrow(
                     () -> new NotFoundContentsException("해당 컨텐츠를 찾을 수 없습니다")
             );
+
+            //이미지 저장
             imageService.uploadImage(image,storyBoard);
+
+            //post 생성
+
 
             return new ResponseForm<>(HttpStatus.OK, null,"이미지 저장 완료");
         } catch (NotFoundContentsException e) {

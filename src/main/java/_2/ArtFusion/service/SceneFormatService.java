@@ -95,13 +95,15 @@ public class SceneFormatService {
         String promptKor;
 
         for (SceneFormat sceneFormat : sceneFormats) {
-            //내부 로직을 통해 promptKor 생성
+
+            //내부 로직을 통해 promptKor 생성 -> 수정해야함
             promptKor = sceneFormat.getDescription() + sceneFormat.getBackground();
 
             String scenePromptEn = convertToPromptEnglish(promptKor);
 
             sceneFormat.setScenePromptEn(scenePromptEn);
         }
+
         return sceneFormats;
     }
 
@@ -110,7 +112,7 @@ public class SceneFormatService {
         log.info("combineToPromptAndTransEnglish start");
         String promptKor;
 
-        //내부 로직을 통해 promptKor 생성
+        //내부 로직을 통해 promptKor 생성 -> 수정해야함
         promptKor = sceneFormat.getDescription() + sceneFormat.getBackground();
 
         String scenePromptEn = convertToPromptEnglish(promptKor);

@@ -10,6 +10,6 @@ public class ArchiveDataForm {
     private String coverImg;
     private String title;
     private String summary;
-    private String nickName;
+    private String nickname;
     private String hashTag;
 }

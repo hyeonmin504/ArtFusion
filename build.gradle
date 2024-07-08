@@ -31,6 +31,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+	//openai
+	implementation 'com.theokanning.openai-gpt3-java:client:0.10.0'
+	implementation 'com.theokanning.openai-gpt3-java:service:0.10.0'
+
 	//aws
 	implementation 'software.amazon.awssdk:s3:2.17.89'
 	implementation 'software.amazon.awssdk:auth:2.17.89'
