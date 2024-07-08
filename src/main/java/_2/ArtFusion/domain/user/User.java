@@ -26,7 +26,7 @@ public class User {
     private String name;
     private String email;
     private String password;
-    private String nickName;
+    private String nickname;
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
     private LocalDateTime joinDate;
@@ -50,6 +50,6 @@ public class User {
     }
 
     public User(String nickName) {
-        this.nickName = nickName;
+        this.nickname = nickName;
     }
 }

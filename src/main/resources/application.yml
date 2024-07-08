@@ -18,6 +18,11 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
+  ai:
+    openai:
+      api-key: ${OPEN_AI_ACCESS_KEY}
+      gpt-url: ${OPEN_AI_GPT_URL}
+
 logging:
   level:
     org.hibernate.SQL: info
@@ -34,3 +39,5 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     bucket: ${AWS_BUCKET_NAME}
     region: ${AWS_REGION}
+
+

@@ -45,6 +45,26 @@ public class ArchiveService {
     }
 
     @Transactional(readOnly = true)
+    public AllArchivesResponse getArchiveListForUser(Pageable pageable, String nickname) {
+        // Slice 객체로 Form 데이터를 가져옴
+        Slice<ArchiveDataForm> archiveDataFormsSlice = archiveRepository.findAllArchiveFormForNickname(pageable, nickname);
+
+        // 아카이브 데이터를 리스트로 변환
+        List<ArchiveDataForm> archiveDataForms = archiveDataFormsSlice.getContent();
+
+        // PostFormResponse 객체 생성 및 반환
+        return AllArchivesResponse.builder()
+                .archiveDataForms(archiveDataForms)
+                .offset(pageable.getOffset())
+                .pageNum(archiveDataFormsSlice.getNumber())
+                .numberOfElements(archiveDataFormsSlice.getNumberOfElements())
+                .size(pageable.getPageSize())
+                .isLast(archiveDataFormsSlice.isLast())
+                .build();
+
+    }
+
+    @Transactional(readOnly = true)
     public DetailArchivesResponse getArchive(Long postId) {
         //해당 아카이브를 찾아오기
         DetailArchiveDataForm detailArchiveDataForm = archiveRepository.findDetailArchiveForm(postId).orElseThrow(

@@ -34,7 +34,7 @@ public class userController {
 
             User findUser = userRepository.findById(savedUser.getId()).orElseThrow();
 
-            UserDataForm userDataForm = new UserDataForm(findUser.getId(),findUser.getNickName(),findUser.getEmail(),findUser.getRole().toString());
+            UserDataForm userDataForm = new UserDataForm(findUser.getId(),findUser.getNickname(),findUser.getEmail(),findUser.getRole().toString());
 
             return new ResponseForm<>(HttpStatus.OK,userDataForm,"Ok");
         } catch (NotFoundUserException e) {
