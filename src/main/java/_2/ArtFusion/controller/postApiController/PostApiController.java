@@ -61,7 +61,7 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @param form -> 받은 textBody
      */
-    @PostMapping("/comment/{postId}")
+    @PostMapping("/comments/{postId}")
     public ResponseForm saveCommentsApi(@RequestHeader("access-token") String token, @PathVariable Long postId, @RequestBody @Validated getCommentForm form){
         //테스트 유저
         Long userId = 1L;
