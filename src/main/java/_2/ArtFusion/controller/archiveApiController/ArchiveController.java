@@ -35,6 +35,7 @@ public class ArchiveController {
         return "ok";
     }
     @GetMapping("/archives")
+    //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
     public ResponseForm getAllArchives(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "id") String sort,
                                        @RequestParam(defaultValue = "6") int size
@@ -50,6 +51,7 @@ public class ArchiveController {
     }
 
     @GetMapping("/archives/{postId}")
+    //입력받은 postId에 대한 archives 세부 정보 조회
     public ResponseForm getArchiveDetail(@PathVariable Long postId) {
         try {
             //아카이브 폼 데이터 조회
@@ -59,6 +61,20 @@ public class ArchiveController {
         } catch (NotFoundContentsException | NotFoundImageException | NoResultException e) {
             log.info("error={}",e);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/archives/{postId}")
+    public ResponseForm deleteArchive(@PathVariable("postId") Long postId){
+        try {
+            //아카이브 삭제 서비스 호출
+            archiveService.deleteArchive(postId);
+
+            //성공 응답
+            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+        }catch (NotFoundContentsException e){
+            log.info("error={}", e);
+            return new ResponseForm<>(HttpStatus.NO_CONTENT,null,"작품이 존재하지 않습니다.");
         }
     }
 
