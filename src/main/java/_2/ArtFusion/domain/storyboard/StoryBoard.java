@@ -40,7 +40,7 @@ public class StoryBoard {
     @OneToOne(mappedBy = "storyBoard")
     private StoryPost storyPost;
 
-    @OneToMany(mappedBy = "storyBoard")
+    @OneToMany(mappedBy = "storyBoard",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CaptureImage> captureImage = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)

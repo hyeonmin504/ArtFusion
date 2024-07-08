@@ -40,6 +40,27 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
     }
 
     @Override
+    public Slice<ArchiveDataForm> findAllArchiveFormForNickname(Pageable pageable, String nickname) {
+        TypedQuery<ArchiveDataForm> query = em.createQuery(
+                "select new _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm" +
+                        "(p.id, p.coverImg, b.title, p.summary, u.nickname, p.hashTag) " +
+                        "from StoryPost p " +
+                        "join p.storyBoard b " +
+                        "join p.user u " +
+                        "where u.nickname = :nickname" , ArchiveDataForm.class);
+
+        query.setParameter("nickname",nickname);
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        List<ArchiveDataForm> resultList = query.getResultList();
+
+        boolean hasNext = resultList.size() == pageable.getPageSize();
+
+        return new SliceImpl<>(resultList, pageable, hasNext);
+    }
+
+    @Override
     public Optional<DetailArchiveDataForm> findDetailArchiveForm(Long storyId) {
         DetailArchiveDataForm detailArchiveDataForm = em.createQuery(
                         "select new _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm" +
