@@ -76,15 +76,6 @@ public class PostApiController {
     }
 
 
-
-//    @PostMapping ("/likes")
-//    public ResponseForm isLikeStatusApi(@RequestHeader("access-token") String token, @PathVariable Long postId, Long userId) {
-//        Long userId = 1L;
-//        LikeService.
-//
-//
-//    }
-
     /**
      * 댓글 수 조회 API
      * @param postId -> 현재 postId
@@ -126,9 +117,6 @@ public class PostApiController {
             return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
         }
     }
-
-
-
     @Data
     @Builder
     @AllArgsConstructor
@@ -145,8 +133,4 @@ public class PostApiController {
         @NotEmpty
         private String textBody;
     }
-
-
-
-
 }
