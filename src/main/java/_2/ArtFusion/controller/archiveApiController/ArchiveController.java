@@ -94,19 +94,37 @@ public class ArchiveController {
         }
     }
 
+    /**
+     *
+     * @param postId -> 삭제하려는 포스트 id
+     */
     @DeleteMapping("/archives/{postId}")
     public ResponseForm deleteArchive(@PathVariable("postId") Long postId){
         try {
-            //아카이브 삭제 서비스 호출
             archiveService.deleteArchive(postId);
-
-            //성공 응답
             return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
-        }catch (NotFoundContentsException e){
+        } catch (NotFoundContentsException e) {
             log.info("error={}", e);
-            return new ResponseForm<>(HttpStatus.NO_CONTENT,null,"작품이 존재하지 않습니다.");
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "작품이 존재하지 않습니다.");
         }
     }
+
+    /**
+     *
+     * @param storyId -> 삭제하려는 스토리 id
+     */
+    @DeleteMapping("/story/temporary/{storyId}")
+    public ResponseForm deleteStoryPost(@PathVariable("storyId") Long storyId){
+        try {
+            archiveService.deleteStoryPost(storyId);
+            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+        } catch (NotFoundContentsException e) {
+            log.info("error={}", e);
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "스토리가 존재하지 않습니다.");
+        }
+    }
+
+
 
     @Data
     @AllArgsConstructor
