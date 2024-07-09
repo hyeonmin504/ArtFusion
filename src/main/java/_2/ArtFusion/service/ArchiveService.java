@@ -2,6 +2,7 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
+import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.repository.ArchiveRepository;
@@ -86,5 +87,21 @@ public class ArchiveService {
                 .hashTag(hashTags)
                 .captureImage(urls)
                 .build();
+    }
+
+    @Transactional
+    public void deleteArchive(Long postId){
+        // postId로 아카이브 조회
+        // storyPost로 가져오면 안됨. 두가지 경우. 만들다가 삭제. 다만들고 저장했다가 삭제
+        //
+        StoryPost storyPost = archiveRepository.findById(postId).orElseThrow(
+                () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다.")
+        );
+
+        // 관련된 캡쳐 이미지를 먼저 삭제
+        captureImageRepository.deleteCaptureImagesByStoryId(storyPost.getStoryBoard().getId());
+
+        // 아카이브 삭제
+        archiveRepository.deleteById(postId);
     }
 }

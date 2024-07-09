@@ -12,6 +12,8 @@ public interface CommentRepositoryQuery {
 
     Integer getMaxOrderNumber(StoryPost storyPost);
 
+    int countComments(StoryPost storyPost);
+
 
 
 
