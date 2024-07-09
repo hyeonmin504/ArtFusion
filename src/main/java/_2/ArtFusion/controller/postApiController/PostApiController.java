@@ -34,7 +34,7 @@ public class PostApiController {
      * 저장된 댓글 데이터 모두 가져오기
      * @param postId -> 현재 postId
      */
-    @GetMapping("/comment/{postId}") //수정
+    @GetMapping("/comments/{postId}") //수정
     public ResponseForm getAllCommentsApi(@PathVariable Long postId) {
         try {
             //commentForm 객체를 담을 리스트 초기화
