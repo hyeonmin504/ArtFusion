@@ -34,6 +34,14 @@ public class ArchiveController {
         storyBoardService.testForGetAllArchives();
         return "ok";
     }
+
+    /**
+     * 모든 아카이브 가져오기
+     * @param page -> 해당 페이지 번호
+     * @param sort -> 정렬 기준
+     * @param size -> 가져올 데이터 크기
+     * @return
+     */
     @GetMapping("/archives")
     //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
     public ResponseForm getAllArchives(@RequestParam(defaultValue = "0") int page,
@@ -50,9 +58,31 @@ public class ArchiveController {
         return new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
     }
 
-    @GetMapping("/archives/{postId}")
-    //입력받은 postId에 대한 archives 세부 정보 조회
-    public ResponseForm getArchiveDetail(@PathVariable Long postId) {
+
+    @GetMapping("/archives/{nickname}")
+    public ResponseForm getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "id") String sort,
+                                                  @RequestParam(defaultValue = "6") int size,
+                                                  @PathVariable String nickname
+    ) {
+        // Pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+
+        // ArchiveService를 통해 PostFormResponse 객체를 가져옴
+        AllArchivesResponse archiveList = archiveService.getArchiveListForUser(pageable,nickname);
+
+        // ResponseForm 객체 생성 및 반환
+        return new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+    }
+
+    /**
+     * 해당 포스트 가져오기
+     * @param postId -> 해당하는 포스트 id
+     * @param nickname -> nickname 최적화로 사용 예정
+     * @return
+     */
+    @GetMapping("/archives/{nickname}/{postId}")
+    public ResponseForm getArchiveDetail(@PathVariable Long postId,@PathVariable String nickname) {
         try {
             //아카이브 폼 데이터 조회
             DetailArchivesResponse detailArchivesResponse = archiveService.getArchive(postId);

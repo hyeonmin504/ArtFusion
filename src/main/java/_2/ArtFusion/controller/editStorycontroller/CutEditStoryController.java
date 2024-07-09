@@ -3,6 +3,7 @@ package _2.ArtFusion.controller.editStorycontroller;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.editStorycontroller.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStorycontroller.editForm.DetailEditForm;
+import _2.ArtFusion.controller.editStorycontroller.editForm.SceneSeqForm;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.SceneEditService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/cuts")
-public class cutEditStoryController {
+public class CutEditStoryController {
 
     private final SceneEditService sceneEditService;
 
@@ -53,8 +54,15 @@ public class cutEditStoryController {
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         }
     }
-    @PutMapping("/cuts/sequence")
-    public ResponseForm imageSequenceEdit() {
-        return new ResponseForm<>(HttpStatus.OK, null, "Ok");
+    @PutMapping("/sequence")
+    public ResponseForm imageSequenceEdit(@RequestBody @Validated SceneSeqForm form) {
+        try {
+            //순서 수정
+            sceneEditService.sequenceEdit(form);
+
+            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+        } catch (NotFoundContentsException e) {
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+        }
     }
 }

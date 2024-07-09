@@ -34,7 +34,7 @@ public class StoryPost {
     @OneToMany(mappedBy = "storyPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comment = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "story_id")
     private StoryBoard storyBoard;
 
