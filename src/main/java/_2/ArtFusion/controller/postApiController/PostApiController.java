@@ -61,7 +61,7 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @param form -> 받은 textBody
      */
-    @PostMapping("/comments/{postId}")
+    @PostMapping("/comment/{postId}")
     public ResponseForm saveCommentsApi(@RequestHeader("access-token") String token, @PathVariable Long postId, @RequestBody @Validated getCommentForm form){
         //테스트 유저
         Long userId = 1L;
@@ -80,7 +80,7 @@ public class PostApiController {
      * 댓글 수 조회 API
      * @param postId -> 현재 postId
      */
-    @GetMapping("/comments/cnt/{postId}")
+    @GetMapping("/comment/cnt/{postId}")
     public ResponseForm getCommentCountApi(@PathVariable Long postId) {
         try {
             int count = commentService.countComments(postId);
