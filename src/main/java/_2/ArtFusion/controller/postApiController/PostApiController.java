@@ -75,6 +75,21 @@ public class PostApiController {
         }
     }
 
+
+    /**
+     * 댓글 수 조회 API
+     * @param postId -> 현재 postId
+     */
+    @GetMapping("/comment/cnt/{postId}")
+    public ResponseForm getCommentCountApi(@PathVariable Long postId) {
+        try {
+            int count = commentService.countComments(postId);
+            return new ResponseForm<>(HttpStatus.OK, count, "OK");
+        } catch (NotFoundContentsException e) {
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+        }
+    }
+
     private CommentForm convertCommentForm(Comment comment) {
         return CommentForm.builder()
                 .commentId(comment.getId())
@@ -84,14 +99,6 @@ public class PostApiController {
                 .nickName(comment.getUser().getNickname())
                 .build();
     }
-
-//    @PostMapping ("/likes")
-//    public ResponseForm isLikeStatusApi(@RequestHeader("access-token") String token, @PathVariable Long postId, Long userId) {
-//        Long userId = 1L;
-//        LikeService.
-//
-//
-//    }
 
     /**
      * 좋아요 기능 API
@@ -110,7 +117,6 @@ public class PostApiController {
             return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
         }
     }
-
     @Data
     @Builder
     @AllArgsConstructor
@@ -127,8 +133,4 @@ public class PostApiController {
         @NotEmpty
         private String textBody;
     }
-
-
-
-
 }

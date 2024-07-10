@@ -43,6 +43,7 @@ public class ArchiveController {
      * @return
      */
     @GetMapping("/archives")
+    //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
     public ResponseForm getAllArchives(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "id") String sort,
                                        @RequestParam(defaultValue = "6") int size
@@ -56,6 +57,7 @@ public class ArchiveController {
         // ResponseForm 객체 생성 및 반환
         return new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
     }
+
 
     @GetMapping("/archives/{nickname}")
     public ResponseForm getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
@@ -91,6 +93,38 @@ public class ArchiveController {
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         }
     }
+
+    /**
+     *
+     * @param postId -> 삭제하려는 포스트 id
+     */
+    @DeleteMapping("/archives/{postId}")
+    public ResponseForm deleteArchive(@PathVariable("postId") Long postId){
+        try {
+            archiveService.deleteArchive(postId);
+            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+        } catch (NotFoundContentsException e) {
+            log.info("error={}", e);
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "작품이 존재하지 않습니다.");
+        }
+    }
+
+    /**
+     *
+     * @param storyId -> 삭제하려는 스토리 id
+     */
+    @DeleteMapping("/story/temporary/{storyId}")
+    public ResponseForm deleteStoryBoardRequest(@PathVariable("storyId") Long storyId){
+        try {
+            archiveService.deleteStoryBoard(storyId);
+            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+        } catch (NotFoundContentsException e) {
+            log.info("error={}", e);
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "스토리가 존재하지 않습니다.");
+        }
+    }
+
+
 
     @Data
     @AllArgsConstructor

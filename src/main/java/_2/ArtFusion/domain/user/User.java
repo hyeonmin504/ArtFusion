@@ -20,7 +20,8 @@ import java.util.List;
 @Table(name = "users")
 public class User {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     @Column(name = "user_id")
     private Long id;
     private String name;
