@@ -25,7 +25,7 @@ public class StoryPost {
     private LocalDateTime createDate;
     private String coverImg;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private User user;
 
     @OneToOne(mappedBy = "storyPost", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -57,7 +57,7 @@ public class StoryPost {
         this.summary = summary;
         this.hashTag = hashTag;
         this.coverImg = coverImg;
-        this.user =user;
+        this.user = user;
         this.storyBoard = storyBoard;
     }
 
@@ -65,7 +65,7 @@ public class StoryPost {
         this.summary = summary;
     }
 
-    public static StoryPost createStoryPost(String summery) {
-        return new StoryPost(summery);
+    public static StoryPost createStoryPost(String summary) {
+        return new StoryPost(summary);
     }
 }

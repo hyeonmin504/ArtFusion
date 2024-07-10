@@ -95,10 +95,8 @@ public class ArchiveService {
                 .captureImage(urls)
                 .build();
     }
-
     @Transactional
-    public void deleteArchive(Long postId){
-
+    public void deleteArchive(Long postId) {
         StoryPost storyPost = archiveRepository.findById(postId).orElseThrow(
                 () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다.")
         );
@@ -109,9 +107,9 @@ public class ArchiveService {
         // 아카이브 삭제
         archiveRepository.deleteById(postId);
     }
+
     @Transactional
     public void deleteStoryPost(Long storyId) throws NotFoundContentsException {
-
         StoryBoard storyBoard = storyBoardRepository.findById(storyId)
                 .orElseThrow(() -> new NotFoundContentsException("스토리보드를 찾을 수 없습니다."));
 
@@ -120,12 +118,12 @@ public class ArchiveService {
             storyBoard.setStoryPost(null);
             storyPostRepository.delete(storyPost);
         }
-        //만약 storyPost가 존재해도 연관관계 모두 삭제 되도록
+        // 만약 storyPost가 존재해도 연관관계 모두 삭제되도록
         captureImageRepository.deleteCaptureImagesByStoryId(storyId);
 
         storyBoardRepository.delete(storyBoard);
-
     }
+
     }
 
 
