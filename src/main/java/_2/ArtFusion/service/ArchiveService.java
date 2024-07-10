@@ -9,7 +9,6 @@ import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.repository.ArchiveRepository;
 import _2.ArtFusion.repository.CaptureImageRepository;
 import _2.ArtFusion.repository.StoryBoardRepository;
-import _2.ArtFusion.repository.StoryPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -28,7 +27,6 @@ public class ArchiveService {
     private final ArchiveRepository archiveRepository;
     private final CaptureImageRepository captureImageRepository;
     private final StoryBoardRepository storyBoardRepository;
-    private final StoryPostRepository storyPostRepository;
 
 
 
@@ -101,25 +99,21 @@ public class ArchiveService {
                 () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다.")
         );
 
-        // 관련된 캡쳐 이미지를 먼저 삭제(연관관계 때문에)
-        captureImageRepository.deleteCaptureImagesByStoryId(storyPost.getStoryBoard().getId());
-
         // 아카이브 삭제
+        storyBoardRepository.deleteById(storyPost.getStoryBoard().getId());
         archiveRepository.deleteById(postId);
+
     }
 
     @Transactional
-    public void deleteStoryPost(Long storyId) throws NotFoundContentsException {
+    public void deleteStoryBoard(Long storyId) throws NotFoundContentsException {
         StoryBoard storyBoard = storyBoardRepository.findById(storyId)
                 .orElseThrow(() -> new NotFoundContentsException("스토리보드를 찾을 수 없습니다."));
 
         StoryPost storyPost = storyBoard.getStoryPost();
         if (storyPost != null) {
             storyBoard.setStoryPost(null);
-            storyPostRepository.delete(storyPost);
         }
-        // 만약 storyPost가 존재해도 연관관계 모두 삭제되도록
-        captureImageRepository.deleteCaptureImagesByStoryId(storyId);
 
         storyBoardRepository.delete(storyBoard);
     }

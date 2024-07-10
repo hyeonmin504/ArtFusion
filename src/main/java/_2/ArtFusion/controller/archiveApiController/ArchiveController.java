@@ -114,9 +114,9 @@ public class ArchiveController {
      * @param storyId -> 삭제하려는 스토리 id
      */
     @DeleteMapping("/story/temporary/{storyId}")
-    public ResponseForm deleteStoryPost(@PathVariable("storyId") Long storyId){
+    public ResponseForm deleteStoryBoardRequest(@PathVariable("storyId") Long storyId){
         try {
-            archiveService.deleteStoryPost(storyId);
+            archiveService.deleteStoryBoard(storyId);
             return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
         } catch (NotFoundContentsException e) {
             log.info("error={}", e);
