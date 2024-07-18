@@ -26,18 +26,18 @@ public class StoryBoard {
     private String generateType;
     private String genre;
     @Column("cut_cnt")
-    private int wishCutCount;
+    private int cutCnt;
     @Column("user_id")
     private Long userId;  // userId를 직접 필드로 추가
 
     @Builder
-    public StoryBoard(String promptKor, String title, Style style, String generateType, String genre, int wishCutCount, Long userId) {
+    public StoryBoard(String promptKor, String title, Style style, String generateType, String genre, int cutCnt, Long userId) {
         this.promptKor = promptKor;
         this.title = title;
         this.style = style;
         this.generateType = generateType;
         this.genre = genre;
-        this.wishCutCount = wishCutCount;
+        this.cutCnt = cutCnt;
         this.userId = userId;
     }
 }

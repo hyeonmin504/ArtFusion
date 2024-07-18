@@ -1,8 +1,8 @@
 package _2.ArtFusion.service;
 
-import _2.ArtFusion.domain.storyboard.CaptureImage;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
-import _2.ArtFusion.repository.jpa.CaptureImageRepository;
+import _2.ArtFusion.domain.storyboard.StoryImage;
+import _2.ArtFusion.repository.jpa.StoryImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import java.util.Objects;
 public class ImageService {
 
     private final S3Client s3Client;
-    private final CaptureImageRepository captureImageRepository;
+    private final StoryImageRepository storyImageRepository;
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
@@ -29,7 +29,7 @@ public class ImageService {
     @Transactional
     public void uploadImage(MultipartFile image, StoryBoard storyBoard) throws IOException {
         //마지막 이미지 번호
-        int maxSequence = captureImageRepository.findMaxSequenceByStoryBoard(storyBoard);
+        int maxSequence = storyImageRepository.findMaxSequenceByStoryBoard(storyBoard);
         int newSequence = maxSequence + 1;
 
         File file = convertMultiPartFileToFile(image);
@@ -46,8 +46,8 @@ public class ImageService {
 
         //S3에서 URL 가져와서 저장하기
         String imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(fileName)).toExternalForm();
-        CaptureImage captureImage = new CaptureImage(imageUrl,newSequence,storyBoard);
-        captureImageRepository.save(captureImage);
+        StoryImage storyImage = new StoryImage(imageUrl,newSequence,storyBoard);
+        storyImageRepository.save(storyImage);
     }
 
     private File convertMultiPartFileToFile(MultipartFile file) throws IOException {

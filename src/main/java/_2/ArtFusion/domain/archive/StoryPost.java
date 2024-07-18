@@ -30,7 +30,7 @@ public class StoryPost {
     private User user;
 
     @OneToOne(mappedBy = "storyPost", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private IsLikePost isLikePost;
+    private Heart heart;
 
     @OneToMany(mappedBy = "storyPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comment = new ArrayList<>();
@@ -50,8 +50,8 @@ public class StoryPost {
     }
 
     // 연관 관계를 위한 setter
-    public void setIsLikePost(IsLikePost isLikePost) {
-        this.isLikePost = isLikePost;
+    public void setHeart(Heart heart) {
+        this.heart = heart;
     }
 
     public StoryPost(String summary, String hashTag, String coverImg, User user, StoryBoard storyBoard) {

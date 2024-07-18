@@ -1,4 +1,4 @@
-package _2.ArtFusion.domain.Character;
+package _2.ArtFusion.domain.actor;
 
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "actor")
-public class Characters {
+public class Actor {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "actor_id")
@@ -32,7 +32,7 @@ public class Characters {
     private StoryBoard storyBoard;
 
     @Builder
-    public Characters(String characterPrompt,  Gender gender, String name,StoryBoard storyBoard) {
+    public Actor(String characterPrompt,  Gender gender, String name,StoryBoard storyBoard) {
         this.characterPrompt = characterPrompt;
         this.gender = gender;
         this.name = name;
@@ -42,6 +42,6 @@ public class Characters {
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {
         this.storyBoard = storyBoard;
-        storyBoard.getCharacters().add(this);
+        storyBoard.getActors().add(this);
     }
 }

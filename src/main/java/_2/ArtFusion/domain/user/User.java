@@ -1,7 +1,7 @@
 package _2.ArtFusion.domain.user;
 
 import _2.ArtFusion.domain.archive.Comment;
-import _2.ArtFusion.domain.archive.IsLikePost;
+import _2.ArtFusion.domain.archive.Heart;
 import _2.ArtFusion.domain.archive.StoryPost;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
@@ -33,7 +33,7 @@ public class User {
     private LocalDateTime joinDate;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private IsLikePost isLikePost;
+    private Heart heart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StoryPost> storyPost = new ArrayList<>();
@@ -46,8 +46,8 @@ public class User {
     private List<StoryBoard> storyBoards = new ArrayList<>();
 
     // 연관 관계를 위한 setter
-    public void setIsLikePost(IsLikePost isLikePost) {
-        this.isLikePost = isLikePost;
+    public void setHeart(Heart heart) {
+        this.heart = heart;
     }
 
     public User(String nickName) {

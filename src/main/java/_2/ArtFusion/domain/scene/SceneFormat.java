@@ -37,7 +37,7 @@ public class SceneFormat {
 
     @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     @JoinColumn(name = "image_id")
-    private TemporaryPhotoStorage temporaryImage;
+    private SceneImage sceneImage;
 
     @OneToOne(mappedBy = "sceneFormat", cascade = CascadeType.ALL, orphanRemoval = true)
     private DallEAi dallEAi;
@@ -82,8 +82,8 @@ public class SceneFormat {
     }
 
     // 연관 관계를 위한 setter
-    public void setTemporaryImage(TemporaryPhotoStorage storage) {
-        this.temporaryImage = storage;
+    public void setSceneImage(SceneImage storage) {
+        this.sceneImage = storage;
     }
     public void setDallEAi(DallEAi dallEAi) {
         this.dallEAi = dallEAi;
