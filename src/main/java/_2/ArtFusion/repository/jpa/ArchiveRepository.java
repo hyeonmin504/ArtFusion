@@ -5,4 +5,5 @@ import _2.ArtFusion.repository.jpa.query.ArchiveRepositoryQuery;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ArchiveRepository extends JpaRepository<StoryPost, Long>, ArchiveRepositoryQuery {
+
 }

@@ -43,6 +43,7 @@ public class ArchiveController {
      * @return
      */
     @GetMapping("/archives")
+    //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
     public ResponseForm getAllArchives(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "id") String sort,
                                        @RequestParam(defaultValue = "6") int size
@@ -56,6 +57,7 @@ public class ArchiveController {
         // ResponseForm 객체 생성 및 반환
         return new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
     }
+
 
     @GetMapping("/archives/{nickname}")
     public ResponseForm getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,

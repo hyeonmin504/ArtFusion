@@ -35,4 +35,14 @@ public class CommentRepositoryQueryImpl implements CommentRepositoryQuery {
                 .getSingleResult();
 
     }
+
+    @Override
+    public int countComments(StoryPost storyPost) {
+        return em.createQuery(
+                        "select count(c) from Comment c " +
+                                "where c.storyPost = :storyPost", Long.class)
+                .setParameter("storyPost", storyPost)
+                .getSingleResult()
+                .intValue();
+    }
 }

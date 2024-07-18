@@ -49,4 +49,15 @@ public class CommentService {
         Comment comment = new Comment(form.getTextBody(),nextNumber,user,storyPost);
         commentRepository.save(comment);
     }
+
+    //댓글 수 조회 메서드
+    public int countComments(Long postId){
+        //postId로 StoryPost 검색하고 없으면 예외 반환
+        StoryPost storyPost = archiveRepository.findById(postId).orElseThrow(
+                () -> new NotFoundContentsException("해당 스토리를 팢을 수 없습니다.")
+        );
+        // 검색된 storyPost에 대한 댓글 수 반환
+        return commentRepository.countComments(storyPost);
+
+    }
 }
