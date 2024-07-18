@@ -10,14 +10,16 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "actor")
 public class Characters {
 
-    @Id @GeneratedValue
-    @Column(name = "character_id")
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "actor_id")
     private Long id;
 
     private String clothes;
     private String personality;
+    @Column(name = "actor_prompt")
     private String characterPrompt;
     private String name;
     private String appearance;

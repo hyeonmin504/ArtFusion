@@ -4,8 +4,8 @@ import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
-import _2.ArtFusion.repository.ArchiveRepository;
-import _2.ArtFusion.repository.CaptureImageRepository;
+import _2.ArtFusion.repository.jpa.ArchiveRepository;
+import _2.ArtFusion.repository.jpa.CaptureImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -61,7 +61,6 @@ public class ArchiveService {
                 .size(pageable.getPageSize())
                 .isLast(archiveDataFormsSlice.isLast())
                 .build();
-
     }
 
     @Transactional(readOnly = true)
