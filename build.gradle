@@ -24,16 +24,35 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	//json 처리
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+	//사용 db 및 구현체
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'mysql:mysql-connector-java:8.0.33'
+
+	// 비동기 처리 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	// 비동기 처리 db 의존성
+	// https://github.com/mirromutth/r2dbc-mysql/tree/v0.8.2.RELEASE 참고
+	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+	implementation 'io.asyncer:r2dbc-mysql:1.1.0'
+
+
+	// netty dns 해석 의존 각각 mac os, mac m1 os
+	// https://github.com/netty/netty/issues/11020 참고
+	implementation 'io.netty:netty-resolver-dns-native-macos'
+	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.72.Final:osx-aarch_64'
+
 	//openai
-	implementation 'com.theokanning.openai-gpt3-java:client:0.10.0'
-	implementation 'com.theokanning.openai-gpt3-java:service:0.10.0'
+	implementation 'com.theokanning.openai-gpt3-java:client:0.13.0'
+	implementation 'com.theokanning.openai-gpt3-java:service:0.13.0'
 
 	//aws
 	implementation 'software.amazon.awssdk:s3:2.17.89'
@@ -42,11 +61,12 @@ dependencies {
 	//스웨거
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
+	//lombok
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
 
-	//test
+	//test 및 검증
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.projectlombok:lombok:1.18.32'

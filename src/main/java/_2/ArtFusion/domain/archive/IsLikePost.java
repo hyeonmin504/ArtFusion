@@ -9,15 +9,15 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "is_like_post")
+@Table(name = "heart")
 public class IsLikePost {
 
-    @Id
-    @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "like_id")
     private Long id;
+    @Column(name = "is_like")
     private Boolean isLike;
-    @Column(name = "like_count")
+    @Column(name = "is_like_cnt")
     private int isLikeCnt;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

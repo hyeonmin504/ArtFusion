@@ -2,7 +2,7 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.domain.storyboard.CaptureImage;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
-import _2.ArtFusion.repository.CaptureImageRepository;
+import _2.ArtFusion.repository.jpa.CaptureImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

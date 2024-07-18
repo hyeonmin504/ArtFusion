@@ -1,14 +1,21 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/ArtFusion
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: ${DB_URL}
+    username: ${USER_NAME}
+    password: ${PASSWORD}
+    driver-class-name: ${DRIVER_NAME}
+
   servlet:
     multipart:
       enabled: true
       max-file-size: 10MB
       max-request-size: 10MB
+
+  r2dbc:
+    url: ${RDB_URL}
+    name: ${RDB_NAME}
+    username: ${USER_NAME}
+    password: ${PASSWORD}
 
   jpa:
     hibernate:
@@ -23,12 +30,17 @@ spring:
       api-key: ${OPEN_AI_ACCESS_KEY}
       gpt-url: ${OPEN_AI_GPT_URL}
 
+  mvc:
+    async:
+      request-timeout: 60000
+
 logging:
   level:
     org.hibernate.SQL: info
     org.hibernate.type: trace
     org:
       springframework:
+        r2dbc: DEBUG
         orm:
           jpa: DEBUG
         transaction: DEBUG

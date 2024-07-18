@@ -14,13 +14,14 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "story_post")
 public class StoryPost {
-
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_id")
     private Long id;
     private String summary;
     //해쉬 태그는 여러개를 ","를 통해 이어서 저장하는 방식으로 진행
+    @Column(name = "hash_tag")
     private String hashTag;
     private LocalDateTime createDate;
     private String coverImg;

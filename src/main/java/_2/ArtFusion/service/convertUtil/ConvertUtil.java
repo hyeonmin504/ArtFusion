@@ -1,12 +1,11 @@
 package _2.ArtFusion.service.convertUtil;
 
 import _2.ArtFusion.controller.generateStoryController.storyForm.GenerateTemporaryForm;
-import _2.ArtFusion.domain.Character.Characters;
 import _2.ArtFusion.domain.Character.Gender;
+import _2.ArtFusion.domain.r2dbcVersion.Characters;
+import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
 import _2.ArtFusion.domain.storyboard.GenerateType;
-import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.storyboard.Style;
-import _2.ArtFusion.domain.user.User;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -22,16 +21,16 @@ public class ConvertUtil {
      * @param form
      * @return
      */
-    public static StoryBoard convertStoryBoard(GenerateTemporaryForm form, User user) {
+    public static _2.ArtFusion.domain.r2dbcVersion.StoryBoard convertStoryBoard(GenerateTemporaryForm form, Long userId) {
         log.info("convertStoryBoard start");
-        return StoryBoard.builder()
+        return _2.ArtFusion.domain.r2dbcVersion.StoryBoard.builder()
                 .title(form.getTitle())
                 .promptKor(form.getPromptKor())
                 .style(convertToStyleTypeEnum(form.getStyle()))
-                .generateType(convertToGenerateTypeEnum(form.getGenerateType()))
+                .generateType(checkToGenerateTypeEnum(form.getGenerateType()))
                 .genre(convertToGenre(form.getGenre()))
                 .wishCutCount(form.getWishCutCnt())
-                .user(user)
+                .userId(userId)
                 .build();
     }
 
@@ -40,15 +39,15 @@ public class ConvertUtil {
      * @param form
      * @return
      */
-    public static List<Characters> convertCharacter(List<CharacterForm> form, StoryBoard storyBoard) {
-        List<Characters> characters = new ArrayList<>();
+    public static List<_2.ArtFusion.domain.r2dbcVersion.Characters> convertCharacter(List<CharacterForm> form, StoryBoard storyBoard) {
+        List<_2.ArtFusion.domain.r2dbcVersion.Characters> characters = new ArrayList<>();
         for (CharacterForm characterForm : form) {
             log.info("Character build={}",characterForm.getName());
             characters.add(Characters.builder()
                     .characterPrompt(characterForm.getCharacterPrompt())
                     .gender(convertToGenderEnum(characterForm.getGender()))
                     .name(characterForm.getName())
-                    .storyBoard(storyBoard)
+                    .storyId(storyBoard.getId())
                     .build());
         }
         return characters;
@@ -68,8 +67,16 @@ public class ConvertUtil {
      * @param generateType
      * @return
      */
-    public static GenerateType convertToGenerateTypeEnum(String generateType) {
-        return GenerateType.valueOf(generateType);
+    public static String checkToGenerateTypeEnum(String generateType) {
+        try {
+            // GenerateType이 유효한 enum 값인지 확인합니다.
+            GenerateType.valueOf(generateType);
+            // 유효하면 그대로 반환합니다.
+            return generateType;
+        } catch (IllegalArgumentException e) {
+            // 유효하지 않으면 예외를 발생시킵니다.
+            throw new IllegalArgumentException("Invalid generateType: " + generateType);
+        }
     }
 
     public static Style convertToStyleTypeEnum(String generateType) {
@@ -78,6 +85,7 @@ public class ConvertUtil {
 
     /**
      * GenderForm -> Gender
+     *
      * @param gender
      * @return
      */

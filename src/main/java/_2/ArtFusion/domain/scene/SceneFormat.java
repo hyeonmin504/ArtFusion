@@ -1,6 +1,6 @@
 package _2.ArtFusion.domain.scene;
 
-import _2.ArtFusion.domain.openai.SceneData;
+import _2.ArtFusion.domain.openai.DallEAi;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -11,23 +11,27 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "scene_format")
 public class SceneFormat {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "scene_id")
     private Long id;
 
     @Size(max = 4000)
     private String description;
     @Size(max = 60000)
+    @Column(name = "scene_prompt")
     private String scenePromptEn;
+    @Column(name = "scene_sequence")
     private int sceneSequence;
     @Size(max = 4000)
     private String dialogue;
     @Size(max = 4000)
     private String background;
+    private String actors;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "story_id")
     private StoryBoard storyBoard;
 
@@ -36,18 +40,23 @@ public class SceneFormat {
     private TemporaryPhotoStorage temporaryImage;
 
     @OneToOne(mappedBy = "sceneFormat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private SceneData sceneData;
+    private DallEAi dallEAi;
 
-    protected SceneFormat(int sceneSequence, String description, String dialogue, String background, StoryBoard storyBoard) {
+    public static SceneFormat createFormat(int sceneSequence, String description, String dialogue, String background,String actors, StoryBoard storyBoard) {
+        return new SceneFormat(sceneSequence, description, dialogue, background, actors, storyBoard);
+    }
+
+    protected SceneFormat(int sceneSequence, String description, String dialogue, String background,String actors, StoryBoard storyBoard) {
         this.sceneSequence = sceneSequence;
         this.description = description;
         this.dialogue = dialogue;
         this.background = background;
+        this.actors = actors;
         setStoryBoard(storyBoard);
     }
 
-    public static SceneFormat createFormat(int sceneSequence, String description, String dialogue, String background, StoryBoard storyBoard) {
-        return new SceneFormat(sceneSequence, description, dialogue, background, storyBoard);
+    public SceneFormat(String description) {
+        this.description = description;
     }
 
     public void setScenePromptEn(String scenePromptEn) {
@@ -67,14 +76,16 @@ public class SceneFormat {
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {
         this.storyBoard = storyBoard;
-        storyBoard.getSceneFormats().add(this);
+        if (!storyBoard.getSceneFormats().contains(this)) {
+            storyBoard.getSceneFormats().add(this);
+        }
     }
 
     // 연관 관계를 위한 setter
     public void setTemporaryImage(TemporaryPhotoStorage storage) {
         this.temporaryImage = storage;
     }
-    public void setSceneData(SceneData sceneData) {
-        this.sceneData = sceneData;
+    public void setDallEAi(DallEAi dallEAi) {
+        this.dallEAi = dallEAi;
     }
 }
