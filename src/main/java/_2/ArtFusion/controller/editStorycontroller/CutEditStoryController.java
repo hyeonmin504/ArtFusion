@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,22 +20,20 @@ public class CutEditStoryController {
     private final SceneEditService sceneEditService;
 
     @PutMapping("/{sceneId}/contents")
-    public ResponseForm imageContentsEdit(@Validated @RequestBody ContentEditForm form,
-                                          @PathVariable Long sceneId) {
-        try {
-            //내용 수정
-            sceneEditService.contentEdit(form,sceneId);
-
-            return new ResponseForm<>(HttpStatus.OK, null, "Ok");
-        } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
-        }
+    public Mono<ResponseForm<Object>> imageContentsEdit(@Validated @RequestBody ContentEditForm form,
+                                                        @PathVariable Long sceneId) {
+        return sceneEditService.contentEdit(Mono.just(form), Mono.just(sceneId))
+                .map(updatedScene -> new ResponseForm<>(HttpStatus.OK, null, "OK"))
+                .onErrorResume(NotFoundContentsException.class, e ->
+                        Mono.just(new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage()))
+                );
     }
+
 
     @PutMapping("/{sceneId}/refresh")
     public ResponseForm imageRandomEdit(@PathVariable Long sceneId) {
         try {
-            //내용 수정
+            //랜덤 수정
             sceneEditService.randomEdit(sceneId);
 
             return new ResponseForm<>(HttpStatus.OK, null, "Ok");
@@ -46,7 +45,7 @@ public class CutEditStoryController {
     public ResponseForm imageDetailEdit(@Validated @RequestBody DetailEditForm form,
                                         @PathVariable Long sceneId) {
         try {
-            //내용 수정
+            //디테일 수정
             sceneEditService.detailEdit(form,sceneId);
 
             return new ResponseForm<>(HttpStatus.OK, null, "Ok");

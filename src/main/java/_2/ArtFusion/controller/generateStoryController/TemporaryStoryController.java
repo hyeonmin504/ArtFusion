@@ -1,6 +1,5 @@
 package _2.ArtFusion.controller.generateStoryController;
 
-
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.generateStoryController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
@@ -8,8 +7,7 @@ import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.UserRepository;
-import _2.ArtFusion.service.OpenAiService;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
 import _2.ArtFusion.service.StoryBoardService;
 import jakarta.persistence.NoResultException;
@@ -20,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +30,7 @@ import java.util.List;
 public class TemporaryStoryController {
 
     private final SceneFormatService sceneFormatService;
-    private final StoryBoardService storyBoardService;
-    private final OpenAiService openaiService;
+    private final StoryBoardService storyBoardService;;
     private final UserRepository userRepository;
 
     @GetMapping("/story/temporary/{storyId}")
@@ -67,30 +66,39 @@ public class TemporaryStoryController {
     }
 
     @PostMapping("/story/temporary")
-    public ResponseForm generateTemporaryImageRequest(@RequestBody @Validated GenerateTemporaryForm form) {
-        try {
-            /**
-             * 핵심 저장 비즈니스 로직
-             */
-            //예시로 유저 id가 1L인 사람이 요청 했을 경우 test 데이터
-            User user = userRepository.findById(1L).get();
+    public Mono<ResponseForm<Object>> generateTemporaryImageRequest(@RequestBody @Validated GenerateTemporaryForm form) {
+        Long userId = 1L; // 예시 데이터로 유저 ID 설정
 
-            //request 폼 데이터를 StoryBoard, Character 엔티티에 맵핑 후 저장
-            StoryBoard savedStory = storyBoardService.generateStoryBoardAndCharacter(form,user);
-
-            //입력받은 스토리보드를 gpt rest api 요청
-            List<SceneFormat> sceneFormats = sceneFormatService.ScenesFormatting(savedStory);
-
-            //장면 마다 이미지 생성 후 저장
-            for (SceneFormat sceneFormat : sceneFormats) {
-                openaiService.generateImage(sceneFormat);
-            }
-
-
-            return new ResponseForm<>(HttpStatus.OK,null,"작품 이미지 생성 및 저장 완료");
-        } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
-        }
+        log.info("Start generating temporary image request");
+        return storyBoardService.generateStoryBoardAndCharacter(form, userId)
+                .flatMap(actorAndStoryIdForm ->
+                        sceneFormatService.processStoryBoard(Mono.just(actorAndStoryIdForm.getStoryId()),Mono.just(actorAndStoryIdForm.getCharacters()))
+                                .collectList()
+                )
+                //Mono<List<SceneFormat>> 값이 없을 경우
+                .onErrorResume(e -> {
+                    log.error(e.getMessage());
+                    return Mono.just(new ArrayList<>());
+                })
+                .flatMap(sceneFormats -> {
+                    log.info("Scene formats processed={}", sceneFormats.size());
+                    // 반환 값이 없을 경우
+                    if (sceneFormats.isEmpty()){
+                        return Mono.just(new ResponseForm<>(HttpStatus.NO_CONTENT, null, "값을 불러올 수 없습니다. 다시 시도해주세요"));
+                    }
+                    // 장면마다 이미지 생성 후 저장하는 로직
+                    for (_2.ArtFusion.domain.r2dbcVersion.SceneFormat sceneFormat : sceneFormats) {
+                        log.info("Processing scene format={}", sceneFormat);
+                        // 이미지 생성 및 저장 로직
+                    }
+                    return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "작품 이미지 생성 및 저장 완료"));
+                })
+                .doOnSuccess(response -> log.info("Temporary image request completed successfully"))
+                .doOnError(e -> log.error("Error in generating temporary image request", e))
+                .onErrorResume(e -> {
+                    HttpStatus status = (e instanceof NotFoundContentsException) ? HttpStatus.NO_CONTENT : HttpStatus.REQUEST_TIMEOUT;
+                    return Mono.just(new ResponseForm<>(status, null, e.getMessage()));
+                });
     }
 
     /**

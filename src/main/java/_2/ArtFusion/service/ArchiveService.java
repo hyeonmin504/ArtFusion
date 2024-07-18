@@ -6,9 +6,9 @@ import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
-import _2.ArtFusion.repository.ArchiveRepository;
-import _2.ArtFusion.repository.CaptureImageRepository;
-import _2.ArtFusion.repository.StoryBoardRepository;
+import _2.ArtFusion.repository.jpa.ArchiveRepository;
+import _2.ArtFusion.repository.jpa.CaptureImageRepository;
+import _2.ArtFusion.repository.jpa.StoryBoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -67,7 +67,6 @@ public class ArchiveService {
                 .size(pageable.getPageSize())
                 .isLast(archiveDataFormsSlice.isLast())
                 .build();
-
     }
 
     @Transactional(readOnly = true)
