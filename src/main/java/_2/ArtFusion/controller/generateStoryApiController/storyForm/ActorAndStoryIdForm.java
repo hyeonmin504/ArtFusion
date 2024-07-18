@@ -1,4 +1,4 @@
-package _2.ArtFusion.controller.generateStoryController.storyForm;
+package _2.ArtFusion.controller.generateStoryApiController.storyForm;
 
 import _2.ArtFusion.domain.r2dbcVersion.Characters;
 import lombok.AllArgsConstructor;

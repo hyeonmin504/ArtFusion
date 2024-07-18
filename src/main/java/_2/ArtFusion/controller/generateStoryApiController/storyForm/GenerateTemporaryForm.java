@@ -1,4 +1,4 @@
-package _2.ArtFusion.controller.generateStoryController.storyForm;
+package _2.ArtFusion.controller.generateStoryApiController.storyForm;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

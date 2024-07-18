@@ -1,8 +1,7 @@
 package _2.ArtFusion.service;
 
-import _2.ArtFusion.controller.generateStoryController.TemporaryStoryController;
-import _2.ArtFusion.controller.generateStoryController.storyForm.ActorAndStoryIdForm;
-import _2.ArtFusion.controller.generateStoryController.storyForm.GenerateTemporaryForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.ActorAndStoryIdForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.r2dbcVersion.Characters;
