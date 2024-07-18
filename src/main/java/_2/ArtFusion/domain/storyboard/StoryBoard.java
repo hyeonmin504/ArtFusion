@@ -1,6 +1,6 @@
 package _2.ArtFusion.domain.storyboard;
 
-import _2.ArtFusion.domain.Character.Characters;
+import _2.ArtFusion.domain.actor.Actor;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.user.User;
@@ -12,7 +12,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Data
 @Table(name = "story_board")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StoryBoard {
@@ -32,10 +31,10 @@ public class StoryBoard {
     //장르는 여러개를 ","를 통해 이어서 저장하는 방식으로 진행
     private String genre;
     @Column(name = "cut_cnt")
-    private int wishCutCount;
+    private int cutCnt;
 
     @OneToMany(mappedBy = "storyBoard")
-    private List<Characters> characters = new ArrayList<>();
+    private List<Actor> actors = new ArrayList<>();
 
     @OneToMany(mappedBy = "storyBoard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SceneFormat> sceneFormats = new ArrayList<>();
@@ -44,11 +43,18 @@ public class StoryBoard {
     private StoryPost storyPost;
 
     @OneToMany(mappedBy = "storyBoard",cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CaptureImage> captureImage = new ArrayList<>();
+    private List<StoryImage> storyImages = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
+
+    public void setSceneFormats(List<SceneFormat> sceneFormats) {
+        this.sceneFormats = sceneFormats;
+        for (SceneFormat sceneFormat : sceneFormats) {
+            sceneFormat.setStoryBoard(this);
+        }
+    }
 
     // 연관 관계를 위한 setter
     public void setStoryPost(StoryPost storyPost) {
@@ -72,13 +78,13 @@ public class StoryBoard {
     }
 
     @Builder
-    public StoryBoard(String promptKor, String title, Style style, String generateType, String genre, int wishCutCount, User user) {
+    public StoryBoard(String promptKor, String title, Style style, String generateType, String genre, int cutCnt, User user) {
         this.promptKor = promptKor;
         this.title = title;
         this.style = style;
         this.generateType = generateType;
         this.genre = genre;
-        this.wishCutCount = wishCutCount;
+        this.cutCnt = cutCnt;
         setUser(user);
     }
 }

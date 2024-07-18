@@ -3,6 +3,7 @@ package _2.ArtFusion.controller.generateStoryApiController;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
+import _2.ArtFusion.domain.scene.SceneImage;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
@@ -39,6 +40,7 @@ public class TemporaryStoryController {
     public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId) {
         //예시로 유저 id가 1L인 사람이 요청 했을 경우 test 데이터
         User user = userRepository.findById(1L).get();
+
         try {
             //SceneFormat 데이터를 가저오기
             StoryBoard storyBoard = sceneFormatService.getSceneFormatData(user.getId(),storyId);
@@ -52,8 +54,8 @@ public class TemporaryStoryController {
 
             for (SceneFormat format : storyBoard.getSceneFormats()) {
                 log.info("sceneFormat 생성");
-                SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getTemporaryImage().getId(),
-                        format.getSceneSequence(),format.getTemporaryImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
+                SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getSceneImage().getId(),
+                        format.getSceneSequence(),format.getSceneImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
                 sceneFormatForms.add(sceneFormatForm);
             }
 

@@ -1,8 +1,8 @@
 package _2.ArtFusion.service;
 
 import _2.ArtFusion.domain.scene.SceneFormat;
-import _2.ArtFusion.domain.scene.TemporaryPhotoStorage;
-import _2.ArtFusion.repository.jpa.TemporaryPhotoRepository;
+import _2.ArtFusion.domain.scene.SceneImage;
+import _2.ArtFusion.repository.jpa.SceneImageRepository;
 import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
@@ -22,7 +22,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class OpenAiGPTService {
 
-    private final TemporaryPhotoRepository temporaryPhotoRepository;
+    private final SceneImageRepository sceneImageRepository;
     private final com.theokanning.openai.service.OpenAiService openAiService;
 
     @Transactional(transactionManager = "r2dbcTransactionManager")
@@ -49,19 +49,19 @@ public class OpenAiGPTService {
             }
 
         })
-                .timeout(Duration.ofSeconds(30)) // 타임아웃 설정
-                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))) // 재시도 로직 설정, 3번 재시도, 2초 간격으로 백오프
-                .doOnError(OpenAiHttpException.class, e -> log.error("OpenAI API 호출 에러", e))
-                .doOnError(Exception.class, e -> log.error("기타 에러", e))
-                .subscribeOn(Schedulers.boundedElastic());
+        .timeout(Duration.ofSeconds(30)) // 타임아웃 설정
+        .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))) // 재시도 로직 설정, 3번 재시도, 2초 간격으로 백오프
+        .doOnError(OpenAiHttpException.class, e -> log.error("OpenAI API 호출 에러", e))
+        .doOnError(Exception.class, e -> log.error("기타 에러", e))
+        .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
     public void generateImage(SceneFormat sceneFormat) {
-        TemporaryPhotoStorage storage = new TemporaryPhotoStorage(sceneFormat.getBackground() + "url",sceneFormat);
+        SceneImage storage = new SceneImage(sceneFormat.getBackground() + "url",sceneFormat);
 
         log.info("storage={}",storage.getUrl());
-        TemporaryPhotoStorage save = temporaryPhotoRepository.save(storage);
+        SceneImage save = sceneImageRepository.save(storage);
     }
 
     @Transactional

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "story_image")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CaptureImage {
+public class StoryImage {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
@@ -27,10 +27,10 @@ public class CaptureImage {
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {
         this.storyBoard = storyBoard;
-        storyBoard.getCaptureImage().add(this);
+        storyBoard.getStoryImages().add(this);
     }
 
-    public CaptureImage(String imageUrl, int imageSequence, StoryBoard storyBoard) {
+    public StoryImage(String imageUrl, int imageSequence, StoryBoard storyBoard) {
         this.imageUrl = imageUrl;
         this.imageSequence = imageSequence;
         setStoryBoard(storyBoard);

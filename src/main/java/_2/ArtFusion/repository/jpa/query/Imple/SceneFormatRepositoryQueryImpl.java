@@ -20,8 +20,8 @@ public class SceneFormatRepositoryQueryImpl implements SceneFormatRepositoryQuer
         return em.createQuery(
                         "select s " +
                                 "from SceneFormat s " +
-                                "join fetch s.temporaryImage i " +
-                                "where s.storyBoard =: storyBoard", SceneFormat.class)
+                                "where s.storyBoard =: storyBoard " +
+                                "order by s.sceneSequence asc", SceneFormat.class)
                 .setParameter("storyBoard", storyBoard)
                 .getResultList();
     }

@@ -1,6 +1,6 @@
 package _2.ArtFusion.service.webClientService;
 
-import _2.ArtFusion.domain.r2dbcVersion.Characters;
+import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
@@ -43,7 +43,7 @@ public class SceneFormatWebClientService {
      * @return 여러 SceneFormat
      */
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Flux<SceneFormat> processStoryBoard(Mono<Long> storyId,Mono<List<Characters>> characterMono) {
+    public Flux<SceneFormat> processStoryBoard(Mono<Long> storyId,Mono<List<Actor>> characterMono) {
 
         //스토리보드의 style을 최적화를 위해 미리 캐싱한다
         Mono<String> styleMono = sceneFormatR2DBCRepository.findStyleById(storyId)
@@ -87,12 +87,12 @@ public class SceneFormatWebClientService {
     }
 
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    private Mono<SceneFormat> translateSceneFormat(SceneFormat sceneFormat, Mono<List<Characters>> characterMono, Mono<String> styleMono) {
+    private Mono<SceneFormat> translateSceneFormat(SceneFormat sceneFormat, Mono<List<Actor>> characterMono, Mono<String> styleMono) {
 
         return Mono.zip(characterMono, styleMono)
                 .flatMap(tuple -> {
                     //현재 장면의 배우들을 db에서 prompt로 찾아온다
-                    List<Characters> characters = tuple.getT1();
+                    List<Actor> characters = tuple.getT1();
                     String style = tuple.getT2();
 
                     String actorsPrompt = findMatchingActors(sceneFormat.getActors(), characters);
@@ -116,13 +116,13 @@ public class SceneFormatWebClientService {
                 );
     }
 
-    public String findMatchingActors(String actors, List<Characters> characters) {
+    public String findMatchingActors(String actors, List<Actor> characters) {
         String charactersPrompt = "";
 
         List<String> actorList = stream(actors.trim().split(",")).toList();
 
         for (String actor : actorList) {
-            for (Characters character : characters) {
+            for (Actor character : characters) {
                 if (character.getName().contains(actor)) {
                     charactersPrompt = charactersPrompt.concat(character.getName() + "=" + character.getCharacterPrompt() + ",");
                 }
@@ -174,7 +174,7 @@ public class SceneFormatWebClientService {
                         { "scenes": [ { "description": "", "dialogue": "", "location": "", "actors": "actor1, actor2 ..." }, ... ] }
                         Story content: %s
                         """,
-                storyBoard.getWishCutCount(), storyBoard.getPromptKor());
+                storyBoard.getCutCnt(), storyBoard.getPromptKor());
         log.info("initialPrompt={}", initialPrompt);
         return initialPrompt;
     }

@@ -3,7 +3,7 @@ package _2.ArtFusion.service.webClientService;
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.exception.NotFoundContentsException;
-import _2.ArtFusion.repository.r2dbc.CharacterR2DBCRepository;
+import _2.ArtFusion.repository.r2dbc.ActorR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 public class SceneEditWebClientService {
 
     private final SceneFormatR2DBCRepository sceneFormatR2DBCRepository;
-    private final CharacterR2DBCRepository characterR2DBCRepository;
+    private final ActorR2DBCRepository actorR2DBCRepository;
     private final SceneFormatWebClientService sceneFormatWebClientService;
 
     /**
@@ -35,7 +35,7 @@ public class SceneEditWebClientService {
     public Mono<SceneFormat> contentEdit(Mono<ContentEditForm> form, Mono<Long> sceneId) {
         return sceneId
                 .flatMap(id -> sceneFormatR2DBCRepository.findById(id)
-                        .flatMap(sceneFormat -> characterR2DBCRepository.findByStoryId(Mono.just(sceneFormat.getStoryId()))
+                        .flatMap(sceneFormat -> actorR2DBCRepository.findByStoryId(Mono.just(sceneFormat.getStoryId()))
                                 .collectList()
                                 .flatMap(characters -> form.flatMap(contentEditForm -> {
                                     if (isContentUnchanged(sceneFormat, contentEditForm)) {
