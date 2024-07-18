@@ -1,7 +1,7 @@
-package _2.ArtFusion.controller.generateStoryController;
+package _2.ArtFusion.controller.generateStoryApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
-import _2.ArtFusion.controller.generateStoryController.storyForm.GenerateTemporaryForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
@@ -9,6 +9,7 @@ import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
+import _2.ArtFusion.service.webClientService.SceneFormatWebClientService;
 import _2.ArtFusion.service.StoryBoardService;
 import jakarta.persistence.NoResultException;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequestMapping("/api")
 public class TemporaryStoryController {
 
+    private final SceneFormatWebClientService sceneFormatWebClientService;
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
     private final UserRepository userRepository;
@@ -72,7 +74,7 @@ public class TemporaryStoryController {
         log.info("Start generating temporary image request");
         return storyBoardService.generateStoryBoardAndCharacter(form, userId)
                 .flatMap(actorAndStoryIdForm ->
-                        sceneFormatService.processStoryBoard(Mono.just(actorAndStoryIdForm.getStoryId()),Mono.just(actorAndStoryIdForm.getCharacters()))
+                        sceneFormatWebClientService.processStoryBoard(Mono.just(actorAndStoryIdForm.getStoryId()),Mono.just(actorAndStoryIdForm.getCharacters()))
                                 .collectList()
                 )
                 //Mono<List<SceneFormat>> 값이 없을 경우

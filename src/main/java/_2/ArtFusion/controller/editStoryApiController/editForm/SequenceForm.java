@@ -1,4 +1,4 @@
-package _2.ArtFusion.controller.editStorycontroller.editForm;
+package _2.ArtFusion.controller.editStoryApiController.editForm;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
