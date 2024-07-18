@@ -5,7 +5,7 @@ import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.UserRepository;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;

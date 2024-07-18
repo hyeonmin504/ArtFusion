@@ -7,15 +7,17 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(name = "story_image")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CaptureImage {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
     private Long id;
+    @Column(name = "image_url")
     private String imageUrl;
 
-    @Column(name = "image_seq")
+    @Column(name = "image_sequence")
     private int imageSequence;
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)

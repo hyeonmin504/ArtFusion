@@ -12,12 +12,14 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
     private Long id;
 
+    @Column(name = "create_date")
     private LocalDateTime createDate;
     private String textBody;
+    @Column(name = "order_num")
     private int orderNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
