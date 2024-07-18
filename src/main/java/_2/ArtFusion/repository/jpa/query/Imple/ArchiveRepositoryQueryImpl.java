@@ -24,7 +24,7 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
     public Slice<ArchiveDataForm> findAllArchiveForm(Pageable pageable) {
         TypedQuery<ArchiveDataForm> query = em.createQuery(
                 "select new _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm" +
-                        "(p.id, p.coverImg, b.title, p.summary, u.nickName, p.hashTag) " +
+                        "(p.id, p.coverImg, b.title, p.summary, u.nickname, p.hashTag) " +
                         "from StoryPost p " +
                         "join p.storyBoard b " +
                         "join p.user u", ArchiveDataForm.class);
@@ -64,7 +64,7 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
     public Optional<DetailArchiveDataForm> findDetailArchiveForm(Long storyId) {
         DetailArchiveDataForm detailArchiveDataForm = em.createQuery(
                         "select new _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm" +
-                                "(s.id, u.nickName, p.createDate, p.hashTag) " +
+                                "(s.id, u.nickname, p.createDate, p.hashTag) " +
                                 "from StoryBoard s " +
                                 "join s.storyPost p " +
                                 "join p.user u " +

@@ -4,13 +4,13 @@ import _2.ArtFusion.controller.generateStoryApiController.storyForm.ActorAndStor
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.StoryPost;
-import _2.ArtFusion.domain.r2dbcVersion.Characters;
+import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
-import _2.ArtFusion.domain.storyboard.CaptureImage;
+import _2.ArtFusion.domain.storyboard.StoryImage;
 import _2.ArtFusion.domain.storyboard.Style;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.repository.jpa.*;
-import _2.ArtFusion.repository.r2dbc.CharacterR2DBCRepository;
+import _2.ArtFusion.repository.r2dbc.ActorR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.StoryBoardR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.UserR2DBCRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +32,8 @@ public class StoryBoardService {
 
     private final UserR2DBCRepository userR2DBCRepository;
     private final ArchiveRepository archiveRepository;
-    private final CaptureImageRepository captureImageRepository;
-    private final CharacterR2DBCRepository characterR2DBCRepository;
+    private final StoryImageRepository storyImageRepository;
+    private final ActorR2DBCRepository actorR2DBCRepository;
     private final UserRepository userRepository;
     private final StoryBoardR2DBCRepository storyBoardR2DBCRepository;
     private final CommentRepository commentRepository;
@@ -52,9 +52,9 @@ public class StoryBoardService {
                     StoryBoard storyBoard = convertStoryBoard(form, userId);
                     return storyBoardR2DBCRepository.save(storyBoard)
                             .flatMap(savedStoryBoard -> {
-                                List<Characters> characters = convertCharacter(form.getCharacters(), savedStoryBoard);
+                                List<Actor> characters = convertCharacter(form.getCharacters(), savedStoryBoard);
                                 return Flux.fromIterable(characters)
-                                        .flatMap(characterR2DBCRepository::save)
+                                        .flatMap(actorR2DBCRepository::save)
                                         .then(Mono.just(new ActorAndStoryIdForm(characters,savedStoryBoard.getId())));
                             });
                 })
@@ -70,10 +70,10 @@ public class StoryBoardService {
         for (int i = 1; i <= 50; i++) {
             _2.ArtFusion.domain.storyboard.StoryBoard storyBoard = new _2.ArtFusion.domain.storyboard.StoryBoard("여기다가 광마회귀 스토리 프롬프트를 작성해서 넘겨주면 gpt openai를 통해서 내 프롬프트를 포멧시켜주겠죠??", "광마회귀" + i, Style.KOR_WEBTOON, "SIMPLE", "무협");
             StoryPost storyPost = new StoryPost("미친 사내가 미치기 전의 평범했던 시절로 돌아간다면. 사내는 다시 미치게 될 것인가? 아니면 사내의 적들이 미치게 될 것인가.광마 이자하, 점소이 시절로 회귀하다.", "무협,판타지", "이미지 url" + i, user, storyBoard);
-            CaptureImage captureImage = new CaptureImage("captureImageUrl" + i, i, storyBoard);
+            StoryImage storyImage = new StoryImage("captureImageUrl" + i, i, storyBoard);
             Comment comment = new Comment("미친", 1, user, storyPost);
             archiveRepository.save(storyPost);
-            captureImageRepository.save(captureImage);
+            storyImageRepository.save(storyImage);
             commentRepository.save(comment);
         }
     }

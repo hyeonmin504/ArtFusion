@@ -1,8 +1,8 @@
 package _2.ArtFusion.service.convertUtil;
 
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
-import _2.ArtFusion.domain.Character.Gender;
-import _2.ArtFusion.domain.r2dbcVersion.Characters;
+import _2.ArtFusion.domain.actor.Gender;
+import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
 import _2.ArtFusion.domain.storyboard.GenerateType;
 import _2.ArtFusion.domain.storyboard.Style;
@@ -21,15 +21,15 @@ public class ConvertUtil {
      * @param form
      * @return
      */
-    public static _2.ArtFusion.domain.r2dbcVersion.StoryBoard convertStoryBoard(GenerateTemporaryForm form, Long userId) {
+    public static StoryBoard convertStoryBoard(GenerateTemporaryForm form, Long userId) {
         log.info("convertStoryBoard start");
-        return _2.ArtFusion.domain.r2dbcVersion.StoryBoard.builder()
+        return StoryBoard.builder()
                 .title(form.getTitle())
                 .promptKor(form.getPromptKor())
                 .style(convertToStyleTypeEnum(form.getStyle()))
                 .generateType(checkToGenerateTypeEnum(form.getGenerateType()))
                 .genre(convertToGenre(form.getGenre()))
-                .wishCutCount(form.getWishCutCnt())
+                .cutCnt(form.getWishCutCnt())
                 .userId(userId)
                 .build();
     }
@@ -39,11 +39,11 @@ public class ConvertUtil {
      * @param form
      * @return
      */
-    public static List<_2.ArtFusion.domain.r2dbcVersion.Characters> convertCharacter(List<CharacterForm> form, StoryBoard storyBoard) {
-        List<_2.ArtFusion.domain.r2dbcVersion.Characters> characters = new ArrayList<>();
+    public static List<Actor> convertCharacter(List<CharacterForm> form, StoryBoard storyBoard) {
+        List<Actor> characters = new ArrayList<>();
         for (CharacterForm characterForm : form) {
             log.info("Character build={}",characterForm.getName());
-            characters.add(Characters.builder()
+            characters.add(Actor.builder()
                     .characterPrompt(characterForm.getCharacterPrompt())
                     .gender(convertToGenderEnum(characterForm.getGender()))
                     .name(characterForm.getName())

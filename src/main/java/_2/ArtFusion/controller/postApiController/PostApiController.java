@@ -2,8 +2,6 @@ package _2.ArtFusion.controller.postApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.archive.Comment;
-import _2.ArtFusion.domain.archive.IsLikePost;
-import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.CommentService;
 import _2.ArtFusion.service.LikeService;
@@ -26,9 +24,6 @@ public class PostApiController {
 
     private final CommentService commentService;
     private final LikeService likeService;
-
-
-
 
     /**
      * 저장된 댓글 데이터 모두 가져오기
@@ -62,7 +57,7 @@ public class PostApiController {
      * @param form -> 받은 textBody
      */
     @PostMapping("/comment/{postId}")
-    public ResponseForm saveCommentsApi(@RequestHeader("access-token") String token, @PathVariable Long postId, @RequestBody @Validated getCommentForm form){
+    public ResponseForm saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form){
         //테스트 유저
         Long userId = 1L;
         try {
@@ -105,8 +100,8 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @return
      */
-    @PostMapping("/likes/{postId}")
-    public ResponseForm likeApi(@RequestHeader("access-token") String token, @PathVariable Long postId){
+    @PutMapping("/likes/{postId}")
+    public ResponseForm likeApi(@PathVariable Long postId){
         //테스트 유저
         Long userId = 1L;
         try {
