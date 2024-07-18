@@ -1,6 +1,6 @@
 package _2.ArtFusion.domain.r2dbcVersion;
 
-import _2.ArtFusion.domain.Character.Gender;
+import _2.ArtFusion.domain.actor.Gender;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -12,7 +12,7 @@ import lombok.Builder;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table("actor")
-public class Characters {
+public class Actor {
 
     @Id
     @Column("actor_id")
@@ -30,7 +30,7 @@ public class Characters {
     private Long storyId;
 
     @Builder
-    public Characters(String characterPrompt, Gender gender, String name, Long storyId) {
+    public Actor(String characterPrompt, Gender gender, String name, Long storyId) {
         this.characterPrompt = characterPrompt;
         this.gender = gender;
         this.name = name;

@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "heart")
-public class IsLikePost {
+public class Heart {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "like_id")
+    @Column(name = "heart_id")
     private Long id;
-    @Column(name = "is_like")
+    @Column(name = "is_heart")
     private Boolean isLike;
-    @Column(name = "is_like_cnt")
+    @Column(name = "is_heart_cnt")
     private int isLikeCnt;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -35,10 +35,13 @@ public class IsLikePost {
     public void changeLikeCnt(boolean up) {
         if (up) {
             this.isLikeCnt ++;
-        } else this.isLikeCnt --;
+        } else {
+            if (this.isLikeCnt <= 0) return ;
+            this.isLikeCnt--;
+        }
     }
 
-    public IsLikePost(Boolean isLike, int isLikeCnt, User user, StoryPost storyPost) {
+    public Heart(Boolean isLike, int isLikeCnt, User user, StoryPost storyPost) {
         this.isLike = isLike;
         this.isLikeCnt = isLikeCnt;
         this.user = user;
@@ -48,26 +51,11 @@ public class IsLikePost {
     // -- 연관 관계 세팅 메서드 -- //
     public void setUser(User user) {
         this.user = user;
-        user.setIsLikePost(this);
+        user.setHeart(this);
     }
 
     public void setStoryPost(StoryPost storyPost) {
         this.storyPost = storyPost;
-        storyPost.setIsLikePost(this);
-    }
-
-    // 좋아요 수 증감 //
-    // 좋아요 수 증가
-    public void incrementLikeCount() {
-        this.isLikeCnt++;
-    }
-
-    // 좋아요 수 감소
-    public void decrementLikeCount() {
-        if (this.isLikeCnt > 0) {
-            this.isLikeCnt--;
-        }
-
-
+        storyPost.setHeart(this);
     }
 }

@@ -7,7 +7,7 @@ import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.repository.jpa.ArchiveRepository;
-import _2.ArtFusion.repository.jpa.CaptureImageRepository;
+import _2.ArtFusion.repository.jpa.StoryImageRepository;
 import _2.ArtFusion.repository.jpa.StoryBoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +25,7 @@ import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
 public class ArchiveService {
 
     private final ArchiveRepository archiveRepository;
-    private final CaptureImageRepository captureImageRepository;
+    private final StoryImageRepository storyImageRepository;
     private final StoryBoardRepository storyBoardRepository;
 
 
@@ -78,7 +78,7 @@ public class ArchiveService {
         List<String> hashTags = Arrays.asList(detailArchiveDataForm.getHashTag().split(","));
 
         //시퀀스에따라 이미지를 불러옴
-        List<String> urls = captureImageRepository.findCaptureImagesByStoryId(detailArchiveDataForm.getStoryId());
+        List<String> urls = storyImageRepository.findStoryImagesByStoryId(detailArchiveDataForm.getStoryId());
 
         if (urls.isEmpty()) {
             throw new NotFoundImageException("해당 이미지를 불러올 수 없습니다");
