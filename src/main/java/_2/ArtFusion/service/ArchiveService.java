@@ -118,6 +118,4 @@ public class ArchiveService {
         storyBoardRepository.delete(storyBoard);
     }
 
-    }
-
-
+}

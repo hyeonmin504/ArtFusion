@@ -1,4 +1,4 @@
-package _2.ArtFusion.controller.generateStoryController;
+package _2.ArtFusion.controller.generateStoryApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.storyboard.StoryBoard;

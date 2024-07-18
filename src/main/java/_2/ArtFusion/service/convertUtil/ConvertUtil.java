@@ -1,6 +1,6 @@
 package _2.ArtFusion.service.convertUtil;
 
-import _2.ArtFusion.controller.generateStoryController.storyForm.GenerateTemporaryForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.Character.Gender;
 import _2.ArtFusion.domain.r2dbcVersion.Characters;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
-import static _2.ArtFusion.controller.generateStoryController.storyForm.GenerateTemporaryForm.*;
+import static _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm.*;
 
 @Slf4j
 public class ConvertUtil {
