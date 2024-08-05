@@ -1,4 +1,4 @@
-package _2.ArtFusion.service.convertUtil;
+package _2.ArtFusion.service.util.convertUtil;
 
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.actor.Gender;

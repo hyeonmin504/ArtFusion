@@ -3,9 +3,9 @@ package _2.ArtFusion.service.webClientService;
 import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
+import _2.ArtFusion.domain.storyboard.Style;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.StoryBoardR2DBCRepository;
-import _2.ArtFusion.service.OpenAiGPTService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -33,7 +33,7 @@ public class SceneFormatWebClientService {
 
     private final StoryBoardR2DBCRepository storyBoardR2DBCRepository;
     private final SceneFormatR2DBCRepository sceneFormatR2DBCRepository;
-    private final OpenAiGPTService openAiService;
+    private final OpenAiGPTWebClientService openAiService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -142,7 +142,7 @@ public class SceneFormatWebClientService {
                 without speech bubbles or text
                 """,
                 sceneFormat.getBackground(), sceneFormat.getDescription(),
-                charactersPrompt, style);
+                charactersPrompt, Style.valueOf(style).getStyle());
         log.info("prompt={}", prompt);
         return Mono.just(prompt);
     }

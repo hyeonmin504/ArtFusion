@@ -29,10 +29,12 @@ spring:
     openai:
       api-key: ${OPEN_AI_ACCESS_KEY}
       gpt-url: ${OPEN_AI_GPT_URL}
+      dall-e-url: ${OPEN_AI_DALL_E_URL}
+      base-url: ${OPEN_AI_BASE_URL}
 
   mvc:
     async:
-      request-timeout: 60000
+      request-timeout: 300000
 
 logging:
   level:
@@ -51,5 +53,3 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     bucket: ${AWS_BUCKET_NAME}
     region: ${AWS_REGION}
-
-

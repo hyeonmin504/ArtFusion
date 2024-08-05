@@ -1,4 +1,4 @@
-package _2.ArtFusion.service;
+package _2.ArtFusion.service.webClientService;
 
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.scene.SceneImage;
@@ -20,7 +20,7 @@ import java.util.Collections;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class OpenAiGPTService {
+public class OpenAiGPTWebClientService {
 
     private final SceneImageRepository sceneImageRepository;
     private final com.theokanning.openai.service.OpenAiService openAiService;
@@ -33,7 +33,7 @@ public class OpenAiGPTService {
                 ChatMessage message = new ChatMessage("user", prompt);
                 ChatCompletionRequest request = ChatCompletionRequest.builder()
                         .messages(Collections.singletonList(message))
-                        .model("gpt-3.5-turbo")
+                        .model("gpt-4o")
                         .maxTokens(3000)
                         .build();
 

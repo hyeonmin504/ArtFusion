@@ -1,5 +1,6 @@
 package _2.ArtFusion.domain.r2dbcVersion;
 
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -16,18 +17,23 @@ public class SceneFormat {
     @Column("scene_id")
     private Long id;
 
+    @Size(max = 4000)
     private String description;
+    @Size(max = 60000)
     @Column("scene_prompt")
     private String scenePromptEn;
+    @Column("scene_sequence")
     private int sceneSequence;
+    @Size(max = 4000)
     private String dialogue;
+    @Size(max = 4000)
     private String background;
     private String actors;
 
     @Column("story_id")
     private Long storyId;
     @Column("image_id")
-    private Long temporaryImageId;
+    private Long imageId;
 
     protected SceneFormat(int sceneSequence, String description, String dialogue, String background,String actors, Long storyId) {
         this.sceneSequence = sceneSequence;
@@ -53,7 +59,7 @@ public class SceneFormat {
         this.scenePromptEn = scenePromptEn;
     }
 
-    public void setTemporaryImageId(Long temporaryImageId) {
-        this.temporaryImageId = temporaryImageId;
+    public void setImageId(Long imageId) {
+        this.imageId = imageId;
     }
 }

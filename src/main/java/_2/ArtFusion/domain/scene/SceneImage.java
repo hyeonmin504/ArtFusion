@@ -1,6 +1,7 @@
 package _2.ArtFusion.domain.scene;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +16,7 @@ public class SceneImage {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
     private Long id;
+    @Size(max = 512)
     private String url;
 
     @OneToOne(mappedBy = "sceneImage", cascade = CascadeType.ALL, orphanRemoval = true)
