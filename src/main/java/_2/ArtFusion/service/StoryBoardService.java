@@ -22,8 +22,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static _2.ArtFusion.service.convertUtil.ConvertUtil.convertCharacter;
-import static _2.ArtFusion.service.convertUtil.ConvertUtil.convertStoryBoard;
+import static _2.ArtFusion.service.util.convertUtil.ConvertUtil.convertCharacter;
+import static _2.ArtFusion.service.util.convertUtil.ConvertUtil.convertStoryBoard;
 
 @Service
 @RequiredArgsConstructor

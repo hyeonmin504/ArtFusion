@@ -29,6 +29,8 @@ public abstract class DallEAi {
     @JoinColumn(name = "scene_id")
     private SceneFormat sceneFormat;
 
+
+
     public void setSceneFormat(SceneFormat sceneFormat) {
         this.sceneFormat = sceneFormat;
         sceneFormat.setDallEAi(this);
