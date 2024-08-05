@@ -1,6 +1,7 @@
 package _2.ArtFusion.exception.handler;
 
 import _2.ArtFusion.controller.ResponseForm;
+import com.theokanning.openai.OpenAiHttpException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,6 +15,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import retrofit2.HttpException;
 
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
@@ -42,7 +44,7 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, body, "올바른 입력값이 아닙니다");
-        log.info("error={}",ex);
+        log.info("error",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.BAD_REQUEST);
     }
 
@@ -59,14 +61,16 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.NOT_FOUND, body, "올바른 경로가 아닙니다");
-        log.info("error={}",ex);
+        log.info("error",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler({
-            ConnectException.class,
-            SocketTimeoutException.class,
-            UnknownHostException.class
+            ConnectException.class, // db 연결 장애
+            SocketTimeoutException.class, //api 연결 시간 장애
+            UnknownHostException.class,
+            OpenAiHttpException.class, //openai 연결 장애
+            HttpException.class //openai 연결 장애 + api 연결 장애
     })
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public ResponseEntity<ResponseForm<Map<String, Object>>> handleNetworkException(Exception ex, WebRequest request) {
@@ -77,7 +81,7 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, body, "네트워크 문제로 인해 서비스를 다시 이용해주세요.");
-        log.info("error={}", ex);
+        log.info("error", ex);
         return new ResponseEntity<>(responseForm, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
@@ -91,7 +95,7 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, body, "An unexpected error occurred.");
-        log.info("error={}",ex);
+        log.info("error",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -8,6 +8,7 @@ import _2.ArtFusion.domain.scene.SceneImage;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.jpa.SceneFormatRepository;
 import _2.ArtFusion.repository.jpa.SceneImageRepository;
+import _2.ArtFusion.service.webClientService.OpenAiGPTWebClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,17 +22,8 @@ import java.util.List;
 public class SceneEditService {
     
     private final SceneFormatRepository sceneFormatRepository;
-    private final OpenAiGPTService openAiService;
+    private final OpenAiGPTWebClientService openAiService;
     private final SceneImageRepository sceneImageRepository;
-
-    @Transactional
-    public void randomEdit(Long sceneId) {
-        SceneFormat scene = sceneFormatRepository.findById(sceneId).orElseThrow(
-                () -> new NotFoundContentsException("해당 장면을 찾을 수 없습니다")
-        );
-        //장면 생성및 저장
-        openAiService.generateImage(scene);
-    }
 
     @Transactional
     public void detailEdit(DetailEditForm form,Long sceneId) {
@@ -50,7 +42,6 @@ public class SceneEditService {
         openAiService.variationImage(form.getSceneModifyPrompt());
 
         //저장
-
     }
 
     @Transactional
