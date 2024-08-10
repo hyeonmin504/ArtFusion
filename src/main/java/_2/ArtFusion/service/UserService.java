@@ -1,12 +1,17 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.domain.user.UserCreateForm;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +22,18 @@ import java.util.regex.Pattern;
 public class UserService {
 
     private final UserRepository userRepository;
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
+    public User createUser(UserCreateForm userCreateForm){
+        User user = new User(
+        userCreateForm.getEmail(),
+        passwordEncoder.encode(userCreateForm.getPw())
+        );
+
+        this.userRepository.save(user);
+        return user;
+
+    }
 
     /**
      * 이메일 존재 여부 검증

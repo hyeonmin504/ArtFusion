@@ -50,6 +50,11 @@ public class User {
         this.heart = heart;
     }
 
+    public User(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
     public User(String nickName) {
         this.nickname = nickName;
     }
