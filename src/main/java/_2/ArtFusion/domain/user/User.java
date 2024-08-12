@@ -50,6 +50,8 @@ public class User {
         this.heart = heart;
     }
 
+
+    //회원 가입 생성자 User
     public User(String email, String password) {
         this.email = email;
         this.password = password;

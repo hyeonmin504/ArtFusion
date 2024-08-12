@@ -25,14 +25,20 @@ public class UserService {
     @Autowired
     private final PasswordEncoder passwordEncoder;
     public User createUser(UserCreateForm userCreateForm){
+        // 비밀번호와 비밀번호 확인 필드가 일치하는지 확인
+        if (!userCreateForm.getPassword().equals(userCreateForm.getPasswordconfig())) {
+            throw new InvalidFormatException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 비밀번호 암호화
         User user = new User(
-        userCreateForm.getEmail(),
-        passwordEncoder.encode(userCreateForm.getPw())
+                userCreateForm.getEmail(),
+                passwordEncoder.encode(userCreateForm.getPassword()) // 여기서 password 필드를 암호화
         );
 
+        // 사용자 저장
         this.userRepository.save(user);
         return user;
-
     }
 
     /**

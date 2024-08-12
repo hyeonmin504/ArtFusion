@@ -15,7 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
+import _2.ArtFusion.domain.user.UserCreateForm;
+import _2.ArtFusion.controller.ResponseForm;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -25,8 +26,31 @@ public class userController {
     private final UserRepository userRepository;
     private final UserService userService;
 
-//    @PostMapping("/users/signup")
-//    public ResponseForm createUser()
+    //회원 가입
+    @PostMapping("/users/signup")
+    public ResponseForm createUser(@RequestBody UserCreateForm userCreateForm) {
+        try {
+            User user = userService.createUser(userCreateForm);
+            // 응답으로 사용할 객체를 생성 (성공 메시지나 생성된 사용자 정보를 반환)
+            return new ResponseForm<>(HttpStatus.OK, userCreateForm, "User created successfully");
+        }
+        catch (ExistsUserException e) {
+            // 사용자 중복 예외 처리
+            return new ResponseForm<>(HttpStatus.CONFLICT, null, "User already exists");
+        }
+        catch (InvalidFormatException e) {
+            // 잘못된 형식 예외 처리
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Invalid input format");
+        }
+        catch (NotFoundUserException e) {
+            // 사용자 미발견 예외 처리
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, "User not found");
+        }
+        catch (Exception e) {
+            // 그 외 예상치 못한 예외 처리
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
+        }
+    }
 
     @GetMapping("/users")
     public ResponseForm requestUserData(HttpServletRequest request) {
