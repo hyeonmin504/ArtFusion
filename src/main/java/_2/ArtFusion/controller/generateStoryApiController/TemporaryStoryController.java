@@ -9,7 +9,7 @@ import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
-import _2.ArtFusion.service.webClientService.DallEConnectionWebClientService;
+import _2.ArtFusion.service.processor.DallE3QueueProcessor;
 import _2.ArtFusion.service.webClientService.SceneFormatWebClientService;
 import _2.ArtFusion.service.StoryBoardService;
 import jakarta.persistence.NoResultException;
@@ -35,7 +35,7 @@ import static org.springframework.http.HttpStatus.*;
 public class TemporaryStoryController {
 
     private final SceneFormatWebClientService sceneFormatWebClientService;
-    private final DallEConnectionWebClientService dallEConnectionWebClientService;
+    private final DallE3QueueProcessor dallE3QueueProcessor;
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
     private final UserRepository userRepository;
@@ -126,14 +126,14 @@ public class TemporaryStoryController {
      */
     @NotNull
     private Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
-        return dallEConnectionWebClientService.transImagesForDallE(Mono.just(sceneFormats))
+        return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats))
                 .flatMap(failApiResponseForm -> {
-                    if (failApiResponseForm.getFailSeq().isEmpty()) { // 이미지 생성 성공
-                        log.info("failApiResponseForm.getFailSeq={}", failApiResponseForm.getFailSeq());
+                    if (failApiResponseForm.getFailedSeq().isEmpty()) { // 이미지 생성 성공
+                        log.info("failApiResponseForm.getFailedSeq={}", failApiResponseForm.getFailedSeq());
                         return Mono.just(new ResponseForm<>(OK, null, "작품 이미지 생성중!"));
                     }
                     // 이미지 생성에 실패한 장면이 존재할 경우
-                    List<Integer> failSeq = failApiResponseForm.getFailSeq();
+                    List<Integer> failSeq = failApiResponseForm.getFailedSeq();
                     return Mono.just(new ResponseForm<>(NO_CONTENT, failSeq, "일부 이미지 생성중 오류가 발생했습니다"));
                 })
                 .onErrorResume(e -> {

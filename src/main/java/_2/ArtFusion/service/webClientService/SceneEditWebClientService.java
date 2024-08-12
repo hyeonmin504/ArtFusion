@@ -1,16 +1,24 @@
 package _2.ArtFusion.service.webClientService;
 
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
-import _2.ArtFusion.controller.generateStoryApiController.FailApiResponseForm;
+import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
+import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
+import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.r2dbc.ActorR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
+import _2.ArtFusion.repository.r2dbc.SceneImageR2DBCRepository;
+import _2.ArtFusion.service.processor.DallE2QueueProcessor;
+import _2.ArtFusion.service.processor.DallE3QueueProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +28,9 @@ public class SceneEditWebClientService {
     private final SceneFormatR2DBCRepository sceneFormatR2DBCRepository;
     private final ActorR2DBCRepository actorR2DBCRepository;
     private final SceneFormatWebClientService sceneFormatWebClientService;
-    private final DallEConnectionWebClientService dallEConnectionWebClientService;
+    private final DallE3QueueProcessor dallE3QueueProcessor;
+    private final DallE2QueueProcessor dallE2QueueProcessor;
+    private final SceneImageR2DBCRepository sceneImageR2DBCRepository;
 
     /**
      * if문에서
@@ -42,25 +52,15 @@ public class SceneEditWebClientService {
                     .collectList()
                     .flatMap(actors -> form.flatMap(contentEditForm -> {
                         log.info("content edit");
-                        //로직에 따른 내용 수정이 크게 일어나지 않은 경우
                         if (isContentUnchanged(sceneFormat, contentEditForm)) {
-                            //내용만 수정
+                            //로직에 따른 내용 수정이 거의 없는 경우 - updateContent
                             SceneFormat newScene = sceneFormat.editContentForm(contentEditForm.getDescription(), contentEditForm.getBackground(), contentEditForm.getDialogue());
                             return sceneFormatR2DBCRepository.save(newScene)
                                     //-1L 값을 반환
                                     .then(Mono.just(-1L));
-                        } else {//로직에 따른 내용 수정이 크게 일어난 경우
-                            log.info("content, image edit");
-                            //내용 수정
-                            SceneFormat newScene = sceneFormat.editContentForm(contentEditForm.getDescription(), contentEditForm.getBackground(), contentEditForm.getDialogue());
-                            //각 내용에 등장하는 actor 정보를 삽입
-                            String actorsPrompt = sceneFormatWebClientService.findMatchingActors(newScene.getActors(), actors);
-                            //프롬프트 수정
-                            return sceneFormatR2DBCRepository.findStyleById(Mono.just(newScene.getStoryId()))
-                                .flatMap(style -> sceneFormatWebClientService.generateSceneFormatForDallE(newScene, actorsPrompt, style))
-                                .flatMap(sceneFormatR2DBCRepository::save)
-                                    //이미지를 변환할 장면 id 반환
-                                    .then(sceneId);
+                        } else {
+                            //로직에 따른 내용 수정이 크게 일어난 경우
+                            return updateContentAndImage(sceneId, sceneFormat, actors, contentEditForm);
                         }
                     }))
             )
@@ -73,15 +73,66 @@ public class SceneEditWebClientService {
         });
     }
 
+    @Transactional(transactionManager = "r2dbcTransactionManager")
+    public Mono<ResultApiResponseForm> detailEdit(DetailEditForm form, Long sceneId) {
+        return sceneFormatR2DBCRepository.findById(sceneId)
+                .switchIfEmpty(Mono.error(new NotFoundContentsException("해당 장면을 찾을 수 없습니다" + sceneId)))
+                .flatMap(sceneFormat ->
+                        sceneImageR2DBCRepository.findById(form.getImageId())
+                                .flatMap(sceneImage ->
+                                        dallE2QueueProcessor.updateImageForDallE(sceneImage, Mono.just(sceneFormat))
+                                )
+                                .switchIfEmpty(Mono.error(new NotFoundContentsException("해당 이미지를 찾을 수 없습니다" + form.getImageId())))
+                )
+                .onErrorResume(e -> {
+                    log.error("Error editing detail", e);
+                    return Mono.error(new NotFoundContentsException(e.getMessage()));
+                });
+    }
+
+    /**
+     * 이미지, 내용 수정
+     * @param sceneId
+     * @param sceneFormat
+     * @param actors -> 장면에 등장하는 actor
+     * @param contentEditForm -> 변경하려는 내용
+     * @return
+     */
+    @NotNull
+    private Mono<Long> updateContentAndImage(Mono<Long> sceneId, SceneFormat sceneFormat, List<Actor> actors, ContentEditForm contentEditForm) {
+        log.info("content, image edit");
+        //내용 수정
+        SceneFormat newScene = sceneFormat.editContentForm(contentEditForm.getDescription(), contentEditForm.getBackground(), contentEditForm.getDialogue());
+        //각 내용에 등장하는 actor 정보를 삽입
+        String actorsPrompt = sceneFormatWebClientService.findMatchingActors(newScene.getActors(), actors);
+        //프롬프트 수정
+        return sceneFormatR2DBCRepository.findStyleById(Mono.just(newScene.getStoryId()))
+                .flatMap(style -> sceneFormatWebClientService.generateSceneFormatForDallE(newScene, actorsPrompt, style))
+                .flatMap(sceneFormatR2DBCRepository::save)
+                //이미지를 변환할 장면 id 반환
+                .then(sceneId);
+    }
+
+    /**
+     * 이미지 변경 정도
+     * @param sceneFormat -> 기존의 장면
+     * @param contentEditForm -> 새로운 장면
+     * @return 비교 후 결과 값 반환 true = 이미지, 내용 수정 / false = 내용 수정
+     */
     private static boolean isContentUnchanged(SceneFormat sceneFormat, ContentEditForm contentEditForm) {
         return sceneFormat.getBackground().equals(contentEditForm.getBackground().trim()) &&
                 sceneFormat.getDescription().equals(contentEditForm.getDescription().trim()) &&
                 !sceneFormat.getDialogue().isEmpty();
     }
 
-    public Mono<FailApiResponseForm> singleTransImage(Long sceneId) {
+    /**
+     * 수정api를 위한 단일 이미지 수정 요청
+     * @param sceneId -> 장면 id 값
+     * @return FailApiResponseForm -> 성공 여부
+     */
+    public Mono<ResultApiResponseForm> singleTransImage(Long sceneId) {
         return sceneFormatR2DBCRepository.findById(sceneId)
-                .flatMap(sceneFormat -> dallEConnectionWebClientService.transImageForDallE(Mono.just(sceneFormat)))
+                .flatMap(sceneFormat -> dallE3QueueProcessor.transImageForDallE(Mono.just(sceneFormat)))
                 .switchIfEmpty(Mono.empty());
     }
 }

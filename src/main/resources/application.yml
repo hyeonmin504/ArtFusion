@@ -30,6 +30,7 @@ spring:
       api-key: ${OPEN_AI_ACCESS_KEY}
       gpt-url: ${OPEN_AI_GPT_URL}
       dall-e-url: ${OPEN_AI_DALL_E_URL}
+      dall-e-url-for-variation: ${OPEN_AI_DALL_E_URL_FOR_VARIATION}
       base-url: ${OPEN_AI_BASE_URL}
 
   mvc:
