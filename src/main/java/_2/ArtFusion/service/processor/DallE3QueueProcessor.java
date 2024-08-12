@@ -1,11 +1,12 @@
-package _2.ArtFusion.service.webClientService;
+package _2.ArtFusion.service.processor;
 
-import _2.ArtFusion.controller.generateStoryApiController.FailApiResponseForm;
+import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.SceneImage;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.SceneImageR2DBCRepository;
-import _2.ArtFusion.service.util.singleton.SingletonQueueUtil;
+import _2.ArtFusion.service.util.form.OpenAiImageResponseForm;
+import _2.ArtFusion.service.util.singleton.SingletonQueueUtilForDallE3;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -35,14 +36,14 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @Slf4j
-public class DallEConnectionWebClientService {
+public class DallE3QueueProcessor {
 
     private static final int REQUEST_COUNT = 5;
     private static final int REQUEST_INTERVAL_SEC = 65;
     private final WebClient webClient;
     private final SceneImageR2DBCRepository sceneImageR2DBCRepository;
     private final SceneFormatR2DBCRepository sceneFormatR2DBCRepository;
-    private final SingletonQueueUtil<SceneFormat> queue = SingletonQueueUtil.getInstance();
+    private final SingletonQueueUtilForDallE3<SceneFormat> queue = SingletonQueueUtilForDallE3.getInstance();
 
     @Value("${spring.ai.openai.api-key}")
     private String openAiAccessKey;
@@ -50,7 +51,7 @@ public class DallEConnectionWebClientService {
     private String openAiDallEUrl;
 
     @Autowired
-    public DallEConnectionWebClientService(WebClient webClient,
+    public DallE3QueueProcessor(WebClient webClient,
                                            SceneImageR2DBCRepository sceneImageR2DBCRepository,
                                            SceneFormatR2DBCRepository sceneFormatR2DBCRepository) {
         this.webClient = webClient;
@@ -61,13 +62,13 @@ public class DallEConnectionWebClientService {
     }
 
     /**
-     * 큐에 삽입해서 별도로 큐를 관리
+     * 생성 요청 시 큐에 삽입해서 별도로 큐를 관리
      * @param sceneFormats
      * @return
      */
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<FailApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats) {
-        FailApiResponseForm form = new FailApiResponseForm();
+    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats) {
+        ResultApiResponseForm form = new ResultApiResponseForm();
         return sceneFormats
                 .flatMapMany(Flux::fromIterable)
                 .flatMap(sceneFormat -> {
@@ -86,10 +87,15 @@ public class DallEConnectionWebClientService {
                 .then(Mono.just(form));
     }
 
+    /**
+     * 단일 생성 요청 시 큐에 삽입해서 별도로 큐를 관리
+     * @param singleScene
+     * @return
+     */
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<FailApiResponseForm> transImageForDallE(Mono<SceneFormat> sceneFormatMono) {
-        FailApiResponseForm form = new FailApiResponseForm();
-        return sceneFormatMono.flatMap(sceneFormat -> {
+    public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene) {
+        ResultApiResponseForm form = new ResultApiResponseForm();
+        return singleScene.flatMap(sceneFormat -> {
             try {
                 queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
                 form.setSingleResult(true); // 성공 처리
@@ -109,25 +115,25 @@ public class DallEConnectionWebClientService {
      */
     private void startQueueProcessor() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::processQueue, 0, REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::processQueue, 45, REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
     }
 
     /**
      * 큐에서 장면 REQUEST_COUNT(5)개 추출
      */
     private void processQueue() {
-        log.info("startQueue");
+        log.info("startQueue - dalle3 ver");
         if (!queue.getIsEmpty()) {
             for (int i = 0; i < REQUEST_COUNT && !queue.getIsEmpty(); i++) {
                 try {
                     SceneFormat sceneFormat = queue.dequeue();
-                    processSceneFormat(sceneFormat).subscribe();
+                    processDallE3Api(sceneFormat).subscribe();
                 } catch (InterruptedException e) {
                     log.error("Queue processing interrupted", e);
                 }
             }
         } else {
-            log.info("queue is empty");
+            log.info("queue is empty - dalle3 ver");
         }
 
     }
@@ -137,7 +143,7 @@ public class DallEConnectionWebClientService {
      * @param sceneFormat 요청할 장면
      * @return
      */
-    private Mono<Void> processSceneFormat(SceneFormat sceneFormat) {
+    private Mono<Void> processDallE3Api(SceneFormat sceneFormat) {
         ImageRequestForm form = ImageRequestForm.builder()
                 .model("dall-e-3")
                 .prompt(sceneFormat.getScenePromptEn())
@@ -152,7 +158,7 @@ public class DallEConnectionWebClientService {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + openAiAccessKey)
                 .bodyValue(form)
                 .retrieve()
-                .bodyToMono(ImageResponseForm.class)
+                .bodyToMono(OpenAiImageResponseForm.class)
                 .flatMap(imageResponseForm -> {
                     String imageUrl = imageResponseForm.getData().get(0).getUrl();
                     SceneImage sceneImage = new SceneImage(imageUrl);
@@ -176,20 +182,5 @@ public class DallEConnectionWebClientService {
         private int n;
         @JsonProperty(value = "response_format")
         private String responseFormat;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    private static class ImageResponseForm {
-        private int created;
-        private List<ImageUrl> data;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    private static class ImageUrl {
-        private String url;
     }
 }

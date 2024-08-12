@@ -4,12 +4,13 @@ import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.SceneSeqForm;
-import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
+import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.SceneEditService;
 import _2.ArtFusion.service.webClientService.SceneEditWebClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -41,22 +42,33 @@ public class CutEditStoryController {
                     } else {
                         // 이미지 변환이 필요한 경우
                         return sceneEditWebClientService.singleTransImage(sceneFormatId)
-                                .flatMap(failApiResponseForm -> {
-                                    //장면을 api요청 큐에 잘 넣은 경우
-                                    if (failApiResponseForm.isSingleResult()) {
-                                        log.info("Image processing successful for sceneFormatId={}", sceneFormatId);
-                                        return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "내용 수정 성공, 이미지 요청중"));
-                                    } else {
-                                        return Mono.just(new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "이미지 생성 중 오류가 발생했습니다."));
-                                    }
-                                });
+                                //enqueue 따른 response 반환
+                                .flatMap(resultApiResponseForm -> resultForEnqueue(sceneFormatId, resultApiResponseForm));
                     }
                 })
+                //sceneFormatId == Mono.empty 인 경우
                 .switchIfEmpty(Mono.just(new ResponseForm<>(HttpStatus.NOT_FOUND, null, "장면을 찾을 수 없습니다."))) // sceneId가 없는 경우
                 .onErrorResume(e -> {
                     log.error("Error editing content for sceneId={}: {}", sceneId, e.getMessage());
                     return Mono.just(new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "장면 내용 수정 중 오류가 발생했습니다."));
                 });
+    }
+
+    /**
+     * 달리 큐에 요청 성공 여부
+     * @param sceneFormatId
+     * @param resultApiResponseForm -> 성공 여부
+     * @return
+     */
+    @NotNull
+    private static Mono<ResponseForm<Object>> resultForEnqueue(Long sceneFormatId, ResultApiResponseForm resultApiResponseForm) {
+        //장면을 api요청 큐에 잘 넣은 경우
+        if (resultApiResponseForm.isSingleResult()) {
+            log.info("Image processing successful for sceneFormatId={}", sceneFormatId);
+            return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "내용 수정 성공, 이미지 요청 완료"));
+        } else {
+            return Mono.just(new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "이미지 생성 중 오류가 발생했습니다."));
+        }
     }
 
     /**
@@ -67,12 +79,12 @@ public class CutEditStoryController {
     @PutMapping("/{sceneId}/refresh")
     public Mono<ResponseForm<Object>> imageRandomEdit(@PathVariable Long sceneId) {
         return sceneEditWebClientService.singleTransImage(sceneId)
-                .flatMap(failApiResponseForm -> {
-                    if (failApiResponseForm.isSingleResult()) {
+                .flatMap(resultApiResponseForm -> {
+                    if (resultApiResponseForm.isSingleResult()) {
                         log.info("success random edit");
-                        return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "작품 이미지 생성 및 저장 완료"));
+                        return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "작품 랜덤 이미지 생성 요청 완료"));
                     }
-                    return Mono.just(new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, null, "큐 포화 상태.잠시 후에 다시 이용해주세요"));
+                    return Mono.just(new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, null, "요청 포화 상태.잠시 후에 다시 이용해주세요"));
                 })
                 .onErrorResume(e -> {
                     log.error("error={}", e.getMessage());
@@ -88,16 +100,23 @@ public class CutEditStoryController {
      * @return
      */
     @PutMapping("/{sceneId}/detail")
-    public ResponseForm imageDetailEdit(@Validated @RequestBody DetailEditForm form,
+    public Mono<ResponseForm<Object>> imageDetailEdit(@Validated @RequestBody DetailEditForm form,
                                         @PathVariable Long sceneId) {
-        try {
-            sceneEditService.detailEdit(form,sceneId);
-
-            return new ResponseForm<>(HttpStatus.OK, null, "Ok");
-        } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
-        }
+        return sceneEditWebClientService.detailEdit(form, sceneId)
+                .flatMap(resultApiResponseForm -> {
+                    if (resultApiResponseForm.isSingleResult()) {
+                        log.info("success detail edit");
+                        return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "작품 변형 요청 완료"));
+                    }
+                    return Mono.just(new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, null, "요청 포화 상태.잠시 후에 다시 이용해주세요"));
+                })
+                .onErrorResume(NotFoundContentsException.class, e -> {
+                    // 이 곳에서 예외를 처리할 수 있습니다.
+                    log.error("Error editing detail: {}", e.getMessage());
+                    return Mono.just(new ResponseForm<>(HttpStatus.NO_CONTENT,null, e.getMessage()));
+                });
     }
+
     @PutMapping("/sequence")
     public ResponseForm imageSequenceEdit(@RequestBody @Validated SceneSeqForm form) {
         try {
