@@ -1,10 +1,8 @@
 package _2.ArtFusion.service;
 
-import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.SceneSeqForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.SequenceForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
-import _2.ArtFusion.domain.scene.SceneImage;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.jpa.SceneFormatRepository;
 import _2.ArtFusion.repository.jpa.SceneImageRepository;
@@ -22,27 +20,6 @@ import java.util.List;
 public class SceneEditService {
     
     private final SceneFormatRepository sceneFormatRepository;
-    private final OpenAiGPTWebClientService openAiService;
-    private final SceneImageRepository sceneImageRepository;
-
-    @Transactional
-    public void detailEdit(DetailEditForm form,Long sceneId) {
-        SceneFormat scene = sceneFormatRepository.findById(sceneId).orElseThrow(
-                () -> new NotFoundContentsException("해당 장면을 찾을 수 없습니다")
-        );
-
-        SceneImage storage = sceneImageRepository.findById(form.getImageId()).orElseThrow(
-                () -> new NotFoundContentsException("해당 이미지를 찾을 수 없습니다")
-        );
-
-        //해당 Url을 이미지 데이터로 바꾼 후 데이터로서 달리에 요청
-
-
-        //sceneData를 통해 이미지 변환 요청
-        openAiService.variationImage(form.getSceneModifyPrompt());
-
-        //저장
-    }
 
     @Transactional
     public void sequenceEdit(SceneSeqForm form) {
