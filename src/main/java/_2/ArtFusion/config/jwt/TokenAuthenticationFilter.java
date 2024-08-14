@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 
-
+//- **`TokenAuthenticationFilter`**: 이 클래스는 HTTP 요청에서 JWT 토큰을 추출하고, 유효성을 검증한 후, 해당 토큰에 기반하여 Spring Security의 인증을 처리합니다.
 //TokenAuthenticationFilter는 tokenprovider를 받아서 Authorization
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {

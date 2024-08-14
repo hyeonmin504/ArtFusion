@@ -18,6 +18,7 @@ import java.util.Set;
 
 @Service  // Spring의 서비스 레이어를 나타내는 어노테이션
 @RequiredArgsConstructor  // 생성자 주입을 자동으로 처리해주는 Lombok 어노테이션
+//- **`TokenProvider`**: 이 클래스는 JWT 토큰의 생성, 검증, 클레임 추출 등을 처리하는 기능을 제공합니다. 또한, 이 클래스는 Redis와 연동되어 JWT 토큰의 상태를 관리할 수 있습니다.
 public class TokenProvider {
     private final JwtProperties jwtProperties;  // JWT 설정 정보를 담고 있는 클래스의 인스턴스
     private final RedisTemplate<String, Object> redisTemplate;  // Redis와 상호작용하기 위한 템플릿
