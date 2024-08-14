@@ -21,8 +21,6 @@ import java.util.Set;
 //- **`TokenProvider`**: 이 클래스는 JWT 토큰의 생성, 검증, 클레임 추출 등을 처리하는 기능을 제공합니다. 또한, 이 클래스는 Redis와 연동되어 JWT 토큰의 상태를 관리할 수 있습니다.
 public class TokenProvider {
     private final JwtProperties jwtProperties;  // JWT 설정 정보를 담고 있는 클래스의 인스턴스
-    private final RedisTemplate<String, Object> redisTemplate;  // Redis와 상호작용하기 위한 템플릿
-
     private Key getSigningKey() {  // JWT 서명에 사용할 키를 생성하는 메서드
         byte[] keyBytes = jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8);  // SecretKey를 바이트 배열로 변환
         return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());  // SecretKeySpec으로 키를 생성
