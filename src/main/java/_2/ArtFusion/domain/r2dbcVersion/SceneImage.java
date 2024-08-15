@@ -19,6 +19,10 @@ public class SceneImage {
 
     private String url;
 
+    public void updateUrl(String url) {
+        this.url = url;
+    }
+
     public SceneImage(String url) {
         this.url = url;
     }
