@@ -1,13 +1,14 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.config.jwt.Token;
 import _2.ArtFusion.config.jwt.TokenProvider;
 import _2.ArtFusion.domain.user.*;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
+import _2.ArtFusion.repository.jpa.TokenRepository;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,9 +27,9 @@ import java.util.regex.Pattern;
 @Slf4j
 public class UserService implements UserDetailsService {
 
+    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
 
     public User createUser(UserCreateForm userCreateForm) {
@@ -96,11 +98,33 @@ public class UserService implements UserDetailsService {
         }
 
         try {
+            //액세스 토큰 , 리프레시 토큰 생성
             String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
             String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
 
-            redisTemplate.opsForValue().set("ACCESS_TOKEN:" + user.getEmail(), accessToken, Duration.ofMinutes(10));
-            redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getEmail(), refreshToken, Duration.ofDays(7));
+            // 토큰 만료 시간 계산
+            LocalDateTime accessTokenExpiry = LocalDateTime.now().plusMinutes(10);
+            LocalDateTime refreshTokenExpiry = LocalDateTime.now().plusDays(7);
+
+
+            // 기존 토큰 검색 또는 새로운 토큰 엔티티 생성
+            Token token = tokenRepository.findByEmail(user.getEmail())
+                    .orElse(new Token());
+
+
+            token.setEmail(user.getEmail());
+            token.setAccessToken(accessToken);
+            token.setRefreshToken(refreshToken);
+            token.setAccessTokenExpiry(accessTokenExpiry);
+            token.setRefreshTokenExpiry(refreshTokenExpiry);
+
+
+
+            tokenRepository.save(token);  // 데이터베이스에 저장 -> 이 부분이 redis 말고 db에 저장하는 부분
+
+//            redis
+//            redisTemplate.opsForValue().set("ACCESS_TOKEN:" + user.getEmail(), accessToken, Duration.ofMinutes(10));
+//            redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getEmail(), refreshToken, Duration.ofDays(7));
 
             return new LoginResponseForm(user.getEmail(), user.getPassword(), accessToken, refreshToken);
         } catch (Exception e) {
@@ -129,6 +153,53 @@ public class UserService implements UserDetailsService {
     }
 
     public void logout(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if(userOptional.isPresent()){
+            // 사용자 정보 조회
+            User user = userOptional.get();
 
+            // 데이터베이스에서 해당 사용자의 토큰 삭제
+            Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
+            tokenOptional.ifPresent(tokenRepository::delete);
+        } else {
+            throw new UsernameNotFoundException("user not found with email : " + email);
+        }
+
+    }
+
+    public LoginResponseForm refreshAccessToken(String email, String refreshToken) {
+        // 데이터베이스에서 저장된 토큰 조회
+        Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
+
+        if (tokenOptional.isPresent()) {
+            Token storedToken = tokenOptional.get();
+
+            // 저장된 리프레시 토큰과 일치하는지 확인
+            if (storedToken.getRefreshToken().equals(refreshToken)) {
+                // 사용자 정보 조회
+                Optional<User> userOptional = userRepository.findByEmail(email);
+
+                if (userOptional.isPresent()) {
+                    User user = userOptional.get();
+
+                    // 새로운 액세스 토큰 생성
+                    String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
+
+                    // 토큰 정보 업데이트 및 저장
+                    storedToken.setAccessToken(newAccessToken);
+                    storedToken.setAccessTokenExpiry(LocalDateTime.now().plusMinutes(10));
+                    tokenRepository.save(storedToken);
+
+                    // 새로운 토큰 정보를 반환
+                    return new LoginResponseForm(user.getEmail(), user.getPassword(), newAccessToken, refreshToken);
+                }
+            }
+        }
+        return null; // 리프레시 토큰이 유효하지 않거나 사용자가 없는 경우 null 반환
+    }
+
+
+    public boolean validateAccessToken(String token) {
+        return tokenProvider.validateToken(token);
     }
 }

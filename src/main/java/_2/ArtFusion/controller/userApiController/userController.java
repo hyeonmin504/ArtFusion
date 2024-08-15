@@ -10,6 +10,7 @@ import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,7 @@ import _2.ArtFusion.controller.ResponseForm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -101,6 +103,21 @@ public class userController {
         }
     }
 
+    @PostMapping("/refresh")
+    public ResponseForm<LoginResponseForm> refreshAccessToken(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String refreshToken = request.get("refreshToken");
+        try {
+            LoginResponseForm loginResponse = userService.refreshAccessToken(username, refreshToken);
+            if (loginResponse == null) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 Refresh Token 입니다.");
+            }
+            return new ResponseForm<>(HttpStatus.OK, loginResponse, "Access Token 갱신에 성공했습니다.");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "토큰 갱신에 실패했습니다. 오류: " + e.getMessage());
+        }
+    }
+
 
     @GetMapping("/users")
     public ResponseForm requestUserData(HttpServletRequest request) {
@@ -146,6 +163,22 @@ public class userController {
         } catch (Exception e) {
             log.error("Unexpected error during logout", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
+        }
+    }
+
+
+    //JWT 액세스 토큰 유효성 검사
+    @GetMapping("/protected-resource")
+    public ResponseForm<String> getProtectedResource
+            (@RequestHeader(value = "Authorization", required = false) String authorization, HttpServletRequest
+                    request, HttpServletResponse response){
+        String token = Optional.ofNullable(authorization).map(auth -> auth.replace("Bearer ", "")).orElse("");
+        boolean isTokenValid = userService.validateAccessToken(token);
+
+        if (isTokenValid) {
+            return new ResponseForm<>(HttpStatus.OK, "Protected resource accessed successfully!", "Success");
+        } else {
+            return new ResponseForm<>(HttpStatus.FORBIDDEN, null, "유효하지 않은 토큰입니다.");
         }
     }
 
