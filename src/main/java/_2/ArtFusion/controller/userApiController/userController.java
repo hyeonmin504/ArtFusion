@@ -7,6 +7,7 @@ import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
 import _2.ArtFusion.exception.NotFoundUserException;
+import _2.ArtFusion.repository.jpa.TokenRepository;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import _2.ArtFusion.domain.user.UserCreateForm;
 import _2.ArtFusion.controller.ResponseForm;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +36,7 @@ import java.util.Optional;
 @Slf4j
 @RequestMapping("/api")
 public class userController {
-
+    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
@@ -76,7 +78,7 @@ public class userController {
     }
 
     //로그인
-    @PostMapping("/login")
+    @PostMapping("/users/login")
     public ResponseForm loginUser(@Validated @RequestBody LoginForm loginForm,
                                   BindingResult bindingResult) {
         // 1. Form 데이터 검증
@@ -119,21 +121,37 @@ public class userController {
     }
 
 
+    // 사용자 정보 조회
     @GetMapping("/users")
     public ResponseForm requestUserData(HttpServletRequest request) {
         try {
-            //예시 데이터
-            User user = new User("nickName");
-            User savedUser = userRepository.save(user);
+            Principal principal = request.getUserPrincipal();
+            if (principal == null) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Unauthorized request");
+            }
 
-            User findUser = userRepository.findById(savedUser.getId()).orElseThrow();
+            // 인증된 사용자의 이메일을 가져옵니다.
+            String email = principal.getName();
 
-            UserDataForm userDataForm = new UserDataForm(findUser.getId(),findUser.getNickname(),findUser.getEmail(),findUser.getRole().toString());
+            // 이메일로 사용자 정보를 조회합니다.
+            User findUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new NotFoundUserException("User not found"));
 
-            return new ResponseForm<>(HttpStatus.OK,userDataForm,"Ok");
+            // 사용자 정보를 응답 객체에 담습니다.
+            UserDataForm userDataForm = new UserDataForm(
+                    findUser.getId(),
+                    findUser.getNickname(),
+                    findUser.getEmail(),
+                    findUser.getRole().toString()
+            );
+
+            return new ResponseForm<>(HttpStatus.OK, userDataForm, "Ok");
         } catch (NotFoundUserException e) {
-            log.info("error={}",e);
-            return new ResponseForm<>(HttpStatus.NOT_FOUND,null,e.getMessage());
+            log.error("User not found: ", e);
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error: ", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
         }
     }
 
@@ -148,21 +166,40 @@ public class userController {
         }
     }
 
-    // 로그아웃
-    @PostMapping("/logout")
-    public ResponseForm logout(HttpServletRequest request) {
+    @PostMapping("/users/logout")
+    public ResponseForm logout(@RequestHeader("Authorization") String authorization,
+                               @RequestBody LogoutRequestForm logoutRequestForm) {
         try {
-            // 여기에 실제 로그아웃 로직을 추가하세요. 예: 세션 무효화, 토큰 삭제 등
-            String email = request.getUserPrincipal().getName(); // 현재 인증된 사용자의 이메일을 가져옵니다.
-            userService.logout(email); // UserService에 로그아웃 처리 로직이 포함되어 있다고 가정합니다.
+            if (authorization == null || !authorization.startsWith("Bearer ")) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Unauthorized request");
+            }
 
-            return new ResponseForm<>(HttpStatus.OK, null, "로그아웃 완료");
+            String token = authorization.substring(7);
+            if (token.isEmpty()) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Unauthorized request");
+            }
+
+            String email = logoutRequestForm.getEmail();
+            if (email == null || email.isEmpty()) {
+                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Email is missing");
+            }
+
+            // 토큰이 유효한지 확인하고, DB에 해당 토큰이 있는지 확인
+            boolean isTokenValid = tokenRepository.existsByAccessToken(token);
+            if (!isTokenValid) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Invalid token");
+            }
+
+            // 토큰이 유효하고 DB에 존재하면 삭제
+            userService.logout(email, token);
+
+            return new ResponseForm<>(HttpStatus.OK, null, "Logout successful");
         } catch (NotFoundUserException e) {
-            log.error("User not found during logout", e);
+            log.error("User not found during logout for email: {}", logoutRequestForm.getEmail(), e);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error during logout", e);
-            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
+            log.error("Unexpected error during logout for email: {}", logoutRequestForm.getEmail(), e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Logout failed");
         }
     }
 
@@ -191,6 +228,13 @@ public class userController {
         private String nickName;
         private String Email;
         private String Roles;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class LogoutRequestForm {
+        private String email;
     }
 
     @Data

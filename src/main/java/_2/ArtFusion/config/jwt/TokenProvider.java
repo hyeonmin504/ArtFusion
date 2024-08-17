@@ -84,7 +84,7 @@ public class TokenProvider {
 
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {  // JWT 토큰에서 인증 정보를 추출하는 메서드
         Claims claims = getClaims(token);  // 토큰에서 클레임 추출
-        Set<SimpleGrantedAuthority> authorities = Collections.emptySet();  // 사용자의 권한 정보를 설정 (빈 값)
+        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")); // 기본 권한 설정
         return new UsernamePasswordAuthenticationToken(claims.getSubject(), token, authorities);  // 인증 객체 생성
     }
 }

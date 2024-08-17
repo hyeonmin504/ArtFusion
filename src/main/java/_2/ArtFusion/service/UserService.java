@@ -1,7 +1,7 @@
 package _2.ArtFusion.service;
 
-import _2.ArtFusion.config.jwt.Token;
 import _2.ArtFusion.config.jwt.TokenProvider;
+import _2.ArtFusion.domain.token.Token;
 import _2.ArtFusion.domain.user.*;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
@@ -46,8 +46,11 @@ public class UserService implements UserDetailsService {
         // 비밀번호 암호화
         User user = new User(
                 userCreateForm.getEmail(),
-                passwordEncoder.encode(userCreateForm.getPassword())
+                passwordEncoder.encode(userCreateForm.getPassword()),
+                userCreateForm.getNickname()
         );
+        user.setUserRole(UserRole.BASIC); // 기본 역할을 BASIC으로 설정
+
 
         // 사용자 저장
         userRepository.save(user);
@@ -82,7 +85,6 @@ public class UserService implements UserDetailsService {
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-
     public LoginResponseForm getAccessToken(User user, String password) {
         UserDetails userDetails;
         try {
@@ -92,13 +94,20 @@ public class UserService implements UserDetailsService {
             return null;
         }
 
+        // UserRole이 null인지 확인
+        if (user.getRole() == null) {
+            log.error("User role is null for user: {}", user.getEmail());
+            throw new IllegalStateException("User role cannot be null");
+        }
+
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
             log.error("Password mismatch for user: {}", user.getEmail());
             return null;
         }
 
+
         try {
-            //액세스 토큰 , 리프레시 토큰 생성
+            // 액세스 토큰, 리프레시 토큰 생성
             String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
             String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
 
@@ -106,25 +115,20 @@ public class UserService implements UserDetailsService {
             LocalDateTime accessTokenExpiry = LocalDateTime.now().plusMinutes(10);
             LocalDateTime refreshTokenExpiry = LocalDateTime.now().plusDays(7);
 
-
             // 기존 토큰 검색 또는 새로운 토큰 엔티티 생성
             Token token = tokenRepository.findByEmail(user.getEmail())
-                    .orElse(new Token());
-
+                    .orElse(new Token());  // 새 토큰 객체 생성
 
             token.setEmail(user.getEmail());
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
             token.setAccessTokenExpiry(accessTokenExpiry);
             token.setRefreshTokenExpiry(refreshTokenExpiry);
+            token.setRole(user.getRole());  // User의 role을 Token에 설정
 
+            user.setToken(token);
 
-
-            tokenRepository.save(token);  // 데이터베이스에 저장 -> 이 부분이 redis 말고 db에 저장하는 부분
-
-//            redis
-//            redisTemplate.opsForValue().set("ACCESS_TOKEN:" + user.getEmail(), accessToken, Duration.ofMinutes(10));
-//            redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getEmail(), refreshToken, Duration.ofDays(7));
+            tokenRepository.save(token);  // 데이터베이스에 저장
 
             return new LoginResponseForm(user.getEmail(), user.getPassword(), accessToken, refreshToken);
         } catch (Exception e) {
@@ -152,20 +156,32 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public void logout(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if(userOptional.isPresent()){
-            // 사용자 정보 조회
-            User user = userOptional.get();
+    @Transactional
+    public void logout(String email, String accessToken) {
+        Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
 
-            // 데이터베이스에서 해당 사용자의 토큰 삭제
-            Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
-            tokenOptional.ifPresent(tokenRepository::delete);
+        if (tokenOptional.isPresent()) {
+            Token token = tokenOptional.get();
+
+            // email로 조회한 토큰의 accessToken이 주어진 accessToken과 일치하는지 확인
+            if (token.getAccessToken().equals(accessToken)) {
+                // 1. User와 Token의 연관관계를 끊습니다.
+                User user = token.getUser();
+                if (user != null) {
+                    user.setToken(null);  // User 엔티티에서 토큰 필드를 null로 설정
+                }
+
+                // 2. Token을 삭제합니다.
+                tokenRepository.delete(token);
+                log.info("Token deleted successfully for email: {} and accessToken: {}", email, accessToken);
+            } else {
+                log.warn("AccessToken does not match for email: {}", email);
+            }
         } else {
-            throw new UsernameNotFoundException("user not found with email : " + email);
+            log.warn("Token not found for email: {}", email);
         }
-
     }
+
 
     public LoginResponseForm refreshAccessToken(String email, String refreshToken) {
         // 데이터베이스에서 저장된 토큰 조회
