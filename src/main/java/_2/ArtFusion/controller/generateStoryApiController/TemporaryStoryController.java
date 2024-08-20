@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -125,6 +126,7 @@ public class TemporaryStoryController {
      * @return
      */
     @NotNull
+    @Transactional(transactionManager = "r2dbcTransactionManager")
     private Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
         return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats))
                 .flatMap(failApiResponseForm -> {
