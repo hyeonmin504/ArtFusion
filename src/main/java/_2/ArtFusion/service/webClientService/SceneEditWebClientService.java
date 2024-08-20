@@ -130,6 +130,7 @@ public class SceneEditWebClientService {
      * @param sceneId -> 장면 id 값
      * @return FailApiResponseForm -> 성공 여부
      */
+    @Transactional(transactionManager = "r2dbcTransactionManager")
     public Mono<ResultApiResponseForm> singleTransImage(Long sceneId) {
         return sceneFormatR2DBCRepository.findById(sceneId)
                 .flatMap(sceneFormat -> dallE3QueueProcessor.transImageForDallE(Mono.just(sceneFormat)))

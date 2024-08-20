@@ -44,7 +44,7 @@ public class SceneFormat {
         this.storyId = storyId;
     }
 
-    public static SceneFormat createFormat(int sceneSequence, String description, String dialogue, String background, String actors, StoryBoard storyBoard) {
+    public static SceneFormat createFormat(int sceneSequence, String description, String background, String dialogue, String actors, StoryBoard storyBoard) {
         return new SceneFormat(sceneSequence, description, dialogue, background,actors, storyBoard.getId());
     }
 

@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,12 +70,14 @@ public class SceneFormatWebClientService {
                 });
     }
 
-    @Transactional(transactionManager = "r2dbcTransactionManager")
     private Flux<SceneFormat> parseGptResponse(String gptResponse, GivenEntity givenEntity) {
 
         try {
             //String에서 불필요한 데이터 대체
-            String cleanedResponse = gptResponse.replaceAll("```json", "").replaceAll("```", "");
+            // 불필요한 콤마 제거
+            String cleanedResponse = gptResponse.replaceAll("```json", "")
+                    .replaceAll("```", "")
+                    .replaceAll(",\\s*}", "}");
             //json 변환
             JsonNode jsonResponse = objectMapper.readTree(cleanedResponse);
             //응답 받은 jsonResponse -> givenEntity 변환
@@ -106,10 +109,9 @@ public class SceneFormatWebClientService {
                 .flatMap(translatePrompt ->
                         openAiService.callGptApiCompletion(translatePrompt)
                                 .flatMap(translation -> {
-                                    log.info("Translation response={}", translation);
                                     String dallEPrompt = extractDallEPrompt(translation);
 
-                                    log.info("dallEPrompt={}", dallEPrompt + " end");
+                                    log.info("dallEPrompt={}", dallEPrompt);
                                     sceneFormat.setScenePromptEn(dallEPrompt);
                                     return sceneFormatR2DBCRepository.save(sceneFormat);
                                 })
@@ -117,29 +119,48 @@ public class SceneFormatWebClientService {
     }
 
     public String findMatchingActors(String actors, List<Actor> characters) {
-        String charactersPrompt = "";
+        StringBuilder charactersPrompt = new StringBuilder();
 
-        List<String> actorList = stream(actors.trim().split(",")).toList();
+        List<String> actorList = Arrays.stream(actors.trim().split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .distinct()  // 중복 제거
+                .toList();
 
         for (String actor : actorList) {
+            log.info("actor={}",actor);
             for (Actor character : characters) {
-                if (character.getName().contains(actor)) {
-                    charactersPrompt = charactersPrompt.concat(character.getName() + "=" + character.getCharacterPrompt() + ",");
+                if (character.getName().toLowerCase().contains(actor)) {
+                    charactersPrompt.append(character.getName())
+                            .append("=")
+                            .append(character.getCharacterPrompt())
+                            .append(",");
+                    log.info("charactersPrompt={}", charactersPrompt.toString());
                 }
             }
         }
-        return charactersPrompt;
+
+        // 마지막에 추가된 쉼표 제거
+        if (!charactersPrompt.isEmpty()) {
+            charactersPrompt.setLength(charactersPrompt.length() - 1);
+        }
+
+        return charactersPrompt.toString();
     }
 
     private Mono<String> getTranslatePrompt(SceneFormat sceneFormat, String charactersPrompt, String style) {
         String prompt = String.format(
                 """
-                Translate the following text to English and create a DALL-E 3 API prompt for image generation. Provide the response in the following JSON format: { "prompt": "<DALL-E 3 API prompt>" }. Use the following details:
-                location: %s
-                Description: %s
-                Characters: %s
-                Art Style: %s
-                without speech bubbles or text
+                    Translate the provided text into English and craft a DALL-E 3 API prompt suitable for image generation.
+                    The response should be formatted as follows: { "prompt": "<DALL-E 3 API prompt>" }.
+                    
+                    Include the following details in the prompt:
+                    - Location: %s
+                    - Scene Description: %s
+                    - Characters: %s
+                    - Style: %s
+                    
+                    Ensure the prompt instructs the model to generate an image without any speech bubbles or text.
                 """,
                 sceneFormat.getBackground(), sceneFormat.getDescription(),
                 charactersPrompt, Style.valueOf(style).getStyle());
@@ -153,7 +174,6 @@ public class SceneFormatWebClientService {
             String regex = "\\{\\s*\"prompt\":\\s*\"(.*?)\"\\s*\\}";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(translation);
-            log.info("translation={}", translation);
             if (matcher.find()) {
                 return matcher.group(1).trim();
             } else {
@@ -167,14 +187,29 @@ public class SceneFormatWebClientService {
 
     private String getSplitQuestion(StoryBoard storyBoard) {
         String initialPrompt = String.format(
-                        """
-                        Please split the following story into the number of
-                        scenes specified by %d and provide a description, dialogue, location , and actors for each scene in Korean.
-                        Format the response as JSON with the following structure:
-                        { "scenes": [ { "description": "", "dialogue": "", "location": "", "actors": "actor1, actor2 ..." }, ... ] }
-                        Story content: %s
-                        """,
-                storyBoard.getCutCnt(), storyBoard.getPromptKor());
+                """
+                Please split the following story into %d scenes and organize the elements as follows:
+                - 'event' should describe what happens in the scene,
+                - 'background' should detail the setting, including the location, time, and atmosphere of the scene,
+                - 'characters' should describe the characters involved,
+                - 'actors' should list the names of the characters present in the scene.
+                
+                Format the response as JSON with the following structure:
+                {
+                    "scenes": [
+                        {
+                            "event": "",
+                            "background": "",
+                            "characters": "character name=\"dialogue\", ...",
+                            "actors": "actor1, actor2 ..."
+                        },
+                        ...
+                    ]
+                }
+                Genre: %s
+                Story content: %s
+                """,
+                storyBoard.getCutCnt(),storyBoard.getGenre() ,storyBoard.getPromptKor());
         log.info("initialPrompt={}", initialPrompt);
         return initialPrompt;
     }
@@ -185,9 +220,9 @@ public class SceneFormatWebClientService {
         int i = 1;
         for (JsonNode scene : scenes) {
             SceneFormat sceneFormat = SceneFormat.createFormat(i++,
-                    scene.get("description").asText(),
-                    scene.get("dialogue").asText(),
-                    scene.get("location").asText(),
+                    scene.get("event").asText(),
+                    scene.get("background").asText(),
+                    scene.get("characters").asText(),
                     scene.get("actors").asText(),
                     (StoryBoard) givenEntity.getEntity());
             sceneFormats.add(sceneFormat);

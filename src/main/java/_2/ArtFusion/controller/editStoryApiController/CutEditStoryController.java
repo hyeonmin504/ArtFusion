@@ -94,13 +94,13 @@ public class CutEditStoryController {
     }
 
     /**
-     * 세부 수정
+     * 이미지 변환
      * @param form
      * @param sceneId
      * @return
      */
     @PutMapping("/{sceneId}/detail")
-    public Mono<ResponseForm<Object>> imageDetailEdit(@Validated @RequestBody DetailEditForm form,
+    public Mono<ResponseForm<Object>> imageVariation(@Validated @RequestBody DetailEditForm form,
                                         @PathVariable Long sceneId) {
         return sceneEditWebClientService.detailEdit(form, sceneId)
                 .flatMap(resultApiResponseForm -> {
