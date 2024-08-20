@@ -3,19 +3,15 @@ package _2.ArtFusion.service.processor;
 import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.SceneImage;
-import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.SceneImageR2DBCRepository;
 import _2.ArtFusion.service.util.convertUtil.ImageUrlConvertToPng;
 import _2.ArtFusion.service.util.form.OpenAiImageResponseForm;
 import _2.ArtFusion.service.util.singleton.SingletonQueueUtilForDallE2;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -106,6 +102,7 @@ public class DallE2QueueProcessor {
                             .retrieve()
                             .bodyToMono(OpenAiImageResponseForm.class);
                 })
+                //Flux 지만 현재는 하나의 url만 요청해서 기존의 이미지를 업데이트 처리
                 .flatMapMany(imageResponseForm -> Flux.fromIterable(imageResponseForm.getData())
                         .flatMap(imageUrlData -> {
                             String imageUrl = imageUrlData.getUrl();
@@ -114,10 +111,15 @@ public class DallE2QueueProcessor {
                         })
                 )
                 .doOnComplete(() -> log.info("이미지를 성공적으로 저장했습니다"))
-                .doOnError(e -> log.error("Error occurred while processing sceneFormat", e))
+                .retryWhen(reactor.util.retry.Retry.max(1) //1회 재시도
+                        .doBeforeRetry(retrySignal -> log.warn("Retrying request...")))
+                .onErrorResume(e -> {
+                    log.error("Fallback error handling: {}", e.getMessage());
+                    return Mono.empty(); // 또는 원하는 대체 로직을 여기에 작성
+                })
                 .then();
     }
-    //추후 복수개 저장시 이용
+    //반환된 url들을 저장하는 로직, 추후 복수개 저장시 이용
 //                                        .flatMap(savedImage -> {
 //                                            // SceneFormat에 저장된 1개 이미지 id를 업데이트
 //                                            // 나중에 여러개 저장 후 선택을 요청할 예정
@@ -125,7 +127,6 @@ public class DallE2QueueProcessor {
 //                                            return sceneFormatR2DBCRepository.save(updateForm.getSceneFormat());
 //                                        });
 
-    @Transactional(transactionManager = "r2dbcTransactionManager")
     public Mono<ResultApiResponseForm> updateImageForDallE(SceneImage sceneImage, Mono<SceneFormat> baseScene) {
         ResultApiResponseForm form = new ResultApiResponseForm();
         return baseScene.flatMap(sceneFormat -> {
