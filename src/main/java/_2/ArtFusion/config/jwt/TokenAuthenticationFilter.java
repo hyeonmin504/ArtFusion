@@ -1,7 +1,7 @@
 package _2.ArtFusion.config.jwt;
 
 import _2.ArtFusion.controller.ResponseForm;
-import _2.ArtFusion.repository.jpa.TokenRepository;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,7 +23,7 @@ import java.util.List;
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
     private final List<String> excludedPaths;
-    private final TokenRepository tokenRepository;
+    private final UserRepository userRepository;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -33,9 +33,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String token = getAccessToken(request);
 
         if (token != null && tokenProvider.validateToken(token)) {
-            // DB에 해당 토큰이 존재하는지 확인합니다.
-            if (tokenRepository.existsByAccessToken(token)) {
-                Authentication authentication = tokenProvider.getAuthentication(token);
+            // 토큰이 유효한지 확인하고 유저가 존재하는지 확인
+            Authentication authentication = tokenProvider.getAuthentication(token);
+            if (authentication != null) {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

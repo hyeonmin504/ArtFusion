@@ -1,12 +1,11 @@
 package _2.ArtFusion.service;
 
 import _2.ArtFusion.config.jwt.TokenProvider;
-import _2.ArtFusion.domain.token.Token;
 import _2.ArtFusion.domain.user.*;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
-import _2.ArtFusion.repository.jpa.TokenRepository;
 import _2.ArtFusion.repository.jpa.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,7 +26,6 @@ import java.util.regex.Pattern;
 @Slf4j
 public class UserService implements UserDetailsService {
 
-    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
@@ -57,6 +55,7 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
+
     public User loginUser(LoginForm loginForm) {
         // 로그인을 위한 사용자 정보 검증 로직 추가 가능
 
@@ -67,6 +66,37 @@ public class UserService implements UserDetailsService {
 
         return userOptional.get();
     }
+
+
+    public LoginResponseForm getAccessToken(User user, String password) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            log.error("Password mismatch for user: {}", user.getEmail());
+            return null;
+        }
+
+        String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(30));
+        return new LoginResponseForm(user.getEmail(), user.getPassword(), accessToken, user.getRefreshToken());
+    }
+
+    public LoginResponseForm refreshAccessToken(String email, String refreshToken) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.getRefreshToken().equals(refreshToken) && LocalDateTime.now().isBefore(user.getRefreshTokenExpiry())) {
+                String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(30));
+                return new LoginResponseForm(user.getEmail(), user.getPassword(), newAccessToken, refreshToken);
+            }
+        }
+        return null;
+    }
+
+    public void updateUserRefreshToken(User user, String refreshToken, LocalDateTime expiryDate) {
+        user.setRefreshToken(refreshToken);
+        user.setRefreshTokenExpiry(expiryDate);
+        userRepository.save(user);
+    }
+
+
 
     @Transactional(readOnly = true)
     public Boolean emailValidation(String email) {
@@ -82,60 +112,7 @@ public class UserService implements UserDetailsService {
         return !userRepository.existsUserByEmail(email);
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-    public LoginResponseForm getAccessToken(User user, String password) {
-        UserDetails userDetails;
-        try {
-            userDetails = loadUserByUsername(user.getEmail());
-        } catch (UsernameNotFoundException e) {
-            log.error("Error loading user by email: {}", e.getMessage());
-            return null;
-        }
 
-        // UserRole이 null인지 확인
-        if (user.getRole() == null) {
-            log.error("User role is null for user: {}", user.getEmail());
-            throw new IllegalStateException("User role cannot be null");
-        }
-
-        if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            log.error("Password mismatch for user: {}", user.getEmail());
-            return null;
-        }
-
-
-        try {
-            // 액세스 토큰, 리프레시 토큰 생성
-            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
-            String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
-
-            // 토큰 만료 시간 계산
-            LocalDateTime accessTokenExpiry = LocalDateTime.now().plusMinutes(10);
-            LocalDateTime refreshTokenExpiry = LocalDateTime.now().plusDays(7);
-
-            // 기존 토큰 검색 또는 새로운 토큰 엔티티 생성
-            Token token = tokenRepository.findByEmail(user.getEmail())
-                    .orElse(new Token());  // 새 토큰 객체 생성
-
-            token.setEmail(user.getEmail());
-            token.setAccessToken(accessToken);
-            token.setRefreshToken(refreshToken);
-            token.setAccessTokenExpiry(accessTokenExpiry);
-            token.setRefreshTokenExpiry(refreshTokenExpiry);
-            token.setRole(user.getRole());  // User의 role을 Token에 설정
-
-            user.setToken(token);
-
-            tokenRepository.save(token);  // 데이터베이스에 저장
-
-            return new LoginResponseForm(user.getEmail(), user.getPassword(), accessToken, refreshToken);
-        } catch (Exception e) {
-            log.error("Error generating tokens: {}", e.getMessage());
-            return null;
-        }
-    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -157,62 +134,27 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void logout(String email, String accessToken) {
-        Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
+    public void logout(String email, HttpSession session) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
 
-        if (tokenOptional.isPresent()) {
-            Token token = tokenOptional.get();
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
 
-            // email로 조회한 토큰의 accessToken이 주어진 accessToken과 일치하는지 확인
-            if (token.getAccessToken().equals(accessToken)) {
-                // 1. User와 Token의 연관관계를 끊습니다.
-                User user = token.getUser();
-                if (user != null) {
-                    user.setToken(null);  // User 엔티티에서 토큰 필드를 null로 설정
-                }
+            // 1. 유저의 리프레시 토큰 초기화
+            user.clearRefreshToken();
+            userRepository.save(user);  // 변경 사항 저장
 
-                // 2. Token을 삭제합니다.
-                tokenRepository.delete(token);
-                log.info("Token deleted successfully for email: {} and accessToken: {}", email, accessToken);
-            } else {
-                log.warn("AccessToken does not match for email: {}", email);
-            }
+            // 2. 세션에서 액세스 토큰 제거
+            session.removeAttribute("ACCESS_TOKEN");
+
+            log.info("User logged out successfully for email: {}", email);
         } else {
-            log.warn("Token not found for email: {}", email);
+            log.warn("User not found for email: {}", email);
         }
     }
 
 
-    public LoginResponseForm refreshAccessToken(String email, String refreshToken) {
-        // 데이터베이스에서 저장된 토큰 조회
-        Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
 
-        if (tokenOptional.isPresent()) {
-            Token storedToken = tokenOptional.get();
-
-            // 저장된 리프레시 토큰과 일치하는지 확인
-            if (storedToken.getRefreshToken().equals(refreshToken)) {
-                // 사용자 정보 조회
-                Optional<User> userOptional = userRepository.findByEmail(email);
-
-                if (userOptional.isPresent()) {
-                    User user = userOptional.get();
-
-                    // 새로운 액세스 토큰 생성
-                    String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
-
-                    // 토큰 정보 업데이트 및 저장
-                    storedToken.setAccessToken(newAccessToken);
-                    storedToken.setAccessTokenExpiry(LocalDateTime.now().plusMinutes(10));
-                    tokenRepository.save(storedToken);
-
-                    // 새로운 토큰 정보를 반환
-                    return new LoginResponseForm(user.getEmail(), user.getPassword(), newAccessToken, refreshToken);
-                }
-            }
-        }
-        return null; // 리프레시 토큰이 유효하지 않거나 사용자가 없는 경우 null 반환
-    }
 
 
     public boolean validateAccessToken(String token) {

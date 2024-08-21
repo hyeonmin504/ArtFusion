@@ -1,17 +1,18 @@
 package _2.ArtFusion.controller.userApiController;
 
+import _2.ArtFusion.config.jwt.TokenProvider;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.user.LoginForm;
 import _2.ArtFusion.domain.user.LoginResponseForm;
 import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.domain.user.UserCreateForm;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.TokenRepository;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,10 +23,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import _2.ArtFusion.domain.user.UserCreateForm;
-import _2.ArtFusion.controller.ResponseForm;
 
 import java.security.Principal;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +37,15 @@ import java.util.Optional;
 @Slf4j
 @RequestMapping("/api")
 public class userController {
-    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
+
+//    public userController(UserService userService){
+//        this.userService = userService;
+//    }
+
 
     //회원 가입
     @PostMapping("/users/signup")
@@ -58,20 +64,16 @@ public class userController {
             userService.createUser(userCreateForm);
             // 응답으로 사용할 객체를 생성 (성공 메시지나 생성된 사용자 정보를 반환)
             return new ResponseForm<>(HttpStatus.OK, userCreateForm, "User created successfully");
-        }
-        catch (ExistsUserException e) {
+        } catch (ExistsUserException e) {
             // 사용자 중복 예외 처리
             return new ResponseForm<>(HttpStatus.CONFLICT, null, "User already exists");
-        }
-        catch (InvalidFormatException e) {
+        } catch (InvalidFormatException e) {
             // 잘못된 형식 예외 처리
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Invalid input format");
-        }
-        catch (NotFoundUserException e) {
+        } catch (NotFoundUserException e) {
             // 사용자 미발견 예외 처리
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, "User not found");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // 그 외 예상치 못한 예외 처리
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
         }
@@ -80,7 +82,7 @@ public class userController {
     //로그인
     @PostMapping("/users/login")
     public ResponseForm loginUser(@Validated @RequestBody LoginForm loginForm,
-                                  BindingResult bindingResult) {
+                                  BindingResult bindingResult, HttpSession session) {
         // 1. Form 데이터 검증
         if (bindingResult.hasErrors()) {
             List<String> errorMessages = new ArrayList<>();
@@ -89,15 +91,24 @@ public class userController {
         }
 
         try {
-            // 2. 사용자 검증 및 비밀번호 검증을 UserService의 loginUser 메서드에서 처리
+            // 2. 사용자 검증 및 비밀 번호 검증(UserService 의 loginUser 메서드 에서 처리)
             User user = userService.loginUser(loginForm);
+
+            // 3. 액세스 토큰 생성 및 세션에 저장
+            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(30));
+            session.setAttribute("ACCESS_TOKEN", accessToken);
+            log.info("Access Token stored in session: {}", accessToken);  // 로그 기록
+
+            // 4. 리프레시 토큰 생성 및 User 엔티티에 저장
+            String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
+            userService.updateUserRefreshToken(user, refreshToken, LocalDateTime.now().plusDays(7));
 
             // 3. 토큰 생성 및 로그인 성공 처리
             LoginResponseForm loginResponseForm = userService.getAccessToken(user, loginForm.getPassword());
             if (loginResponseForm == null) {
                 throw new Exception("토큰 생성 실패");
             }
-            return new ResponseForm<>(HttpStatus.OK, loginResponseForm, "로그인에 성공했습니다.");
+            return new ResponseForm<>(HttpStatus.OK, loginResponseForm, "로그인 에 성공 했습 니다.");
         } catch (InvalidFormatException e) {
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
         } catch (Exception e) {
@@ -105,8 +116,9 @@ public class userController {
         }
     }
 
+    //리프레시 토큰 재발금
     @PostMapping("/refresh")
-    public ResponseForm<LoginResponseForm> refreshAccessToken(@RequestBody Map<String, String> request) {
+    public ResponseForm<LoginResponseForm> refreshAccessToken(@RequestBody Map<String, String> request, HttpSession session) {
         String username = request.get("username");
         String refreshToken = request.get("refreshToken");
         try {
@@ -114,6 +126,10 @@ public class userController {
             if (loginResponse == null) {
                 return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 Refresh Token 입니다.");
             }
+
+            String newAccessToken = loginResponse.getAccessToken();
+            session.setAttribute("ACCESS_TOKEN", newAccessToken);
+
             return new ResponseForm<>(HttpStatus.OK, loginResponse, "Access Token 갱신에 성공했습니다.");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "토큰 갱신에 실패했습니다. 오류: " + e.getMessage());
@@ -159,56 +175,28 @@ public class userController {
     public ResponseForm emailValidation(@RequestParam String email) {
         try {
             Boolean b = userService.emailValidation(email);
-            return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
-        } catch (InvalidFormatException | ExistsUserException e){
-            log.info("error={}",e);
-            return new ResponseForm<>(HttpStatus.BAD_REQUEST,null,e.getMessage());
+            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+        } catch (InvalidFormatException | ExistsUserException e) {
+            log.info("error={}", e);
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
         }
     }
 
     @PostMapping("/users/logout")
-    public ResponseForm logout(@RequestHeader("Authorization") String authorization,
-                               @RequestBody LogoutRequestForm logoutRequestForm) {
+    public ResponseForm logout(@RequestParam String email, HttpSession session) {
         try {
-            if (authorization == null || !authorization.startsWith("Bearer ")) {
-                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Unauthorized request");
-            }
-
-            String token = authorization.substring(7);
-            if (token.isEmpty()) {
-                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Unauthorized request");
-            }
-
-            String email = logoutRequestForm.getEmail();
-            if (email == null || email.isEmpty()) {
-                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Email is missing");
-            }
-
-            // 토큰이 유효한지 확인하고, DB에 해당 토큰이 있는지 확인
-            boolean isTokenValid = tokenRepository.existsByAccessToken(token);
-            if (!isTokenValid) {
-                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Invalid token");
-            }
-
-            // 토큰이 유효하고 DB에 존재하면 삭제
-            userService.logout(email, token);
-
-            return new ResponseForm<>(HttpStatus.OK, null, "Logout successful");
-        } catch (NotFoundUserException e) {
-            log.error("User not found during logout for email: {}", logoutRequestForm.getEmail(), e);
-            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+            userService.logout(email, session);
+            return new ResponseForm<>(HttpStatus.OK, null, "로그아웃에 성공했습니다.");
         } catch (Exception e) {
-            log.error("Unexpected error during logout for email: {}", logoutRequestForm.getEmail(), e);
-            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Logout failed");
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "로그아웃에 실패했습니다. 오류: " + e.getMessage());
         }
     }
 
-
-    //JWT 액세스 토큰 유효성 검사
+    // JWT 액세스 토큰 유효성 검사
     @GetMapping("/protected-resource")
-    public ResponseForm<String> getProtectedResource
-            (@RequestHeader(value = "Authorization", required = false) String authorization, HttpServletRequest
-                    request, HttpServletResponse response){
+    public ResponseForm<String> getProtectedResource(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        // 토큰이 헤더에 존재하는지 확인 후 Bearer 접두사 제거 후 토큰 추출
         String token = Optional.ofNullable(authorization).map(auth -> auth.replace("Bearer ", "")).orElse("");
         boolean isTokenValid = userService.validateAccessToken(token);
 
@@ -217,13 +205,14 @@ public class userController {
         } else {
             return new ResponseForm<>(HttpStatus.FORBIDDEN, null, "유효하지 않은 토큰입니다.");
         }
-    }
 
+    }
 
 
     @Data
     @AllArgsConstructor
-    private static class UserDataForm {
+
+    public static class UserDataForm {
         private Long id;
         private String nickName;
         private String Email;
@@ -243,5 +232,6 @@ public class userController {
     public static class UserDataRequestForm {
         private String AccessToken;
     }
-
 }
+
+

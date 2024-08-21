@@ -39,6 +39,8 @@ public class TokenProvider {
                 .setExpiration(expiredAt)  // 토큰 만료 시간 설정
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)  // 서명 키와 알고리즘을 사용하여 토큰에 서명
                 .compact();  // 토큰을 문자열로 압축하여 반환
+
+
     }
 
     private String makeToken(Date now, Date expiredAt, User user) {  // JWT 토큰을 생성하는 메서드

@@ -3,7 +3,6 @@ package _2.ArtFusion.domain.user;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.Heart;
 import _2.ArtFusion.domain.archive.StoryPost;
-import _2.ArtFusion.domain.token.Token;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
@@ -54,11 +53,11 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StoryBoard> storyBoards = new ArrayList<>();
 
-//    @OneToOne(cascade = CascadeType.ALL)
-//    @JoinColumn(name = "token_id", referencedColumnName = "id")
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "token_id")
-    private Token token;
+    @Column(nullable = true)
+    private String refreshToken;
+
+    @Column(nullable = true)
+    private LocalDateTime refreshTokenExpiry;
 
     public User(String email, String encodePassword) {
         this.email = email;
@@ -89,8 +88,19 @@ public class User {
         this.role = role;
     }
 
-    public void setToken(Token token) {
-        this.token = token;
 
+
+    // 리프레시 토큰 초기화 메서드
+    public void clearRefreshToken() {
+        this.refreshToken = null;
+        this.refreshTokenExpiry = null;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void setRefreshTokenExpiry(LocalDateTime refreshTokenExpiry) {
+        this.refreshTokenExpiry = refreshTokenExpiry;
     }
 }

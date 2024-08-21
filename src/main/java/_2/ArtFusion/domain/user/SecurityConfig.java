@@ -2,7 +2,7 @@ package _2.ArtFusion.domain.user;
 
 import _2.ArtFusion.config.jwt.TokenAuthenticationFilter;
 import _2.ArtFusion.config.jwt.TokenProvider;
-import _2.ArtFusion.repository.jpa.TokenRepository;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +29,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final TokenProvider tokenProvider;
-    private final TokenRepository tokenRepository;
+    private final UserRepository userRepository;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -83,6 +83,6 @@ public class SecurityConfig {
                 "/api/users/signup",
                 "/api/users/login",
                 "/api/logout"
-        ), tokenRepository); // TokenRepository 전달
+        ), userRepository); // TokenRepository 전달
     }
 }
