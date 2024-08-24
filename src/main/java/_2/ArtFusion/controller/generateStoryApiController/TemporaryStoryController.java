@@ -7,12 +7,13 @@ import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
+import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.processor.DallE3QueueProcessor;
 import _2.ArtFusion.service.webClientService.SceneFormatWebClientService;
 import _2.ArtFusion.service.StoryBoardService;
 import jakarta.persistence.NoResultException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,10 @@ public class TemporaryStoryController {
     private final DallE3QueueProcessor dallE3QueueProcessor;
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
+
 
     /**
      * 현재 작업중인 스토리 보드 data 요청 api
@@ -46,13 +50,14 @@ public class TemporaryStoryController {
      * @return
      */
     @GetMapping("/story/temporary/{storyId}")
-    public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId) {
-        //예시로 유저 id가 1L인 사람이 요청 했을 경우 test 데이터
-        User user = userRepository.findById(1L).get();
+    public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
         try {
             //SceneFormat 데이터를 가저오기
-            StoryBoard storyBoard = sceneFormatService.getSceneFormatData(user.getId(),storyId);
+            StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
 
             log.info("storyBoard={}",storyBoard);
 

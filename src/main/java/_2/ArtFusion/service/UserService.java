@@ -4,7 +4,9 @@ import _2.ArtFusion.config.jwt.TokenProvider;
 import _2.ArtFusion.domain.user.*;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
+import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -95,6 +97,16 @@ public class UserService implements UserDetailsService {
         user.setRefreshTokenExpiry(expiryDate);
         userRepository.save(user);
     }
+
+    public User getUserData(String token){
+        String email = tokenProvider.getClaims(token).getSubject();
+
+        return userRepository.findByEmail(email).orElseThrow(
+                () -> new NotFoundUserException("유저 없음")
+        );
+    }
+
+
 
 
 
