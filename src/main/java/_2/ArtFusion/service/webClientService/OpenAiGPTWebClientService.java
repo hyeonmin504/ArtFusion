@@ -4,6 +4,7 @@ import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.scene.SceneImage;
 import _2.ArtFusion.repository.jpa.SceneImageRepository;
 import com.theokanning.openai.OpenAiHttpException;
+import com.theokanning.openai.completion.chat.ChatCompletionChoice;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;
@@ -38,7 +39,7 @@ public class OpenAiGPTWebClientService {
                         .build();
 
                 ChatCompletionResult result = openAiService.createChatCompletion(request);
-                log.info("result.getChoices().get(0).getMessage().getContent()={}", result.getChoices().get(0).getMessage().getContent());
+
                 return result.getChoices().get(0).getMessage().getContent();
             } catch (OpenAiHttpException e) {
                 log.error("OpenAiHttpException occurred: {}", e.getMessage(), e);
