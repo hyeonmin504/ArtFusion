@@ -11,6 +11,7 @@ import _2.ArtFusion.exception.InvalidFormatException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.csrf.InvalidCsrfTokenException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -63,16 +65,16 @@ public class userController {
         try {
             userService.createUser(userCreateForm);
             // 응답으로 사용할 객체를 생성 (성공 메시지나 생성된 사용자 정보를 반환)
-            return new ResponseForm<>(HttpStatus.OK, userCreateForm, "User created successfully");
+            return new ResponseForm<>(HttpStatus.OK, userCreateForm, "성공적으로 User 생성을 완료했습니다.");
         } catch (ExistsUserException e) {
             // 사용자 중복 예외 처리
-            return new ResponseForm<>(HttpStatus.CONFLICT, null, "User already exists");
+            return new ResponseForm<>(HttpStatus.CONFLICT, null, "이미 존재하는 User email 입니다.");
         } catch (InvalidFormatException e) {
             // 잘못된 형식 예외 처리
-            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Invalid input format");
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "잘못된 형식입니다.");
         } catch (NotFoundUserException e) {
             // 사용자 미발견 예외 처리
-            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, "User not found");
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, "찾을 수 없는 User입니다.");
         } catch (Exception e) {
             // 그 외 예상치 못한 예외 처리
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
@@ -103,7 +105,7 @@ public class userController {
             String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
             userService.updateUserRefreshToken(user, refreshToken, LocalDateTime.now().plusDays(7));
 
-            // 3. 토큰 생성 및 로그인 성공 처리
+            // 5. 토큰 생성 및 로그인 성공 처리
             LoginResponseForm loginResponseForm = userService.getAccessToken(user, loginForm.getPassword());
             if (loginResponseForm == null) {
                 throw new Exception("토큰 생성 실패");
@@ -162,6 +164,10 @@ public class userController {
             );
 
             return new ResponseForm<>(HttpStatus.OK, userDataForm, "Ok");
+        } catch (ExpiredJwtException e) {
+            log.error("Expired JWT token: ", e);
+            System.out.println();
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "Token has expired. Please log in again.");
         } catch (NotFoundUserException e) {
             log.error("User not found: ", e);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
@@ -172,9 +178,9 @@ public class userController {
     }
 
     @GetMapping("/users/{email}")
-    public ResponseForm emailValidation(@RequestParam String email) {
+    public ResponseForm emailValidation(@PathVariable String email) {
         try {
-            Boolean b = userService.emailValidation(email);
+            Boolean isValid = userService.emailValidation(email);
             return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
         } catch (InvalidFormatException | ExistsUserException e) {
             log.info("error={}", e);
@@ -183,10 +189,14 @@ public class userController {
     }
 
     @PostMapping("/users/logout")
-    public ResponseForm logout(@RequestParam String email, HttpSession session) {
+    public ResponseForm logout(@RequestHeader("Authorization") String bearToken, HttpSession session) {
         try {
-            userService.logout(email, session);
-            return new ResponseForm<>(HttpStatus.OK, null, "로그아웃에 성공했습니다.");
+            //Bear 토큰에서 실제 토큰 부분만 추출
+            String accessToken = bearToken.substring("Bearer".length());
+
+            //토큰 사용 해서 로그 아웃
+            userService.logout(accessToken, session);
+            return new ResponseForm<>(HttpStatus.OK, "로그아웃 완료", "200 ok");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "로그아웃에 실패했습니다. 오류: " + e.getMessage());
         }

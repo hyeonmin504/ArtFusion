@@ -134,7 +134,8 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void logout(String email, HttpSession session) {
+    public void logout(String accessToken, HttpSession session) {
+        String email = tokenProvider.getClaims(accessToken).getSubject();
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
@@ -147,9 +148,9 @@ public class UserService implements UserDetailsService {
             // 2. 세션에서 액세스 토큰 제거
             session.removeAttribute("ACCESS_TOKEN");
 
-            log.info("User logged out successfully for email: {}", email);
+            log.info("User 성공적으로 로그아웃 되었습니다 email: {}", email);
         } else {
-            log.warn("User not found for email: {}", email);
+            log.warn("User 를 찾을 수 없습니다 email: {}", email);
         }
     }
 

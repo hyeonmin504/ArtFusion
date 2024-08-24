@@ -17,7 +17,7 @@ import java.util.Set;
 
 @Service  // Spring의 서비스 레이어를 나타내는 어노테이션
 @RequiredArgsConstructor  // 생성자 주입을 자동으로 처리해주는 Lombok 어노테이션
-//- **`TokenProvider`**: 이 클래스는 JWT 토큰의 생성, 검증, 클레임 추출 등을 처리하는 기능을 제공합니다. 또한, 이 클래스는 Redis와 연동되어 JWT 토큰의 상태를 관리할 수 있습니다.
+//- **`TokenProvider`**: 이 클래스는 JWT 토큰의 생성, 검증, 클레임 추출 등을 처리하는 기능을 제공.
 public class TokenProvider {
     private final JwtProperties jwtProperties;  // JWT 설정 정보를 담고 있는 클래스의 인스턴스
     private Key getSigningKey() {  // JWT 서명에 사용할 키를 생성하는 메서드
@@ -64,16 +64,23 @@ public class TokenProvider {
             return true;  // 토큰이 유효하면 true 반환
         } catch (ExpiredJwtException e) {
             System.err.println("Expired JWT token: " + e.getMessage());
+            throw e;  // 만료된 토큰 예외를 던짐
         } catch (UnsupportedJwtException e) {
             System.err.println("Unsupported JWT token: " + e.getMessage());
+            throw e;
         } catch (MalformedJwtException e) {
             System.err.println("Malformed JWT token: " + e.getMessage());
+            throw e;
         } catch (SignatureException e) {
             System.err.println("Invalid JWT signature: " + e.getMessage());
+            throw e;
         } catch (IllegalArgumentException e) {
             System.err.println("JWT token is invalid: " + e.getMessage());
+            throw e;
+        } catch (JwtException e) {  // 상위 클래스는 마지막에 캐치
+            System.err.println("Invalid JWT token: " + e.getMessage());
+            throw e;
         }
-        return false;  // 유효하지 않으면 false 반환
     }
 
     public Claims getClaims(String token) {  // JWT 토큰에서 클레임을 추출하는 메서드
@@ -87,6 +94,9 @@ public class TokenProvider {
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {  // JWT 토큰에서 인증 정보를 추출하는 메서드
         Claims claims = getClaims(token);  // 토큰에서 클레임 추출
         Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")); // 기본 권한 설정
-        return new UsernamePasswordAuthenticationToken(claims.getSubject(), token, authorities);  // 인증 객체 생성
+        return new UsernamePasswordAuthenticationToken(claims.getSubject(), token, authorities);  // 사용자의 인증 정보 담음
+        //clamis.subject =  jwt의 주체
+        //token 은 그 자체
+        //authorities 사용자 권한 정보
     }
 }
