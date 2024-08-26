@@ -50,10 +50,9 @@ public class TemporaryStoryController {
      * @param storyId
      * @return
      */
-    @GetMapping("/story/temporary/{storyId}")
+    @GetMapping("/story/temporary/{storyId}") //완료
     public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
         try {
@@ -89,12 +88,14 @@ public class TemporaryStoryController {
      * @param form
      * @return
      */
-    @PostMapping("/story/temporary")
-    public Mono<ResponseForm<?>> generateTemporaryImageRequest(@RequestBody @Validated GenerateTemporaryForm form) {
-        Long userId = 1L; // 예시 데이터로 유저 ID 설정
+    @PostMapping("/story/temporary") //완료
+    public Mono<ResponseForm<?>> generateTemporaryImageRequest(@RequestBody @Validated GenerateTemporaryForm form,HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
         log.info("Start generating temporary image request");
-        return storyBoardService.generateStoryBoardAndCharacter(form, userId)
+        return storyBoardService.generateStoryBoardAndCharacter(form, userData.getId())
                 .flatMap(actorAndStoryIdForm ->
                         sceneFormatWebClientService.processStoryBoard(Mono.just(actorAndStoryIdForm.getStoryId()),Mono.just(actorAndStoryIdForm.getCharacters()))
                                 .collectList()

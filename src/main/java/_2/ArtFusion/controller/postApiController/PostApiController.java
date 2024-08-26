@@ -2,9 +2,12 @@ package _2.ArtFusion.controller.postApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.archive.Comment;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.CommentService;
 import _2.ArtFusion.service.LikeService;
+import _2.ArtFusion.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,11 @@ public class PostApiController {
 
     private final CommentService commentService;
     private final LikeService likeService;
+    private final UserService userService;
+
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
+
 
     /**
      * 저장된 댓글 데이터 모두 가져오기
@@ -56,13 +64,13 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @param form -> 받은 textBody
      */
-    @PostMapping("/comment/{postId}")
-    public ResponseForm saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form){
-        //테스트 유저
-        Long userId = 1L;
+    @PostMapping("/comment/{postId}") //완료 ->post가 없음
+    public ResponseForm saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,HttpServletRequest request){
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
         try {
             //서비스 호출하여 댓글 저장
-            commentService.saveComments(form, userId, postId);
+            commentService.saveComments(form, userData.getId(), postId);
 
             return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
         } catch (NotFoundContentsException e) {
@@ -100,13 +108,14 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @return
      */
-    @PutMapping("/likes/{postId}")
-    public ResponseForm likeApi(@PathVariable Long postId){
-        //테스트 유저
-        Long userId = 1L;
+    @PutMapping("/likes/{postId}") //완료 ->post가 없음
+    public ResponseForm likeApi(@PathVariable Long postId, HttpServletRequest request){
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+
         try {
             //서비스 호출하여 댓글 저장
-            likeService.isLikeStatus(postId,userId);
+            likeService.isLikeStatus(postId,userData.getId());
             return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
         } catch (NotFoundContentsException e) {
             return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());

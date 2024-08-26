@@ -2,10 +2,14 @@ package _2.ArtFusion.controller.generateStoryApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.StoryBoardRepository;
 import _2.ArtFusion.service.ImageService;
+import _2.ArtFusion.service.SceneFormatService;
+import _2.ArtFusion.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,15 +26,23 @@ public class GenerateStoryController {
 
     private final ImageService imageService;
     private final StoryBoardRepository storyBoardRepository;
+    private final UserService userService;
+    private final SceneFormatService sceneFormatService;
 
-    @PostMapping("/story/generate")
-    public ResponseForm getFinalStory(@RequestParam Long storyId, @RequestParam MultipartFile image) {
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
+
+
+    @PostMapping("/story/generate")//완료
+    public ResponseForm getFinalStory(@RequestParam Long storyId, @RequestParam MultipartFile image, HttpServletRequest request) {
+
+        //사용자 인증
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+
         try {
-            //사용자 체크
-
-            StoryBoard storyBoard = storyBoardRepository.findById(storyId).orElseThrow(
-                    () -> new NotFoundContentsException("해당 컨텐츠를 찾을 수 없습니다")
-            );
+            StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
+            //에러코드 추가 해야됨
 
             //이미지 저장
             imageService.uploadImage(image,storyBoard);

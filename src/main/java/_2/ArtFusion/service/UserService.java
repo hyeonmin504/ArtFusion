@@ -98,9 +98,10 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    // 사용자 데이터 확인[자주 쓸 데이터]
     public User getUserData(String token){
         String email = tokenProvider.getClaims(token).getSubject();
-
+        log.info("email={}",email);
         return userRepository.findByEmail(email).orElseThrow(
                 () -> new NotFoundUserException("유저 없음")
         );
