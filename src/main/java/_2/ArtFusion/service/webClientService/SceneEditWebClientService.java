@@ -2,7 +2,7 @@ package _2.ArtFusion.service.webClientService;
 
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
-import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.exception.NotFoundContentsException;

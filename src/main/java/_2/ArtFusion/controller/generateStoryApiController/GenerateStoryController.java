@@ -1,10 +1,13 @@
 package _2.ArtFusion.controller.generateStoryApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
+import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
+import _2.ArtFusion.repository.jpa.ArchiveRepository;
 import _2.ArtFusion.repository.jpa.StoryBoardRepository;
+import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +25,7 @@ public class GenerateStoryController {
 
     private final ImageService imageService;
     private final StoryBoardRepository storyBoardRepository;
+    private final ArchiveService archiveService;
 
     @PostMapping("/story/generate")
     public ResponseForm getFinalStory(@RequestParam Long storyId, @RequestParam MultipartFile image) {
@@ -36,7 +40,7 @@ public class GenerateStoryController {
             imageService.uploadImage(image,storyBoard);
 
             //post 생성
-
+            archiveService.registerStoryPost(storyBoard);
 
             return new ResponseForm<>(HttpStatus.OK, null,"이미지 저장 완료");
         } catch (NotFoundContentsException e) {

@@ -23,9 +23,17 @@ public class ConvertUtil {
      */
     public static StoryBoard convertStoryBoard(GenerateTemporaryForm form, Long userId) {
         log.info("convertStoryBoard start");
+
+        String prompt = form.getPromptKor()
+                .replace(".\n\n", ". ")
+                .replace("\n\n", ". ")
+                .replace(".\n", ". ")
+                .replace("\n", ". ");
+        log.info("convert/form.getPrompt={}",prompt);
+
         return StoryBoard.builder()
                 .title(form.getTitle())
-                .promptKor(form.getPromptKor())
+                .promptKor(prompt)
                 .style(convertToStyleTypeEnum(form.getStyle()))
                 .generateType(checkToGenerateTypeEnum(form.getGenerateType()))
                 .genre(convertToGenre(form.getGenre()))

@@ -132,7 +132,7 @@ public class SceneFormatWebClientService {
             for (Actor character : characters) {
                 if (character.getName().toLowerCase().contains(actor)) {
                     charactersPrompt.append(character.getName())
-                            .append("=")
+                            .append(":")
                             .append(character.getCharacterPrompt())
                             .append(",");
                     log.info("charactersPrompt={}", charactersPrompt.toString());
@@ -186,11 +186,11 @@ public class SceneFormatWebClientService {
     }
 
     private String getSplitQuestion(StoryBoard storyBoard) {
-        String initialPrompt = String.format(
+        return String.format(
                 """
                 Please split the following story into %d scenes and organize the elements as follows:
                 - 'event' should describe what happens in the scene,
-                - 'background' should detail the setting, including the location, time, and atmosphere of the scene,
+                - 'background' should detail the setting, including the location, time, and atmosphere of the scene. If the scene takes place in the same location as the previous or next scene, please describe the location in greater detail.
                 - 'characters' should describe the characters involved,
                 - 'actors' should list the names of the characters present in the scene.
                 
@@ -200,7 +200,7 @@ public class SceneFormatWebClientService {
                         {
                             "event": "",
                             "background": "",
-                            "characters": "character name=\"dialogue\", ...",
+                            "characters": "name1=dialogue,name2=dialogue,...",
                             "actors": "actor1, actor2 ..."
                         },
                         ...
@@ -210,10 +210,7 @@ public class SceneFormatWebClientService {
                 Story content: %s
                 """,
                 storyBoard.getCutCnt(),storyBoard.getGenre() ,storyBoard.getPromptKor());
-        log.info("initialPrompt={}", initialPrompt);
-        return initialPrompt;
     }
-
     private List<SceneFormat> translateEntityForJson(GivenEntity givenEntity, JsonNode jsonResponse) {
         JsonNode scenes = jsonResponse.get("scenes");
         List<SceneFormat> sceneFormats = new ArrayList<>();
