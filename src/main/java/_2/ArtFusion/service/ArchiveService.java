@@ -117,6 +117,12 @@ public class ArchiveService {
     }
 
     @Transactional
+    public void registerStoryPost(StoryBoard storyBoard) {
+        StoryPost storyPost = new StoryPost(storyBoard);
+        archiveRepository.save(storyPost);
+    }
+
+    @Transactional
     public void deleteStoryBoard(Long storyId) throws NotFoundContentsException {
         StoryBoard storyBoard = storyBoardRepository.findById(storyId)
                 .orElseThrow(() -> new NotFoundContentsException("스토리보드를 찾을 수 없습니다."));
@@ -128,5 +134,4 @@ public class ArchiveService {
 
         storyBoardRepository.delete(storyBoard);
     }
-
 }

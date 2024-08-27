@@ -64,7 +64,7 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @param form -> 받은 textBody
      */
-    @PostMapping("/comment/{postId}") //완료 ->post가 없음
+    @PostMapping("/comment/{postId}") //테스트 완료
     public ResponseForm saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,HttpServletRequest request){
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
@@ -83,7 +83,7 @@ public class PostApiController {
      * 댓글 수 조회 API
      * @param postId -> 현재 postId
      */
-    @GetMapping("/comment/cnt/{postId}")
+    @GetMapping("/comment/cnt/{postId}") //테스트 완료
     public ResponseForm getCommentCountApi(@PathVariable Long postId) {
         try {
             int count = commentService.countComments(postId);
@@ -108,7 +108,7 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @return
      */
-    @PutMapping("/likes/{postId}") //완료 ->post가 없음
+    @PutMapping("/likes/{postId}") //테스트 완료
     public ResponseForm likeApi(@PathVariable Long postId, HttpServletRequest request){
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));

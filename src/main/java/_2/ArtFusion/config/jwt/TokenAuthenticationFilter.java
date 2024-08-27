@@ -37,7 +37,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         // 토큰 검사가 필요 없는 경로를 설정합니다.
-        List<String> excludedPaths = List.of("/api/users/signup", "/api/users/login", "/api/users/logout");
+        List<String> excludedPaths = List.of("/api/users/signup", "/api/users/login", "/api/users/logout","/api/archives","/api/archives/{nickname}","/api/archives/{nickname}/{postId}");
 
         // 해당 경로에 대해서는 필터링을 건너뜁니다.
         if (excludedPaths.contains(requestURI)) {

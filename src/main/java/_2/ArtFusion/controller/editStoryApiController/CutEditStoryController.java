@@ -4,7 +4,7 @@ import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.SceneSeqForm;
-import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.SceneEditService;
 import _2.ArtFusion.service.webClientService.SceneEditWebClientService;
@@ -76,7 +76,7 @@ public class CutEditStoryController {
      * @param sceneId
      * @return
      */
-    @PutMapping("/{sceneId}/refresh")
+    @PutMapping("/{sceneId}/refresh") //테스트 완료
     public Mono<ResponseForm<Object>> imageRandomEdit(@PathVariable Long sceneId) {
         return sceneEditWebClientService.singleTransImage(sceneId)
                 .flatMap(resultApiResponseForm -> {
@@ -99,7 +99,7 @@ public class CutEditStoryController {
      * @param sceneId
      * @return
      */
-    @PutMapping("/{sceneId}/detail")
+    @PutMapping("/{sceneId}/detail")//테스트 완료
     public Mono<ResponseForm<Object>> imageVariation(@Validated @RequestBody DetailEditForm form,
                                         @PathVariable Long sceneId) {
         return sceneEditWebClientService.detailEdit(form, sceneId)

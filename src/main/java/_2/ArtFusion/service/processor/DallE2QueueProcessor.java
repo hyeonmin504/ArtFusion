@@ -1,6 +1,6 @@
 package _2.ArtFusion.service.processor;
 
-import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.SceneImage;
 import _2.ArtFusion.repository.r2dbc.SceneImageR2DBCRepository;
@@ -16,7 +16,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -114,7 +113,7 @@ public class DallE2QueueProcessor {
                 .retryWhen(reactor.util.retry.Retry.max(1) //1회 재시도
                         .doBeforeRetry(retrySignal -> log.warn("Retrying request...")))
                 .onErrorResume(e -> {
-                    log.error("Fallback error handling: {}", e.getMessage());
+                    log.error("Fallback error handling", e);
                     return Mono.empty(); // 또는 원하는 대체 로직을 여기에 작성
                 })
                 .then();

@@ -50,7 +50,7 @@ public class TemporaryStoryController {
      * @param storyId
      * @return
      */
-    @GetMapping("/story/temporary/{storyId}") //완료
+    @GetMapping("/story/temporary/{storyId}") //테스트 완료
     public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
@@ -88,7 +88,7 @@ public class TemporaryStoryController {
      * @param form
      * @return
      */
-    @PostMapping("/story/temporary") //완료
+    @PostMapping("/story/temporary") //테스트 완료
     public Mono<ResponseForm<?>> generateTemporaryImageRequest(@RequestBody @Validated GenerateTemporaryForm form,HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 
@@ -133,7 +133,7 @@ public class TemporaryStoryController {
      */
     @NotNull
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    private Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
+    protected Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
         return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats))
                 .flatMap(failApiResponseForm -> {
                     if (failApiResponseForm.getFailedSeq().isEmpty()) { // 이미지 생성 성공

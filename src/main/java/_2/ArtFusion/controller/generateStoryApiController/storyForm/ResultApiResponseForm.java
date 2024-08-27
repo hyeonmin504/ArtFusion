@@ -1,4 +1,4 @@
-package _2.ArtFusion.controller.generateStoryApiController;
+package _2.ArtFusion.controller.generateStoryApiController.storyForm;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
