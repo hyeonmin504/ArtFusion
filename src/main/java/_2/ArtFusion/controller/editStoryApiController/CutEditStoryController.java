@@ -4,7 +4,7 @@ import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.SceneSeqForm;
-import _2.ArtFusion.controller.generateStoryApiController.ResultApiResponseForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.SceneEditService;
 import _2.ArtFusion.service.webClientService.SceneEditWebClientService;

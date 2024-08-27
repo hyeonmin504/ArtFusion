@@ -62,11 +62,7 @@ public class StoryPost {
         this.storyBoard = storyBoard;
     }
 
-    public StoryPost(String summary) {
-        this.summary = summary;
-    }
-
-    public static StoryPost createStoryPost(String summary) {
-        return new StoryPost(summary);
+    public StoryPost(StoryBoard storyBoard) {
+        this.storyBoard = storyBoard;
     }
 }
