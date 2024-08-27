@@ -44,12 +44,12 @@ public class userController {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
 
-//    public userController(UserService userService){
-//        this.userService = userService;
-//    }
-
-
-    //회원 가입
+    /**
+     *
+     * @param userCreateForm
+     * @param bindingResult
+     * @return
+     */
     @PostMapping("/users/signup")
     public ResponseForm createUser(@RequestBody UserCreateForm userCreateForm,
                                    BindingResult bindingResult) {
@@ -81,7 +81,13 @@ public class userController {
         }
     }
 
-    //로그인
+    /**
+     * 로그인 로직
+     * @param loginForm
+     * @param bindingResult
+     * @param session
+     * @return
+     */
     @PostMapping("/users/login")
     public ResponseForm loginUser(@Validated @RequestBody LoginForm loginForm,
                                   BindingResult bindingResult, HttpSession session) {
@@ -118,7 +124,12 @@ public class userController {
         }
     }
 
-    //리프레시 토큰 재발금
+    /**
+     * refresh 토큰 발급
+     * @param request
+     * @param session
+     * @return
+     */
     @PostMapping("/refresh")
     public ResponseForm<LoginResponseForm> refreshAccessToken(@RequestBody Map<String, String> request, HttpSession session) {
         String username = request.get("username");
@@ -139,7 +150,11 @@ public class userController {
     }
 
 
-    // 사용자 정보 조회
+    /**
+     * 유저 정보 조회
+     * @param request
+     * @return
+     */
     @GetMapping("/users")
     public ResponseForm requestUserData(HttpServletRequest request) {
         try {
@@ -177,6 +192,11 @@ public class userController {
         }
     }
 
+    /**
+     * 이메일 검증
+     * @param email
+     * @return
+     */
     @GetMapping("/users/{email}")
     public ResponseForm emailValidation(@PathVariable String email) {
         try {
@@ -188,6 +208,12 @@ public class userController {
         }
     }
 
+    /**
+     * 로그아웃 로직
+     * @param bearToken
+     * @param session
+     * @return
+     */
     @PostMapping("/users/logout")
     public ResponseForm logout(@RequestHeader("Authorization") String bearToken, HttpSession session) {
         try {
@@ -202,7 +228,11 @@ public class userController {
         }
     }
 
-    // JWT 액세스 토큰 유효성 검사
+    /**
+     * JWT 토큰 유효성 검증
+     * @param authorization
+     * @return
+     */
     @GetMapping("/protected-resource")
     public ResponseForm<String> getProtectedResource(
             @RequestHeader(value = "Authorization", required = false) String authorization) {
