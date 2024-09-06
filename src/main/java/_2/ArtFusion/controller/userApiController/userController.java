@@ -41,7 +41,6 @@ import java.util.Optional;
 public class userController {
     private final UserRepository userRepository;
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
 
     /**
