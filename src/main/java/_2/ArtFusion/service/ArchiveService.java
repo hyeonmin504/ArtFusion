@@ -92,6 +92,18 @@ public class ArchiveService {
                 .captureImage(urls)
                 .build();
     }
+
+    public StoryPost getStoryPostById(Long postId) {
+        return archiveRepository.findById(postId).orElseThrow(
+                () -> new NotFoundContentsException("해당 게시글을 찾을 수 없습니다.")
+        );
+    }
+
+    public StoryPost getStoryPostByStoryId(Long storyId) {
+        return archiveRepository.findById(storyId).orElseThrow(
+                () -> new NotFoundContentsException("해당 스토리보드를 찾을 수 없습니다.")
+        );
+    }
     @Transactional
     public void deleteArchive(Long postId) {
         StoryPost storyPost = archiveRepository.findById(postId).orElseThrow(

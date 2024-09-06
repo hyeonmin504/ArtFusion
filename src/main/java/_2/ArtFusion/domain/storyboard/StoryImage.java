@@ -1,6 +1,7 @@
 package _2.ArtFusion.domain.storyboard;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
