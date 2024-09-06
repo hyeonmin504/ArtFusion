@@ -76,7 +76,7 @@ public class CutEditStoryController {
      * @param sceneId
      * @return
      */
-    @PutMapping("/{sceneId}/refresh")
+    @PutMapping("/{sceneId}/refresh") //테스트 완료
     public Mono<ResponseForm<Object>> imageRandomEdit(@PathVariable Long sceneId) {
         return sceneEditWebClientService.singleTransImage(sceneId)
                 .flatMap(resultApiResponseForm -> {
@@ -99,7 +99,7 @@ public class CutEditStoryController {
      * @param sceneId
      * @return
      */
-    @PutMapping("/{sceneId}/detail")
+    @PutMapping("/{sceneId}/detail")//테스트 완료
     public Mono<ResponseForm<Object>> imageVariation(@Validated @RequestBody DetailEditForm form,
                                         @PathVariable Long sceneId) {
         return sceneEditWebClientService.detailEdit(form, sceneId)

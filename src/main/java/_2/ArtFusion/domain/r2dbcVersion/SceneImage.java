@@ -1,5 +1,7 @@
 package _2.ArtFusion.domain.r2dbcVersion;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +19,7 @@ public class SceneImage {
     @Column("image_id")
     private Long id;
 
+    @Size(max = 512)
     private String url;
 
     public void updateUrl(String url) {

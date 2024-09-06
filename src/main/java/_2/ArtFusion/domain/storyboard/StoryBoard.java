@@ -13,6 +13,7 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "story_board")
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StoryBoard {
 
@@ -36,7 +37,7 @@ public class StoryBoard {
     @OneToMany(mappedBy = "storyBoard")
     private List<Actor> actors = new ArrayList<>();
 
-    @OneToMany(mappedBy = "storyBoard", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "storyBoard", cascade = CascadeType.ALL)
     private List<SceneFormat> sceneFormats = new ArrayList<>();
 
     @OneToOne(mappedBy = "storyBoard")
