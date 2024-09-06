@@ -127,7 +127,7 @@ public class TemporaryStoryController {
      */
     @NotNull
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    private Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
+    protected Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
         return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats))
                 .flatMap(failApiResponseForm -> {
                     if (failApiResponseForm.getFailedSeq().isEmpty()) { // 이미지 생성 성공
