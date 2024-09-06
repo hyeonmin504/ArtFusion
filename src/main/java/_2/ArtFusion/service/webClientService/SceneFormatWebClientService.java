@@ -89,7 +89,7 @@ public class SceneFormatWebClientService {
     }
 
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    private Mono<SceneFormat> translateSceneFormat(SceneFormat sceneFormat, Mono<List<Actor>> characterMono, Mono<String> styleMono) {
+    public Mono<SceneFormat> translateSceneFormat(SceneFormat sceneFormat, Mono<List<Actor>> characterMono, Mono<String> styleMono) {
 
         return Mono.zip(characterMono, styleMono)
                 .flatMap(tuple -> {
