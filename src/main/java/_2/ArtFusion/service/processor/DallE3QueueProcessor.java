@@ -2,20 +2,11 @@ package _2.ArtFusion.service.processor;
 
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
-import _2.ArtFusion.domain.r2dbcVersion.SceneImage;
-import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
-import _2.ArtFusion.repository.r2dbc.SceneImageR2DBCRepository;
-import _2.ArtFusion.service.util.form.OpenAiImageResponseForm;
+import _2.ArtFusion.service.processor.imageGeneraterEngine.DallE3;
 import _2.ArtFusion.service.util.singleton.SingletonQueueUtilForDallE3;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -37,26 +28,14 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DallE3QueueProcessor {
 
+    private final DallE3 dallE3;
     private static final int REQUEST_COUNT = 5;
     private static final int REQUEST_INTERVAL_SEC = 65;
-    private final WebClient webClient;
-    private final SceneImageR2DBCRepository sceneImageR2DBCRepository;
-    private final SceneFormatR2DBCRepository sceneFormatR2DBCRepository;
     private final SingletonQueueUtilForDallE3<SceneFormat> queue = SingletonQueueUtilForDallE3.getInstance();
 
-    @Value("${spring.ai.openai.api-key}")
-    private String openAiAccessKey;
-    @Value("${spring.ai.openai.dall-e-url}")
-    private String openAiDallEUrl;
-
     @Autowired
-    public DallE3QueueProcessor(WebClient webClient,
-                                           SceneImageR2DBCRepository sceneImageR2DBCRepository,
-                                           SceneFormatR2DBCRepository sceneFormatR2DBCRepository) {
-        this.webClient = webClient;
-        this.sceneImageR2DBCRepository = sceneImageR2DBCRepository;
-        this.sceneFormatR2DBCRepository = sceneFormatR2DBCRepository;
-
+    public DallE3QueueProcessor(DallE3 dallE3) {
+        this.dallE3 = dallE3;
         startQueueProcessor();
     }
 
@@ -124,7 +103,8 @@ public class DallE3QueueProcessor {
             for (int i = 0; i < REQUEST_COUNT && !queue.getIsEmpty(); i++) {
                 try {
                     SceneFormat sceneFormat = queue.dequeue();
-                    processDallE3Api(sceneFormat).subscribe();
+                    //이미지 생성 엔진
+                    dallE3.processDallE3Api(sceneFormat).subscribe();
                 } catch (InterruptedException e) {
                     log.error("Queue processing interrupted", e);
                 }
@@ -133,58 +113,5 @@ public class DallE3QueueProcessor {
             log.info("queue is empty - dalle3 ver");
         }
 
-    }
-
-    /**
-     * 달리 api 요청 프로세스 (프롬프트 -> 이미지 url)
-     * @param sceneFormat 요청할 장면
-     * @return
-     */
-    private Mono<Void> processDallE3Api(SceneFormat sceneFormat) {
-        ImageRequestForm form = ImageRequestForm.builder()
-                .model("dall-e-3")
-                .prompt(sceneFormat.getScenePromptEn())
-                .n(1)
-                .size("1024x1024")
-                .responseFormat("url")
-                .build();
-
-        log.info("form={}",form);
-
-        return webClient.post()
-                .uri(openAiDallEUrl)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + openAiAccessKey)
-                .bodyValue(form)
-                .retrieve()
-                .bodyToMono(OpenAiImageResponseForm.class)
-                .flatMap(imageResponseForm -> {
-                    String imageUrl = imageResponseForm.getData().get(0).getUrl();
-                    SceneImage sceneImage = new SceneImage(imageUrl);
-                    return sceneImageR2DBCRepository.save(sceneImage)
-                            .flatMap(savedImage -> {
-                                sceneFormat.setImageId(savedImage.getId());
-                                return sceneFormatR2DBCRepository.save(sceneFormat);
-                            });
-                })
-                .doOnSuccess(response -> log.info("이미지를 성공적으로 가져왔습니다"))
-                .retryWhen(reactor.util.retry.Retry.max(1) //1회 재시도
-                        .doBeforeRetry(retrySignal -> log.warn("Retrying request...")))
-                .onErrorResume(e -> {
-                    log.error("Fallback error handling", e);
-                    return Mono.empty(); // 또는 원하는 대체 로직을 여기에 작성
-                })
-                .then();
-    }
-
-    @Data
-    @Builder
-    public static class ImageRequestForm {
-        private String model;
-        private String prompt;
-        private String size;
-        private int n;
-        @JsonProperty(value = "response_format")
-        private String responseFormat;
     }
 }

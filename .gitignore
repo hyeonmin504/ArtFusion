@@ -7,7 +7,7 @@ build/
 
 ### STS ###
 .env
-.fine-tuning
+fine-tuning.txt
 .apt_generated
 .classpath
 .factorypath

@@ -17,7 +17,7 @@ public class ChatGPTConfig {
 
     @Bean
     public OpenAiService openAiService() {
-        log.info("token: {}가 openaiService을 생성합니다", token);
+        log.info("token={}가 openaiService을 생성합니다", token);
         return new OpenAiService(token, Duration.ofSeconds(60));
     }
 }

@@ -52,7 +52,7 @@ public class GenerateTemporaryForm {
     @NotEmpty
     private List<String> genre;
     @Max(value = 20)
-    @Min(1)
+    @Min(0)
     private int wishCutCnt;
     private List<CharacterForm> characters;
 
