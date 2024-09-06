@@ -55,7 +55,7 @@ public class StoryBoardService {
                                 List<Actor> characters = convertCharacter(form.getCharacters(), savedStoryBoard);
                                 return Flux.fromIterable(characters)
                                         .flatMap(actorR2DBCRepository::save)
-                                        .then(Mono.just(new ActorAndStoryIdForm(characters,savedStoryBoard.getId())));
+                                        .then(Mono.just(new ActorAndStoryIdForm(characters, savedStoryBoard.getId())));
                             });
                 })
                 .doOnSuccess(id -> log.info("Generated StoryBoard and Characters with user Id={}", id))
@@ -64,12 +64,26 @@ public class StoryBoardService {
 
     @Transactional
     public void testForGetAllArchives() {
-        User user = new User("hyunmin");
+        // User 생성 시 이메일이 겹치지 않도록 주석 처리하거나 고유한 이메일을 사용
+        // User user = new User("hyunmin"); // 주석 처리
+        User user = new User("uniqueEmail@example.com", "password", "hyunmin"); // 고유한 이메일 사용
         userRepository.save(user);
 
         for (int i = 1; i <= 50; i++) {
-            _2.ArtFusion.domain.storyboard.StoryBoard storyBoard = new _2.ArtFusion.domain.storyboard.StoryBoard("여기다가 광마회귀 스토리 프롬프트를 작성해서 넘겨주면 gpt openai를 통해서 내 프롬프트를 포멧시켜주겠죠??", "광마회귀" + i, Style.KOR_WEBTOON, "SIMPLE", "무협");
-            StoryPost storyPost = new StoryPost("미친 사내가 미치기 전의 평범했던 시절로 돌아간다면. 사내는 다시 미치게 될 것인가? 아니면 사내의 적들이 미치게 될 것인가.광마 이자하, 점소이 시절로 회귀하다.", "무협,판타지", "이미지 url" + i, user, storyBoard);
+            _2.ArtFusion.domain.storyboard.StoryBoard storyBoard = new _2.ArtFusion.domain.storyboard.StoryBoard(
+                    "여기다가 광마회귀 스토리 프롬프트를 작성해서 넘겨주면 gpt openai를 통해서 내 프롬프트를 포멧시켜주겠죠??",
+                    "광마회귀" + i,
+                    Style.KOR_WEBTOON,
+                    "SIMPLE",
+                    "무협"
+            );
+            StoryPost storyPost = new StoryPost(
+                    "미친 사내가 미치기 전의 평범했던 시절로 돌아간다면. 사내는 다시 미치게 될 것인가? 아니면 사내의 적들이 미치게 될 것인가.광마 이자하, 점소이 시절로 회귀하다.",
+                    "무협,판타지",
+                    "이미지 url" + i,
+                    user,
+                    storyBoard
+            );
             StoryImage storyImage = new StoryImage("captureImageUrl" + i, i, storyBoard);
             Comment comment = new Comment("미친", 1, user, storyPost);
             archiveRepository.save(storyPost);

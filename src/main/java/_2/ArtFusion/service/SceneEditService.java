@@ -39,6 +39,12 @@ public class SceneEditService {
     }
 
     @Transactional
+    public SceneFormat getSceneFormatById(Long sceneId){
+        return sceneFormatRepository.findById(sceneId).orElseThrow(
+                ()-> new NotFoundContentsException("해당 장면을 찾을 수 없습니다."));
+
+    }
+    @Transactional
     public void deleteScene(Long sceneId) {
         SceneFormat sceneFormat = sceneFormatRepository.findById(sceneId).orElseThrow(
                 () -> new NotFoundContentsException("해당 장면을 찾을 수 없습니다")

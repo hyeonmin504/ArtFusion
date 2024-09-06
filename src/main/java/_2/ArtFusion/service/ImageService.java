@@ -4,6 +4,7 @@ import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.storyboard.StoryImage;
 import _2.ArtFusion.repository.jpa.StoryImageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImageService {
 
     private final S3Client s3Client;
@@ -46,6 +48,8 @@ public class ImageService {
 
         //S3에서 URL 가져와서 저장하기
         String imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(fileName)).toExternalForm();
+        log.info("imageUrl={}",imageUrl);
+
         StoryImage storyImage = new StoryImage(imageUrl,newSequence,storyBoard);
         storyImageRepository.save(storyImage);
     }
