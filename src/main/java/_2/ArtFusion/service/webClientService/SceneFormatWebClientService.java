@@ -3,7 +3,6 @@ package _2.ArtFusion.service.webClientService;
 import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
-import _2.ArtFusion.domain.storyboard.Style;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.StoryBoardR2DBCRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +24,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Arrays.*;
+import static _2.ArtFusion.service.webClientService.RequestPrompt.getFormat;
 
 @Service
 @Slf4j
@@ -149,21 +148,7 @@ public class SceneFormatWebClientService {
     }
 
     private Mono<String> getTranslatePrompt(SceneFormat sceneFormat, String charactersPrompt, String style) {
-        String prompt = String.format(
-                """
-                    Translate the provided text into English and craft a DALL-E 3 API prompt suitable for image generation.
-                    The response should be formatted as follows: { "prompt": "<DALL-E 3 API prompt>" }.
-                    
-                    Include the following details in the prompt:
-                    - Location: %s
-                    - Scene Description: %s
-                    - Characters: %s
-                    - Style: %s
-                    
-                    Ensure the prompt instructs the model to generate an image without any speech bubbles or text.
-                """,
-                sceneFormat.getBackground(), sceneFormat.getDescription(),
-                charactersPrompt, Style.valueOf(style).getStyle());
+        String prompt = getFormat(sceneFormat, charactersPrompt, style);
         log.info("prompt={}", prompt);
         return Mono.just(prompt);
     }
@@ -186,31 +171,9 @@ public class SceneFormatWebClientService {
     }
 
     private String getSplitQuestion(StoryBoard storyBoard) {
-        return String.format(
-                """
-                Please split the following story into %d scenes and organize the elements as follows:
-                - 'event' should describe what happens in the scene,
-                - 'background' should detail the setting, including the location, time, and atmosphere of the scene. If the scene takes place in the same location as the previous or next scene, please describe the location in greater detail.
-                - 'characters' should describe the characters involved,
-                - 'actors' should list the names of the characters present in the scene.
-                
-                Format the response as JSON with the following structure:
-                {
-                    "scenes": [
-                        {
-                            "event": "",
-                            "background": "",
-                            "characters": "name1=dialogue,name2=dialogue,...",
-                            "actors": "actor1, actor2 ..."
-                        },
-                        ...
-                    ]
-                }
-                Genre: %s
-                Story content: %s
-                """,
-                storyBoard.getCutCnt(),storyBoard.getGenre() ,storyBoard.getPromptKor());
+        return getFormat(storyBoard);
     }
+
     private List<SceneFormat> translateEntityForJson(GivenEntity givenEntity, JsonNode jsonResponse) {
         JsonNode scenes = jsonResponse.get("scenes");
         List<SceneFormat> sceneFormats = new ArrayList<>();

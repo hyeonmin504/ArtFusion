@@ -34,7 +34,7 @@ public class OpenAiGPTWebClientService {
                 ChatMessage message = new ChatMessage("user", prompt);
                 ChatCompletionRequest request = ChatCompletionRequest.builder()
                         .messages(Collections.singletonList(message))
-                        .model("gpt-4o")
+                        .model("gpt-4o-mini")
                         .maxTokens(3000)
                         .build();
 
