@@ -33,19 +33,20 @@ public class CutEditStoryController {
     private static final String TOKEN_PREFIX = "Bearer ";
 
     /**
-     * 내용 수정
+     * 내용, 이미지 수정
      * @param form
      * @param sceneId
+     * @param mode = 1 : 내용만 수정
      * @return
      */
-    @PutMapping("/{sceneId}/contents")
+    @PutMapping("/{sceneId}/contents/{mode}")
     public Mono<ResponseForm<Object>> imageContentsEdit(@Validated @RequestBody ContentEditForm form,
-                                                        @PathVariable Long sceneId,
+                                                        @PathVariable Long sceneId,@PathVariable int mode,
                                                         HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
-        return sceneEditWebClientService.contentEdit(Mono.just(form), Mono.just(sceneId))
+        return sceneEditWebClientService.contentEdit(Mono.just(form), Mono.just(sceneId), mode)
                 .flatMap(sceneFormatId -> {
                     // 내용만 수정된 경우
                     if (sceneFormatId == -1L) {

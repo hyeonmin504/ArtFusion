@@ -34,26 +34,18 @@ public class SceneEditWebClientService {
     private final SceneImageR2DBCRepository sceneImageR2DBCRepository;
 
     /**
-     * if문에서
-     * 변경 o -> 대사 + 변경 전에도 대사가 있었던 경우
-     * -> 만약 변경 전에 대사가 없었다면 장면 변화가 생김
-     * 변경 x -> 배경, 내용
-     * 위 내용에 부합한 경우 true를 반환
-     * => content만 업데이트
-     * <p>
-     * false인 경우
-     * => 이미지 재요청
+     * 내용 + 이미지 수정
      */
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<Long> contentEdit(Mono<ContentEditForm> form, Mono<Long> sceneId) {
+    public Mono<Long> contentEdit(Mono<ContentEditForm> form, Mono<Long> sceneId, int mode) {
         //sceneFormat 조회
         return sceneId.flatMap(id -> sceneFormatR2DBCRepository.findById(id)
             //actor 조회
             .flatMap(sceneFormat -> actorR2DBCRepository.findByStoryId(Mono.just(sceneFormat.getStoryId()))
                     .collectList()
                     .flatMap(actors -> form.flatMap(contentEditForm -> {
-                        log.info("content edit");
-                        if (isContentUnchanged(sceneFormat, contentEditForm)) {
+                        log.info("content edit mode={}",mode);
+                        if (isContentUnchanged(sceneFormat, contentEditForm) || mode == 1) {
                             //로직에 따른 내용 수정이 거의 없는 경우 - updateContent
                             SceneFormat newScene = sceneFormat.editContentForm(contentEditForm.getDescription(), contentEditForm.getBackground(), contentEditForm.getDialogue());
                             return sceneFormatR2DBCRepository.save(newScene)
@@ -123,7 +115,7 @@ public class SceneEditWebClientService {
     private static boolean isContentUnchanged(SceneFormat sceneFormat, ContentEditForm contentEditForm) {
         return sceneFormat.getBackground().equals(contentEditForm.getBackground().trim()) &&
                 sceneFormat.getDescription().equals(contentEditForm.getDescription().trim()) &&
-                !sceneFormat.getDialogue().isEmpty();
+                sceneFormat.getDialogue().equals(contentEditForm.getDialogue().trim());
     }
 
     /**
