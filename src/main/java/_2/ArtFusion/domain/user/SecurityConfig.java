@@ -86,7 +86,11 @@ public class SecurityConfig {
         return new TokenAuthenticationFilter(tokenProvider, List.of(
                 "/api/users/signup",
                 "/api/users/login",
-                "/api/logout"
+                "/api/users/logout",
+                "/api/story/temporary",
+                "/api/cuts/{sceneId}/contents",
+                "/api/cuts/{sceneId}/refresh",
+                "/api/cuts/{sceneId}/detail"
         ), userRepository); // TokenRepository 전달
     }
 }
