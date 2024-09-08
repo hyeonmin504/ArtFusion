@@ -2,7 +2,6 @@ package _2.ArtFusion.domain.r2dbcVersion;
 // User.java
 import _2.ArtFusion.domain.user.UserRole;
 import _2.ArtFusion.exception.NoTokenException;
-import jakarta.persistence.GeneratedValue;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;

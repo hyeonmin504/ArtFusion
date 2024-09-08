@@ -4,7 +4,6 @@ import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiRes
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NoTokenException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.repository.r2dbc.UserR2DBCRepository;
 import _2.ArtFusion.service.processor.imageGeneraterEngine.DallE3;
 import _2.ArtFusion.service.util.singleton.SingletonQueueUtilForDallE3;

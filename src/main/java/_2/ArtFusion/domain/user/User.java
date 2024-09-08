@@ -3,7 +3,6 @@ package _2.ArtFusion.domain.user;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.Heart;
 import _2.ArtFusion.domain.archive.StoryPost;
-import _2.ArtFusion.exception.NoTokenException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
@@ -12,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
