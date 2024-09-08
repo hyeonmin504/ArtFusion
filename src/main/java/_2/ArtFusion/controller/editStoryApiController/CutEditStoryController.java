@@ -5,9 +5,12 @@ import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.SceneSeqForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.service.SceneEditService;
+import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.webClientService.SceneEditWebClientService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +27,10 @@ public class CutEditStoryController {
 
     private final SceneEditService sceneEditService;
     private final SceneEditWebClientService sceneEditWebClientService;
+    private final UserService userService;
+
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
     /**
      * 내용, 이미지 수정
@@ -34,7 +41,11 @@ public class CutEditStoryController {
      */
     @PutMapping("/{sceneId}/contents/{mode}")
     public Mono<ResponseForm<Object>> imageContentsEdit(@Validated @RequestBody ContentEditForm form,
-                                                        @PathVariable Long sceneId,@PathVariable int mode) {
+                                                        @PathVariable Long sceneId,@PathVariable int mode,
+                                                        HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
         return sceneEditWebClientService.contentEdit(Mono.just(form), Mono.just(sceneId), mode)
                 .flatMap(sceneFormatId -> {
                     // 내용만 수정된 경우
@@ -42,7 +53,7 @@ public class CutEditStoryController {
                         return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "내용 수정 성공."));
                     } else {
                         // 이미지 변환이 필요한 경우
-                        return sceneEditWebClientService.singleTransImage(sceneFormatId)
+                        return sceneEditWebClientService.singleTransImage(sceneFormatId,userData)
                                 //enqueue 따른 response 반환
                                 .flatMap(resultApiResponseForm -> resultForEnqueue(sceneFormatId, resultApiResponseForm));
                     }
@@ -68,7 +79,7 @@ public class CutEditStoryController {
             log.info("Image processing successful for sceneFormatId={}", sceneFormatId);
             return Mono.just(new ResponseForm<>(HttpStatus.OK, null, "내용 수정 성공, 이미지 요청 완료"));
         } else {
-            return Mono.just(new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "이미지 생성 중 오류가 발생했습니다."));
+            return Mono.just(new ResponseForm<>(HttpStatus.NO_CONTENT, null, "token이 부족합니다"));
         }
     }
 
@@ -78,8 +89,11 @@ public class CutEditStoryController {
      * @return
      */
     @PutMapping("/{sceneId}/refresh") //테스트 완료
-    public Mono<ResponseForm<Object>> imageRandomEdit(@PathVariable Long sceneId) {
-        return sceneEditWebClientService.singleTransImage(sceneId)
+    public Mono<ResponseForm<Object>> imageRandomEdit(@PathVariable Long sceneId, HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+        return sceneEditWebClientService.singleTransImage(sceneId,userData)
                 .flatMap(resultApiResponseForm -> {
                     if (resultApiResponseForm.isSingleResult()) {
                         log.info("success random edit");
@@ -118,6 +132,11 @@ public class CutEditStoryController {
                 });
     }
 
+    /**
+     * 컷 순서 수정
+     * @param form
+     * @return
+     */
     @PutMapping("/sequence")
     public ResponseForm imageSequenceEdit(@RequestBody @Validated SceneSeqForm form) {
         try {

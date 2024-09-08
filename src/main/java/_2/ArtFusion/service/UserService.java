@@ -6,7 +6,6 @@ import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static _2.ArtFusion.domain.user.UserRole.*;
 
 @Service
 @RequiredArgsConstructor
@@ -47,10 +48,10 @@ public class UserService implements UserDetailsService {
         User user = new User(
                 userCreateForm.getEmail(),
                 passwordEncoder.encode(userCreateForm.getPassword()),
-                userCreateForm.getNickname()
+                userCreateForm.getNickname(),
+                1000,
+                BASIC
         );
-        user.setUserRole(UserRole.BASIC); // 기본 역할을 BASIC으로 설정
-
 
         // 사용자 저장
         userRepository.save(user);
@@ -63,6 +64,8 @@ public class UserService implements UserDetailsService {
 
         Optional<User> userOptional = userRepository.findByEmail(loginForm.getEmail());
         if (userOptional.isEmpty() || !passwordEncoder.matches(loginForm.getPassword(), userOptional.get().getPassword())) {
+            log.info("loginForm.getPassword={}",loginForm.getPassword());
+            log.info("userOptional.get().getPassword())={}",userOptional.get().getPassword());
             throw new InvalidFormatException("잘못된 이메일 또는 비밀번호입니다.");
         }
 

@@ -6,6 +6,7 @@ import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -36,15 +37,9 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers(
-                                        "/api/users/signup",
-                                        "/api/users/login",
-                                        "/api/users/logout",
-                                        "/api/story/temporary",
-                                        "/api/cuts/{sceneId}/contents",
-                                        "/api/cuts/{sceneId}/refresh",
-                                        "/api/cuts/{sceneId}/detail"
-                                ).permitAll()  // 이 경로들은 인증 없이 접근 허용
+                                .requestMatchers(HttpMethod.GET,"/api/users/{email}","/api/archives/**","/api/comments/**").permitAll()  // GET 요청은 인증 없이 접근 허용
+                                .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/signup","/api/mail/code","/api/story/temporary").permitAll()  // POST 요청은 인증 없이 접근 허용
+                                .requestMatchers(HttpMethod.PUT, "/api/cuts/{sceneId}/**","/api/likes/{postId}").permitAll()
                                 .anyRequest().authenticated()  // 그 외 모든 경로는 인증 필요
                 )
                 .csrf(AbstractHttpConfigurer::disable)
@@ -84,13 +79,11 @@ public class SecurityConfig {
     @Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
         return new TokenAuthenticationFilter(tokenProvider, List.of(
-                "/api/users/signup",
-                "/api/users/login",
-                "/api/users/logout",
                 "/api/story/temporary",
-                "/api/cuts/{sceneId}/contents",
-                "/api/cuts/{sceneId}/refresh",
-                "/api/cuts/{sceneId}/detail"
+                "/api/users/{email}","/api/archives/**",
+                "/api/users/login", "/api/users/signup",
+                "/api/cuts/{sceneId}/**","/api/likes/{postId}",
+                "/api/comments/**","/api/mail/code"
         ), userRepository); // TokenRepository 전달
     }
 }

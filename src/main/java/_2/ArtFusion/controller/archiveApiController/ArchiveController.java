@@ -2,14 +2,10 @@ package _2.ArtFusion.controller.archiveApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
-import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.service.ArchiveService;
-import _2.ArtFusion.service.StoryBoardService;
-import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -29,18 +25,9 @@ import java.util.List;
 public class ArchiveController {
 
     private final ArchiveService archiveService;
-    private final StoryBoardService storyBoardService;
-    private final UserService userService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
-
-    @GetMapping
-    public String testData() {
-        // 아카이브 관련 테스트 로직 실행
-        storyBoardService.testForGetAllArchives();
-        return "ok";
-    }
 
     /**
      * 모든 아카이브 가져오기

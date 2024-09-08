@@ -4,6 +4,8 @@ import _2.ArtFusion.domain.actor.Gender;
 import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
+import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.domain.user.UserRole;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.StoryBoardR2DBCRepository;
 import _2.ArtFusion.service.processor.DallE3QueueProcessor;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static _2.ArtFusion.domain.user.UserRole.*;
 import static _2.ArtFusion.service.util.convertUtil.ConvertUtil.*;
 import static _2.ArtFusion.service.webClientService.RequestPrompt.getFormat;
 import static org.springframework.http.HttpStatus.*;
@@ -58,6 +61,8 @@ public class FineTuningTest {
     @PostMapping("/ft")
     public Mono<ResponseForm<?>> generateImageProcessor(@RequestBody StoryData storyData) {
         log.info("Received storyData={}", storyData);
+
+        User user = new User("abc@naver.com","1234","kim",3000, ADMIN);
 
         // StoryBoard 생성 후 저장
         StoryBoard storyBoard = convertStoryBoard(storyData, 2L);
@@ -100,7 +105,7 @@ public class FineTuningTest {
                                 }
 
                                 log.info("Collected scene formats: {}", sceneFormats);
-                                return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats))
+                                return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats),user)
                                         .flatMap(failApiResponseForm -> {
                                             if (failApiResponseForm.getFailedSeq().isEmpty()) { // 이미지 생성 성공
                                                 log.info("All images created successfully");
