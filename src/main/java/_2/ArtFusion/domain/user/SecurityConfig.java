@@ -39,7 +39,11 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/api/users/signup",
                                         "/api/users/login",
-                                        "/api/users/logout"
+                                        "/api/users/logout",
+                                        "/api/story/temporary",
+                                        "/api/cuts/{sceneId}/contents",
+                                        "/api/cuts/{sceneId}/refresh",
+                                        "/api/cuts/{sceneId}/detail"
                                 ).permitAll()  // 이 경로들은 인증 없이 접근 허용
                                 .anyRequest().authenticated()  // 그 외 모든 경로는 인증 필요
                 )
@@ -82,7 +86,11 @@ public class SecurityConfig {
         return new TokenAuthenticationFilter(tokenProvider, List.of(
                 "/api/users/signup",
                 "/api/users/login",
-                "/api/logout"
+                "/api/users/logout",
+                "/api/story/temporary",
+                "/api/cuts/{sceneId}/contents",
+                "/api/cuts/{sceneId}/refresh",
+                "/api/cuts/{sceneId}/detail"
         ), userRepository); // TokenRepository 전달
     }
 }
