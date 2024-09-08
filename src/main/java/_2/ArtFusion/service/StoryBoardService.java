@@ -2,14 +2,8 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.ActorAndStoryIdForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
-import _2.ArtFusion.domain.archive.Comment;
-import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
-import _2.ArtFusion.domain.storyboard.StoryImage;
-import _2.ArtFusion.domain.storyboard.Style;
-import _2.ArtFusion.domain.user.User;
-import _2.ArtFusion.repository.jpa.*;
 import _2.ArtFusion.repository.r2dbc.ActorR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.StoryBoardR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.UserR2DBCRepository;
@@ -31,12 +25,8 @@ import static _2.ArtFusion.service.util.convertUtil.ConvertUtil.convertStoryBoar
 public class StoryBoardService {
 
     private final UserR2DBCRepository userR2DBCRepository;
-    private final ArchiveRepository archiveRepository;
-    private final StoryImageRepository storyImageRepository;
     private final ActorR2DBCRepository actorR2DBCRepository;
-    private final UserRepository userRepository;
     private final StoryBoardR2DBCRepository storyBoardR2DBCRepository;
-    private final CommentRepository commentRepository;
 
     /**
      * userId 값을 받고 storyBoard 생성 및 actor 생성
@@ -60,35 +50,5 @@ public class StoryBoardService {
                 })
                 .doOnSuccess(id -> log.info("Generated StoryBoard and Characters with user Id={}", id))
                 .doOnError(e -> log.error("Error in generateStoryBoardAndCharacter", e));
-    }
-
-    @Transactional
-    public void testForGetAllArchives() {
-        // User 생성 시 이메일이 겹치지 않도록 주석 처리하거나 고유한 이메일을 사용
-        // User user = new User("hyunmin"); // 주석 처리
-        User user = new User("uniqueEmail@example.com", "password", "hyunmin"); // 고유한 이메일 사용
-        userRepository.save(user);
-
-        for (int i = 1; i <= 50; i++) {
-            _2.ArtFusion.domain.storyboard.StoryBoard storyBoard = new _2.ArtFusion.domain.storyboard.StoryBoard(
-                    "여기다가 광마회귀 스토리 프롬프트를 작성해서 넘겨주면 gpt openai를 통해서 내 프롬프트를 포멧시켜주겠죠??",
-                    "광마회귀" + i,
-                    Style.KOR_WEBTOON,
-                    "SIMPLE",
-                    "무협"
-            );
-            StoryPost storyPost = new StoryPost(
-                    "미친 사내가 미치기 전의 평범했던 시절로 돌아간다면. 사내는 다시 미치게 될 것인가? 아니면 사내의 적들이 미치게 될 것인가.광마 이자하, 점소이 시절로 회귀하다.",
-                    "무협,판타지",
-                    "이미지 url" + i,
-                    user,
-                    storyBoard
-            );
-            StoryImage storyImage = new StoryImage("captureImageUrl" + i, i, storyBoard);
-            Comment comment = new Comment("미친", 1, user, storyPost);
-            archiveRepository.save(storyPost);
-            storyImageRepository.save(storyImage);
-            commentRepository.save(comment);
-        }
     }
 }

@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.user;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.archive.Heart;
 import _2.ArtFusion.domain.archive.StoryPost;
+import _2.ArtFusion.exception.NoTokenException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import jakarta.persistence.*;
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,13 +31,13 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    private String name;
     private String email;
     private String password;
     private String nickname;
+    private int token;
 
     @Enumerated(value = EnumType.STRING)
-    private UserRole role=UserRole.BASIC;  // 기존 role 필드와 userRole 필드를 통일했습니다.
+    private UserRole role;  // 기존 role 필드와 userRole 필드를 통일했습니다.
 
     @Column(name = "join_date")
     private LocalDateTime joinDate;
@@ -59,36 +61,25 @@ public class User {
     @Column(nullable = true)
     private LocalDateTime refreshTokenExpiry;
 
-    public User(String email, String encodePassword) {
-        this.email = email;
-        this.role = UserRole.BASIC;
-        this.password = encodePassword;
-    }
-
     // 연관 관계를 위한 setter
     public void setHeart(Heart heart) {
         this.heart = heart;
     }
 
     // 회원 가입 생성자 User
-    public User(String email, String password, String nickname) {
+    public User(String email, String password, String nickname,int token, UserRole userRole) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.role = UserRole.BASIC; // 기본 역할을 BASIC으로 설정
+        this.token = token;
+        this.joinDate = LocalDateTime.now();
+        this.role = userRole; // 기본 역할을 BASIC으로 설정
     }
 
     // 권한 반환 메서드
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
-
-    // 역할 설정 메서드
-    public void setUserRole(UserRole role) {
-        this.role = role;
-    }
-
-
 
     // 리프레시 토큰 초기화 메서드
     public void clearRefreshToken() {

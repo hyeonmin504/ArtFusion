@@ -2,11 +2,16 @@ package _2.ArtFusion.service.processor;
 
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
+import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.exception.NoTokenException;
+import _2.ArtFusion.repository.jpa.UserRepository;
+import _2.ArtFusion.repository.r2dbc.UserR2DBCRepository;
 import _2.ArtFusion.service.processor.imageGeneraterEngine.DallE3;
 import _2.ArtFusion.service.util.singleton.SingletonQueueUtilForDallE3;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,6 +39,9 @@ public class DallE3QueueProcessor {
     private final SingletonQueueUtilForDallE3<SceneFormat> queue = SingletonQueueUtilForDallE3.getInstance();
 
     @Autowired
+    private UserR2DBCRepository userR2DBCRepository;
+
+    @Autowired
     public DallE3QueueProcessor(DallE3 dallE3) {
         this.dallE3 = dallE3;
         startQueueProcessor();
@@ -44,24 +52,34 @@ public class DallE3QueueProcessor {
      * @param sceneFormats
      * @return
      */
-    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats) {
+    @Transactional(transactionManager = "r2dbcTransactionManager")
+    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats,User user) {
         ResultApiResponseForm form = new ResultApiResponseForm();
-        return sceneFormats
-                .flatMapMany(Flux::fromIterable)
-                .flatMap(sceneFormat -> {
-                    try {
-                        queue.enqueue(sceneFormat);
-                        return Mono.just(sceneFormat);
-                    } catch (IllegalStateException e) {
-                        log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
-                        form.setFailSeq(sceneFormat.getSceneSequence()); // 실패한 항목 기록
-                        return Mono.empty(); // 실패한 경우 빈 Mono 반환
-                    } finally {
-                        log.info("queue.size={}",queue.getSize());
-                    }
-                })
-                .collectList()
-                .then(Mono.just(form));
+
+        return userR2DBCRepository.findByUserId(user.getId())
+                .flatMap( userData -> {
+                            return sceneFormats
+                                    .flatMapMany(Flux::fromIterable)
+                                    .flatMap(sceneFormat -> {
+                                        try {
+                                            queue.enqueue(sceneFormat);
+                                            log.info("user.getToken={}",userData.getToken());
+                                            userData.minusTokenForSingleImage();
+                                            log.info("user.getToken={}",userData.getToken());
+                                            return userR2DBCRepository.save(userData)
+                                                    .then(Mono.just(sceneFormat));
+                                        } catch (IllegalStateException | NoTokenException e) {
+                                            log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                                            form.setFailSeq(sceneFormat.getSceneSequence()); // 실패한 항목 기록
+                                            return Mono.empty(); // 실패한 경우 빈 Mono 반환
+                                        } finally {
+                                            log.info("queue.size={}",queue.getSize());
+                                        }
+                                    })
+                                    .collectList()
+                                    .then(Mono.just(form));
+                        }
+                );
     }
 
     /**
@@ -69,19 +87,29 @@ public class DallE3QueueProcessor {
      * @param singleScene
      * @return
      */
-    public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene) {
+    @Transactional(transactionManager = "r2dbcTransactionManager")
+    public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene, User user) {
         ResultApiResponseForm form = new ResultApiResponseForm();
-        return singleScene.flatMap(sceneFormat -> {
-            try {
-                queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
-                form.setSingleResult(true); // 성공 처리
-                log.info("Successfully enqueued sceneFormat, queue size={}", queue.getSize());
-            } catch (IllegalStateException e) {
-                log.error("Failed to enqueue sceneFormat={}, error={}", sceneFormat.getSceneSequence(), e.getMessage());
-                form.setSingleResult(false); // 실패 처리
-            }
-            return Mono.just(sceneFormat);
-        }).then(Mono.just(form));
+
+        return userR2DBCRepository.findByUserId(user.getId())
+                .flatMap(userData -> {
+                    return singleScene.flatMap(sceneFormat -> {
+                        try {
+                            queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
+                            userData.minusTokenForSingleImage();
+                            userR2DBCRepository.save(userData);
+                            form.setSingleResult(true); // 성공 처리
+                            log.info("Successfully enqueued sceneFormat, queue size={}", queue.getSize());
+                        } catch (IllegalStateException e) {
+                            log.error("Failed to enqueue sceneFormat={}, error={}", sceneFormat.getSceneSequence(), e.getMessage());
+                            form.setSingleResult(false); // 실패 처리
+                        } catch (NoTokenException e) {
+                            log.info("토큰이 부족합니다 user.getToken={}", userData.getToken());
+                            form.setSingleResult(false); // 실패 처리
+                        }
+                        return Mono.just(sceneFormat);
+                    }).then(Mono.just(form));
+                });
     }
 
     /**

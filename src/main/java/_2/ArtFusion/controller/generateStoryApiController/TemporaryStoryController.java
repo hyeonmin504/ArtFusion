@@ -113,7 +113,7 @@ public class TemporaryStoryController {
                     log.info("Scene formats processed={}", sceneFormats.size());
 
                     //이미지 생성
-                    return generateImageProcessor(sceneFormats);
+                    return generateImageProcessor(sceneFormats,userData);
                 })
                 .doOnSuccess(response -> log.info("Temporary image request completed successfully"))
                 .doOnError(e -> log.error("error={}", e.getMessage()))
@@ -133,8 +133,8 @@ public class TemporaryStoryController {
      */
     @NotNull
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    protected Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats) {
-        return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats))
+    protected Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats,User user) {
+        return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats),user)
                 .flatMap(failApiResponseForm -> {
                     if (failApiResponseForm.getFailedSeq().isEmpty()) { // 이미지 생성 성공
                         log.info("failApiResponseForm.getFailedSeq={}", failApiResponseForm.getFailedSeq());
@@ -142,11 +142,10 @@ public class TemporaryStoryController {
                     }
                     // 이미지 생성에 실패한 장면이 존재할 경우
                     List<Integer> failSeq = failApiResponseForm.getFailedSeq();
-                    return Mono.just(new ResponseForm<>(NO_CONTENT, failSeq, "일부 이미지 생성중 오류가 발생했습니다"));
+                    return Mono.just(new ResponseForm<>(NO_CONTENT, failSeq, "토큰 부족으로 인해 일부 이미지 생성중 오류가 발생했습니다"));
                 })
                 .onErrorResume(e -> {
                     log.error("error={}", e.getMessage());
-
                     return Mono.just(new ResponseForm<>(INTERNAL_SERVER_ERROR, null, "이미지 생성중 오류 발생!"));
                 });
     }
