@@ -16,19 +16,18 @@ pipelines:
           - ./gradlew clean build -x test
           - echo "=== 빌드 아티팩트 ==="
           - ls -al build/libs
-          - export JAR_FILE=$(ls build/libs | grep '.jar' | head -n 1)
-          - echo "빌드된 JAR 파일:$JAR_FILE"
+          - export JAR_FILE=$(ls build/libs | grep -v 'plain' | grep '.jar' | head -n 1) # plain JAR 제외
+          - echo "빌드된 JAR 파일:" + $JAR_FILE
+          - export APP_NAME=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]') # APP_NAME을 소문자로 변환
           - echo "=== Docker 로그인 ==="
           - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-          - echo "$DOCKERHUB_USERNAME" "$DOCKERHUB_PASSWORD"
           - echo "=== Docker 이미지 빌드 ==="
-          - docker build -t $DOCKERHUB_USERNAME/$APP_NAME .
+          - docker build --build-arg JAR_FILE=build/libs/$JAR_FILE -t $DOCKERHUB_USERNAME/$APP_NAME:latest .
           - echo "=== 빌드된 Docker 이미지 ==="
           - docker images | grep $APP_NAME
           - echo "=== Docker 이미지 푸시 ==="
           - docker push $DOCKERHUB_USERNAME/$APP_NAME
           - wget --post-data '{"text":"도커 이미지 빌드 및 푸시 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
-
     - step:
         name: BLUE EC2에 배포
         script:
