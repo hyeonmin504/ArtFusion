@@ -83,6 +83,7 @@ public class CutEditStoryController {
     @NotNull
     private static Mono<ResponseEntity<ResponseForm<Object>>> resultForEnqueue(Long sceneFormatId, ResultApiResponseForm resultApiResponseForm) {
         //장면을 api요청 큐에 잘 넣은 경우
+        log.info("resultApiResponseForm.isSingleResult={}",resultApiResponseForm.isSingleResult());
         if (resultApiResponseForm.isSingleResult()) {
             log.info("Image processing successful for sceneFormatId={}", sceneFormatId);
             ResponseForm<Object> body = new ResponseForm<>(OK, null, "내용 수정 성공, 이미지 요청 완료");

@@ -9,14 +9,14 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ResultApiResponseForm {
-    private List<Integer> failedSeq;
-    private boolean singleResult;
+    private List<Integer> failedSeq = new ArrayList<>();
+    private boolean singleResult = true;
 
     public ResultApiResponseForm() {
         failedSeq = new ArrayList<>();
     }
 
-    public void setFailSeq(int failNum) {
+    public void setFailSeq(Integer failNum) {
         failedSeq.add(failNum);
     }
 
