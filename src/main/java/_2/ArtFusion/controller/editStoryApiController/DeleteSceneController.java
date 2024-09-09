@@ -13,10 +13,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/api")
@@ -31,7 +34,7 @@ public class DeleteSceneController {
     private static final String TOKEN_PREFIX = "Bearer ";
 
     @DeleteMapping("/cuts/{sceneId}") //테스트 완료
-    public ResponseForm deleteSceneRequest(@PathVariable Long sceneId, HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> deleteSceneRequest(@PathVariable Long sceneId, HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
@@ -39,15 +42,21 @@ public class DeleteSceneController {
             //유저에 대한 검증도 추가 해야 함 -> 완료
             SceneFormat sceneFormat = sceneEditService.getSceneFormatById(sceneId);
         if(!sceneFormat.getStoryBoard().getUser().getId().equals(userData.getId())){
-            return new ResponseForm<>(HttpStatus.FORBIDDEN, null, "해당 장면을 삭제할 권한이 없습니다.");
-
+            ResponseForm<Object> body = new ResponseForm<>(FORBIDDEN, null, "해당 장면을 삭제할 권한이 없습니다.");
+            return ResponseEntity.status(FORBIDDEN).body(body);
         }
             sceneEditService.deleteScene(sceneId);
-            return new ResponseForm<>(HttpStatus.OK,null,"OK");
+
+            ResponseForm<Object> body = new ResponseForm<>(OK, null, "OK");
+            return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.NO_CONTENT,null, e.getMessage());
+
+            ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
+            return ResponseEntity.status(NO_CONTENT).body(body);
         } catch (NotFoundUserException e) {
-            return new ResponseForm<>(HttpStatus.UNAUTHORIZED,null, e.getMessage());
+
+            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            return ResponseEntity.status(UNAUTHORIZED).body(body);
         }
     }
 
@@ -56,19 +65,25 @@ public class DeleteSceneController {
      * @param storyId -> 삭제하려는 스토리 id
      */
     @DeleteMapping("/story/temporary/{storyId}") //아마 될듯 이것도
-    public ResponseForm deleteStoryBoardRequest(@PathVariable("storyId") Long storyId,HttpServletRequest request){
+    public ResponseEntity<ResponseForm> deleteStoryBoardRequest(@PathVariable("storyId") Long storyId, HttpServletRequest request){
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
         try {
             StoryPost storyPost = archiveService.getStoryPostByStoryId(storyId);
             if(!storyPost.getUser().getId().equals(userData.getId())){
-                return new ResponseForm<>(HttpStatus.FORBIDDEN,null,"스토리보드를 찾을 수 없습니다.");
+                ResponseForm<Object> body = new ResponseForm<>(FORBIDDEN, null, "스토리보드를 찾을 수 없습니다.");
+                return ResponseEntity.status(FORBIDDEN).body(body);
             }
             archiveService.deleteStoryBoard(storyId);
-            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+
+
+            ResponseForm<Object> body = new ResponseForm<>(OK, null, "200 ok");
+            return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
-            log.info("error={}", e);
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "스토리가 존재하지 않습니다.");
+            log.info("error", e);
+
+            ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "스토리가 존재하지 않습니다.");
+            return ResponseEntity.status(NO_CONTENT).body(body);
         }
     }
 }

@@ -43,7 +43,7 @@ public class ArchiveController {
      */
     @GetMapping("/archives")
     //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
-    public ResponseForm getAllArchives(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<ResponseForm> getAllArchives(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "id") String sort,
                                        @RequestParam(defaultValue = "6") int size
     ) {
@@ -54,7 +54,8 @@ public class ArchiveController {
         AllArchivesResponse archiveList = archiveService.getArchiveList(pageable);
 
         // ResponseForm 객체 생성 및 반환
-        return new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+        ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+        return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 
 
@@ -85,15 +86,16 @@ public class ArchiveController {
      * @return
      */
     @GetMapping("/archives/{nickname}/{postId}")
-    public ResponseForm getArchiveDetail(@PathVariable Long postId,@PathVariable String nickname) {
+    public ResponseEntity<ResponseForm> getArchiveDetail(@PathVariable Long postId,@PathVariable String nickname) {
         try {
             //아카이브 폼 데이터 조회
             DetailArchivesResponse detailArchivesResponse = archiveService.getArchive(postId);
-
-            return new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "Ok");
+            ResponseForm<DetailArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "Ok");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException | NotFoundImageException | NoResultException e) {
             log.info("error={}",e);
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
         }
     }
 
