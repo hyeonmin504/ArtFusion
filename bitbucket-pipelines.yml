@@ -1,0 +1,53 @@
+image: openjdk:17-jdk-alpine
+
+pipelines:
+  default:
+    - step:
+        name: 도커 이미지 빌드 및 푸시 1
+        caches:
+          - gradle
+          - docker
+        services:
+          - docker
+        script:
+          - apk add --no-cache wget
+          - wget --post-data '{"text":"도커 이미지 빌드 및 푸시 시작"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
+          - echo "=== Gradle 클린 빌드 ==="
+          - ./gradlew clean build -x test
+          - echo "=== 빌드 아티팩트 ==="
+          - ls -al build/libs
+          - export JAR_FILE=$(ls build/libs | grep '.jar' | head -n 1)
+          - echo "빌드된 JAR 파일:$JAR_FILE"
+          - echo "=== Docker 로그인 ==="
+          - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          - echo "$DOCKERHUB_USERNAME" "$DOCKERHUB_PASSWORD"
+          - echo "=== Docker 이미지 빌드 ==="
+          - docker build -t $DOCKERHUB_USERNAME/$APP_NAME:latest .
+          - echo "=== 빌드된 Docker 이미지 ==="
+          - docker images | grep $APP_NAME
+          - echo "=== Docker 이미지 푸시 ==="
+          - docker push $DOCKERHUB_USERNAME/$APP_NAME:latest
+          - wget --post-data '{"text":"도커 이미지 빌드 및 푸시 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
+
+    - step:
+        name: BLUE EC2에 배포
+        script:
+          - echo "=== OpenSSH 클라이언트 설치 ==="
+          - apk add --no-cache openssh-client
+          - echo "=== SSH 키 설정 ==="
+          - mkdir -p ~/.ssh
+          - echo "$ENCODED_SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+          - chmod 600 ~/.ssh/id_rsa
+          - echo "=== SSH 키 내용 확인 ==="
+          - cat ~/.ssh/id_rsa
+          - echo "=== Green EC2의 SSH 키 스캔 ==="
+          - ssh-keyscan -H "${BLUE_SERVER_IP}" >> ~/.ssh/known_hosts
+          - echo "=== known_hosts 파일 내용 ==="
+          - cat ~/.ssh/known_hosts
+          - echo "=== Green EC2에 배포 ==="
+          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker stop ${APP_NAME} || true"
+          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker rm ${APP_NAME} || true"
+          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker run -d --name ${APP_NAME} -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker ps -a"
+          - wget --post-data '{"text":"blue EC2 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
