@@ -58,7 +58,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "20.22.126.143:3000",
+                "192.168.207.29:3000",
+                "http://192.168.207.29:3000",
+                "http://172.30.1.19:3000",
                 "http://localhost:3000"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -84,4 +86,5 @@ public class SecurityConfig {
                 "/api/comments/**","/api/mail/code"
         ), userRepository); // TokenRepository 전달
     }
+
 }
