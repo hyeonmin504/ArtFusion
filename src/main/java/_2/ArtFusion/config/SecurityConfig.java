@@ -58,10 +58,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://d3ao949apmj1lo.cloudfront.net",
-                "https://botox-chat.site",
-                "https://www.botox-chat.site",
-                "http://localhost:3000"
+                "20.22.126.143:3000"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
