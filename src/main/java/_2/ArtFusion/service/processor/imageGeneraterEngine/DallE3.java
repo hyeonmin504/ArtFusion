@@ -65,6 +65,7 @@ public class DallE3 {
                                 sceneFormat.setImageId(savedImage.getId());
                                 return sceneFormatR2DBCRepository.save(sceneFormat);
                             });
+
                 })
                 .doOnSuccess(response -> log.info("이미지를 성공적으로 가져왔습니다"))
                 .onErrorResume(e -> {
