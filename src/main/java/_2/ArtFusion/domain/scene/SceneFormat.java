@@ -8,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,6 +32,10 @@ public class SceneFormat {
     @Size(max = 4000)
     private String background;
     private String actors;
+
+    private UUID requestId;
+    private boolean completed;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "story_id")

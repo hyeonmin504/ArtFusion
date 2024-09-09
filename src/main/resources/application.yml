@@ -36,7 +36,7 @@ spring:
 
   mvc:
     async:
-      request-timeout: 60000
+      request-timeout: 300000
 
 logging:
   level:
