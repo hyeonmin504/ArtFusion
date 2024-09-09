@@ -37,7 +37,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers(HttpMethod.GET,"/api/users/{email}","/api/archives/**","/api/comments/**").permitAll()  // GET 요청은 인증 없이 접근 허용
+                                .requestMatchers(HttpMethod.GET,"/api/users/{email}","/api/archives","/api/comments/**").permitAll()  // GET 요청은 인증 없이 접근 허용
                                 .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/signup","/api/mail/code","/api/story/temporary").permitAll()  // POST 요청은 인증 없이 접근 허용
                                 .requestMatchers(HttpMethod.PUT, "/api/cuts/{sceneId}/**","/api/likes/{postId}").permitAll()
                                 .anyRequest().authenticated()  // 그 외 모든 경로는 인증 필요
@@ -58,7 +58,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "20.22.126.143:3000"
+                "20.22.126.143:3000",
+                "http://localhost:3000"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

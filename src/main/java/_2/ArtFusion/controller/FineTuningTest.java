@@ -65,7 +65,7 @@ public class FineTuningTest {
         User user = new User("abc@naver.com","1234","kim",3000, ADMIN);
 
         // StoryBoard 생성 후 저장
-        StoryBoard storyBoard = convertStoryBoard(storyData, 1L);
+        StoryBoard storyBoard = convertStoryBoard(storyData, 2L);
 
         // gptResponse가 제대로 넘어왔는지 확인
         String gptResponse = storyData.getGptResponse();

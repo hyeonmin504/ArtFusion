@@ -2,16 +2,20 @@ package _2.ArtFusion.controller.archiveApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.service.ArchiveService;
+import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -25,6 +29,7 @@ import java.util.List;
 public class ArchiveController {
 
     private final ArchiveService archiveService;
+    private final UserService userService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -53,20 +58,24 @@ public class ArchiveController {
     }
 
 
-    @GetMapping("/archives/{nickname}")
-    public ResponseForm getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "id") String sort,
-                                                  @RequestParam(defaultValue = "6") int size,
-                                                  @PathVariable String nickname
+    @GetMapping("/archives/my")
+    public ResponseEntity<ResponseForm> getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
+                                                                 @RequestParam(defaultValue = "id") String sort,
+                                                                 @RequestParam(defaultValue = "6") int size,
+                                                                 HttpServletRequest request
     ) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+
         // Pageable 객체 생성
         Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
         // ArchiveService를 통해 PostFormResponse 객체를 가져옴
-        AllArchivesResponse archiveList = archiveService.getArchiveListForUser(pageable,nickname);
+        AllArchivesResponse archiveList = archiveService.getArchiveListForUser(pageable,userData.getNickname());
 
         // ResponseForm 객체 생성 및 반환
-        return new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+        ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+        return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 
     /**

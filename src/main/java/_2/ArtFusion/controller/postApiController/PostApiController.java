@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +39,7 @@ public class PostApiController {
      * @param postId -> 현재 postId
      */
     @GetMapping("/comments/{postId}") //수정
-    public ResponseForm getAllCommentsApi(@PathVariable Long postId) {
+    public ResponseEntity<ResponseForm> getAllCommentsApi(@PathVariable Long postId) {
         try {
             //commentForm 객체를 담을 리스트 초기화
             List<CommentForm> commentForms = new ArrayList<>();
@@ -53,9 +54,11 @@ public class PostApiController {
                 commentForms.add(commentForm);
             }
 
-            return new ResponseForm<>(HttpStatus.OK, commentForms, "OK");
+            ResponseForm<List<CommentForm>> body = new ResponseForm<>(HttpStatus.OK, commentForms, "OK");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "OK");
+            ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, "OK");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
         }
     }
 
@@ -65,16 +68,18 @@ public class PostApiController {
      * @param form -> 받은 textBody
      */
     @PostMapping("/comments/{postId}") //테스트 완료
-    public ResponseForm saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,HttpServletRequest request){
+    public ResponseEntity<ResponseForm> saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,HttpServletRequest request){
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
         try {
             //서비스 호출하여 댓글 저장
             commentService.saveComments(form, userData.getId(), postId);
 
-            return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
+            ResponseForm<?> body = new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(body);
         }
     }
 
@@ -84,12 +89,14 @@ public class PostApiController {
      * @param postId -> 현재 postId
      */
     @GetMapping("/comments/cnt/{postId}") //테스트 완료
-    public ResponseForm getCommentCountApi(@PathVariable Long postId) {
+    public ResponseEntity<ResponseForm> getCommentCountApi(@PathVariable Long postId) {
         try {
             int count = commentService.countComments(postId);
-            return new ResponseForm<>(HttpStatus.OK, count, "OK");
+            ResponseForm<Integer> body = new ResponseForm<>(HttpStatus.OK, count, "OK");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
         }
     }
 
@@ -109,16 +116,18 @@ public class PostApiController {
      * @return
      */
     @PutMapping("/likes/{postId}") //테스트 완료
-    public ResponseForm likeApi(@PathVariable Long postId, HttpServletRequest request){
+    public ResponseEntity<ResponseForm> likeApi(@PathVariable Long postId, HttpServletRequest request){
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
         try {
             //서비스 호출하여 댓글 저장
             likeService.isLikeStatus(postId,userData.getId());
-            return new ResponseForm<>(HttpStatus.OK,null,"200 ok");
+            ResponseForm<?> body = new ResponseForm<>(HttpStatus.OK, null, "200 ok");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         }
     }
     @Data

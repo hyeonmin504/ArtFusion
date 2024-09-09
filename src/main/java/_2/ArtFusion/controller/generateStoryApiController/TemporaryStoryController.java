@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +52,7 @@ public class TemporaryStoryController {
      * @return
      */
     @GetMapping("/story/temporary/{storyId}") //테스트 완료
-    public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
@@ -75,11 +76,14 @@ public class TemporaryStoryController {
 
             StoryBoardForm storyBoardForm = new StoryBoardForm(storyBoard.getId(),sceneFormatForms);
 
-            return new ResponseForm<>(OK, storyBoardForm,"Scene data retrieved successfully");
+            ResponseForm<StoryBoardForm> body = new ResponseForm<>(OK, storyBoardForm, "Scene data retrieved successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NoResultException | NotFoundUserException e) {
-            return new ResponseForm<>(NOT_FOUND, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(NO_CONTENT, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         }
     }
 
@@ -108,7 +112,7 @@ public class TemporaryStoryController {
                 .flatMap(sceneFormats -> {
                     // 반환 값이 없을 경우
                     if (sceneFormats.isEmpty()){
-                        return Mono.just(new ResponseForm<>(NO_CONTENT, null, "값을 불러올 수 없습니다. 다시 시도해주세요"));
+                        return Mono.just(new ResponseForm<>(NO_CONTENT, null, "해당 컨텐츠가 존재하지 않습니다"));
                     }
                     log.info("Scene formats processed={}", sceneFormats.size());
 
@@ -123,6 +127,7 @@ public class TemporaryStoryController {
                         status = (e instanceof IllegalStateException) ? NOT_ACCEPTABLE : REQUEST_TIMEOUT;
                     }
                     return Mono.just(new ResponseForm<>(status, null, e.getMessage()));
+
                 });
     }
 
