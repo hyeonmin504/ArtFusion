@@ -1,10 +1,13 @@
 package _2.ArtFusion.controller.archiveApiController;
 
+import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
+import _2.ArtFusion.exception.NotFoundUserException;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
@@ -22,6 +25,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -29,10 +35,7 @@ import java.util.List;
 public class ArchiveController {
 
     private final ArchiveService archiveService;
-    private final UserService userService;
-
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String TOKEN_PREFIX = "Bearer ";
+    private final UserRepository userRepository;
 
     /**
      * 모든 아카이브 가져오기
@@ -63,20 +66,28 @@ public class ArchiveController {
     public ResponseEntity<ResponseForm> getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "id") String sort,
                                                                  @RequestParam(defaultValue = "6") int size,
-                                                                 HttpServletRequest request
-    ) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+                                                                  @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
+        try {
+            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                    () -> new NotFoundUserException("유저 정보를 찾을 수 없습니다")
+            );
 
-        // Pageable 객체 생성
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+            // Pageable 객체 생성
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        // ArchiveService를 통해 PostFormResponse 객체를 가져옴
-        AllArchivesResponse archiveList = archiveService.getArchiveListForUser(pageable,userData.getNickname());
+            // ArchiveService를 통해 PostFormResponse 객체를 가져옴
+            AllArchivesResponse archiveList = archiveService.getArchiveListForUser(pageable,userData.getNickname());
 
-        // ResponseForm 객체 생성 및 반환
-        ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
-        return ResponseEntity.status(HttpStatus.OK).body(body);
+            // ResponseForm 객체 생성 및 반환
+            ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
+        } catch (NotFoundUserException e) {
+            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            return ResponseEntity.status(UNAUTHORIZED).body(body);
+        } catch (Exception e) {
+            ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, e.getMessage());
+            return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body);
+        }
     }
 
     /**

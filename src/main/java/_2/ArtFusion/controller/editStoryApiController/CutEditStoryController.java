@@ -1,5 +1,6 @@
 package _2.ArtFusion.controller.editStoryApiController;
 
+import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.ContentEditForm;
 import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
@@ -7,6 +8,8 @@ import _2.ArtFusion.controller.editStoryApiController.editForm.SceneSeqForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
+import _2.ArtFusion.exception.NotFoundUserException;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneEditService;
 import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.webClientService.SceneEditWebClientService;
@@ -30,7 +33,7 @@ public class CutEditStoryController {
 
     private final SceneEditService sceneEditService;
     private final SceneEditWebClientService sceneEditWebClientService;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -44,11 +47,12 @@ public class CutEditStoryController {
      */
     @PutMapping("/{sceneId}/contents/{mode}")
     public Mono<ResponseEntity<ResponseForm<Object>>> imageContentsEdit(@Validated @RequestBody ContentEditForm form,
-                                                        @PathVariable Long sceneId,@PathVariable int mode,
-                                                        HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+                                                                        @PathVariable Long sceneId,@PathVariable int mode,
+                                                                        @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
+        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                () -> new NotFoundUserException("유저 정보를 찾을 수 없슴다")
+        );
 
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
         return sceneEditWebClientService.contentEdit(Mono.just(form), Mono.just(sceneId), mode)
                 .flatMap(sceneFormatId -> {
                     // 내용만 수정된 경우
@@ -100,10 +104,12 @@ public class CutEditStoryController {
      * @return
      */
     @PutMapping("/{sceneId}/refresh") //테스트 완료
-    public Mono<ResponseEntity<ResponseForm<Object>>> imageRandomEdit(@PathVariable Long sceneId, HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    public Mono<ResponseEntity<ResponseForm<Object>>> imageRandomEdit(@PathVariable Long sceneId,
+                                                                      @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
+        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                () -> new NotFoundUserException("유저 정보를 찾을 수 없슴다")
+        );
 
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
         return sceneEditWebClientService.singleTransImage(sceneId,userData)
                 .flatMap(resultApiResponseForm -> {
                     if (resultApiResponseForm.isSingleResult()) {

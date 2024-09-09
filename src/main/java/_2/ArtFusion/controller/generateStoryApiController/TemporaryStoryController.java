@@ -43,7 +43,6 @@ public class TemporaryStoryController {
     private final DallE3QueueProcessor dallE3QueueProcessor;
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
-    private final UserService userService;
     private final UserRepository userRepository;
 
     /**
@@ -54,11 +53,12 @@ public class TemporaryStoryController {
     @GetMapping("/story/temporary/{storyId}") //테스트 완료
     public ResponseEntity<ResponseForm> getTemporaryImageRequest(@PathVariable Long storyId,
                                                                  @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
-        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                () -> new NotFoundUserException("유저 정보 없슴니당")
-        );
 
         try {
+            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                    () -> new NotFoundUserException("유저 정보 없슴니당")
+            );
+
             //SceneFormat 데이터를 가저오기
             StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
 
@@ -80,12 +80,15 @@ public class TemporaryStoryController {
 
             ResponseForm<StoryBoardForm> body = new ResponseForm<>(OK, storyBoardForm, "Scene data retrieved successfully");
             return ResponseEntity.status(OK).body(body);
-        } catch (NoResultException | NotFoundUserException e) {
+        } catch (NoResultException e) {
             ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
             return ResponseEntity.status(NOT_FOUND).body(body);
         } catch (NotFoundContentsException e) {
             ResponseForm<?> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(NO_CONTENT).body(body);
+        } catch (NotFoundUserException e) {
+            ResponseForm<?> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            return ResponseEntity.status(UNAUTHORIZED).body(body);
         }
     }
 
@@ -101,15 +104,17 @@ public class TemporaryStoryController {
             @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
 
         User userData;
+
         try {
             userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
                     () -> new NotFoundUserException("유저 정보 없슴니당")
             );
         }catch (NotFoundUserException e) {
-            ResponseForm<Object> responseForm = new ResponseForm<>(NOT_ACCEPTABLE, null, "로그인 먼저 해주세요.");
-            return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(responseForm));
+            ResponseForm<Object> responseForm = new ResponseForm<>(UNAUTHORIZED, null, "로그인 먼저 해주세요.");
+            return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(responseForm));
         }
 
+        log.info("userData={}", userData.getEmail());
 
         log.info("Start generating temporary image request");
         return storyBoardService.generateStoryBoardAndCharacter(form, userData.getId())

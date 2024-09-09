@@ -1,5 +1,6 @@
 package _2.ArtFusion.controller.generateStoryApiController;
 
+import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
@@ -8,6 +9,7 @@ import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.ArchiveRepository;
 import _2.ArtFusion.repository.jpa.StoryBoardRepository;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.ImageService;
 import _2.ArtFusion.service.SceneFormatService;
@@ -31,22 +33,18 @@ import static org.springframework.http.HttpStatus.*;
 public class GenerateStoryController {
 
     private final ImageService imageService;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final SceneFormatService sceneFormatService;
     private final ArchiveService archiveService;
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String TOKEN_PREFIX = "Bearer ";
-
-
     @PostMapping("/story/generate")//테스트 완료
-    public ResponseEntity<ResponseForm> getFinalStory(@RequestParam Long storyId, @RequestParam MultipartFile image, HttpServletRequest request) {
-
-        //사용자 인증
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
-
+    public ResponseEntity<ResponseForm> getFinalStory(@RequestParam Long storyId, @RequestParam MultipartFile image, HttpServletRequest request,
+                                                      @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
+            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                    () -> new NotFoundUserException("유저정보를 찾을 수 없슴다")
+            );
+
             StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
 
             //에러코드 추가 해야됨
@@ -68,7 +66,7 @@ public class GenerateStoryController {
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(NO_CONTENT).body(body);
         } catch (NotFoundUserException e) {
-            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, "유저를 찾을 수 없습니다");
+            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         } catch (IOException e) {
             ResponseForm<Object> body = new ResponseForm<>(SERVICE_UNAVAILABLE, null, "저장중 오류가 발생했습니다");

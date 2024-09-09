@@ -109,7 +109,7 @@ public class userController {
             //세션이 있으면 있는 세션 반환, 없으면 신규 세션을 생성
             HttpSession session = request.getSession();
             //세션에 로그인 회원 정보 보관
-            session.setAttribute("LOGIN_USER", loginForm.getEmail());
+            session.setAttribute("LOGIN_USER", user.getEmail());
 
 //            // 3. 액세스 토큰 생성 및 세션에 저장
 //            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(30));
