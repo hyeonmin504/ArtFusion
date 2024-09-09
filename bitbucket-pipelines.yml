@@ -44,9 +44,9 @@ pipelines:
           - echo "=== known_hosts 파일 내용 ==="
           - cat ~/.ssh/known_hosts
           - echo "=== Green EC2에 배포 ==="
-          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
-          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker stop ${APP_NAME} || true"
-          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker rm ${APP_NAME} || true"
-          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker run -d --name ${APP_NAME} -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
-          - ssh -i ~/.ssh/id_rsa ec2-user@"${BLUE_SERVER_IP}" "docker ps -a"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker stop ${APP_NAME} || true"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker rm ${APP_NAME} || true"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker run -d --name ${APP_NAME} -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker ps -a"
           - wget --post-data '{"text":"blue EC2 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
