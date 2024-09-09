@@ -13,8 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoSink;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +42,9 @@ public class DallE3QueueProcessor {
     private static final int REQUEST_INTERVAL_SEC = 65;
     private final SingletonQueueUtilForDallE3<SceneFormat> queue = SingletonQueueUtilForDallE3.getInstance();
 
+    private final Map<UUID, MonoSink<ResultApiResponseForm>> responseMap = new ConcurrentHashMap<>(); // 응답을 저장하는 Map
+    private final Map<UUID, List<SceneFormat>> requestTaskMap = new ConcurrentHashMap<>(); // 요청에 대한 작업을 저장하는 Map
+
     @Autowired
     private UserR2DBCRepository userR2DBCRepository;
 
@@ -52,33 +60,41 @@ public class DallE3QueueProcessor {
      * @return
      */
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats,User user) {
+    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats, User user) {
         ResultApiResponseForm form = new ResultApiResponseForm();
+        UUID requestId = UUID.randomUUID(); // 요청마다 고유한 ID 생성
 
-        return userR2DBCRepository.findByUserId(user.getId())
-                .flatMap( userData -> {
-                            return sceneFormats
-                                    .flatMapMany(Flux::fromIterable)
-                                    .flatMap(sceneFormat -> {
-                                        try {
-                                            queue.enqueue(sceneFormat);
-                                            log.info("user.getToken={}",userData.getToken());
-                                            userData.minusTokenForSingleImage();
-                                            log.info("user.getToken={}",userData.getToken());
-                                            return userR2DBCRepository.save(userData)
-                                                    .then(Mono.just(sceneFormat));
-                                        } catch (IllegalStateException | NoTokenException e) {
-                                            log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
-                                            form.setFailSeq(sceneFormat.getSceneSequence()); // 실패한 항목 기록
-                                            return Mono.empty(); // 실패한 경우 빈 Mono 반환
-                                        } finally {
-                                            log.info("queue.size={}",queue.getSize());
-                                        }
-                                    })
-                                    .collectList()
-                                    .then(Mono.just(form));
-                        }
-                );
+        return Mono.create(sink -> {
+            responseMap.put(requestId, sink); // 지연된 응답을 처리할 MonoSink 저장
+
+            userR2DBCRepository.findByUserId(user.getId())
+                    .flatMap(userData -> sceneFormats
+                            .flatMapMany(Flux::fromIterable)
+                            .flatMap(sceneFormat -> {
+                                try {
+                                    sceneFormat.setRequestId(requestId.toString()); // 요청 ID 추가
+                                    queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
+
+                                    // requestTaskMap에 작업 추가
+                                    requestTaskMap.computeIfAbsent(requestId, k -> new ArrayList<>()).add(sceneFormat);
+
+                                    log.info("user.getToken={}", userData.getToken());
+                                    userData.minusTokenForSingleImage();
+                                    log.info("user.getToken={}", userData.getToken());
+                                    return userR2DBCRepository.save(userData)
+                                            .then(Mono.just(sceneFormat));
+                                } catch (IllegalStateException | NoTokenException e) {
+                                    log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                                    form.setFailSeq(sceneFormat.getSceneSequence()); // 실패한 항목 기록
+                                    return Mono.empty(); // 실패한 경우 빈 Mono 반환
+                                } finally {
+                                    log.info("queue.size={}", queue.getSize());
+                                }
+                            })
+                            .collectList()
+                            .doOnTerminate(() -> log.info("All scenes enqueued, waiting for completion..."))
+                    ).subscribe();
+        });
     }
 
     /**
@@ -89,27 +105,47 @@ public class DallE3QueueProcessor {
     @Transactional(transactionManager = "r2dbcTransactionManager")
     public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene, User user) {
         ResultApiResponseForm form = new ResultApiResponseForm();
+        UUID requestId = UUID.randomUUID(); // 요청마다 고유한 ID 생성
 
-        return userR2DBCRepository.findByUserId(user.getId())
-                .flatMap(userData -> {
-                    return singleScene.flatMap(sceneFormat -> {
+        return Mono.create(sink -> {
+            responseMap.put(requestId, sink); // 지연된 응답을 처리할 MonoSink 저장
+
+            userR2DBCRepository.findByUserId(user.getId())
+                    .flatMap(userData -> singleScene.flatMap(sceneFormat -> {
                         try {
-                            queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
-                            userData.minusTokenForSingleImage();
-                            userR2DBCRepository.save(userData);
-                            form.setSingleResult(true); // 성공 처리
-                            log.info("Successfully enqueued sceneFormat, queue size={}", queue.getSize());
-                        } catch (IllegalStateException e) {
-                            log.error("Failed to enqueue sceneFormat={}, error={}", sceneFormat.getSceneSequence(), e.getMessage());
-                            form.setSingleResult(false); // 실패 처리
-                        } catch (NoTokenException e) {
-                            log.info("토큰이 부족합니다 user.getToken={}", userData.getToken());
-                            form.setSingleResult(false); // 실패 처리
+                            // SceneFormat에 Request ID 추가
+                            sceneFormat.setRequestId(requestId.toString());
+                            queue.enqueue(sceneFormat); // 큐에 작업 추가
+
+                            requestTaskMap.computeIfAbsent(requestId, k -> new ArrayList<>()).add(sceneFormat);
+
+                            log.info("user.getToken={}", userData.getToken());
+                            userData.minusTokenForSingleImage(); // 사용자 토큰 차감
+                            log.info("user.getToken={}", userData.getToken());
+
+                            return userR2DBCRepository.save(userData);
+                        } catch (IllegalStateException | NoTokenException e) {
+                            log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                            form.setSingleResult(false);
+                            return Mono.empty();
+                        } finally {
+                            log.info("queue.size={}", queue.getSize());
                         }
-                        return Mono.just(sceneFormat);
-                    }).then(Mono.just(form));
-                });
+                    }))
+                    .doOnSuccess(savedData -> {
+                        checkIfRequestCompleted(requestId, form, sink); // 모든 작업 완료 후에만 응답 보내기
+                    })
+                    .onErrorResume(e -> {
+                        log.error("Error during process: {}", e.getMessage());
+                        form.setSingleResult(false); // 실패 처리
+                        sink.success(form); // 즉시 실패 반환
+                        return Mono.empty();
+                    })
+                    .subscribe();
+        });
     }
+
+
 
     /**
      * ScheduledExecutorService -> 일정간격으로 작업을 실행시켜주는 서비스
@@ -118,7 +154,7 @@ public class DallE3QueueProcessor {
      */
     private void startQueueProcessor() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::processQueue, 45, REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::processQueue, 30, REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
     }
 
     /**
@@ -130,8 +166,16 @@ public class DallE3QueueProcessor {
             for (int i = 0; i < REQUEST_COUNT && !queue.getIsEmpty(); i++) {
                 try {
                     SceneFormat sceneFormat = queue.dequeue();
-                    //이미지 생성 엔진
-                    dallE3.processDallE3Api(sceneFormat).subscribe();
+                    dallE3.processDallE3Api(sceneFormat)
+                            .doOnSuccess(response -> {
+                                sceneFormat.setCompleted(true); // 작업 완료 후 isCompleted를 true로 설정
+                                log.info("SceneFormat completed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
+                            })
+                            .doOnTerminate(() -> {
+                                UUID requestId = UUID.fromString(sceneFormat.getRequestId());
+                                checkIfRequestCompleted(requestId); // 요청 완료 여부 확인
+                            })
+                            .subscribe();
                 } catch (InterruptedException e) {
                     log.error("Queue processing interrupted", e);
                 }
@@ -139,6 +183,87 @@ public class DallE3QueueProcessor {
         } else {
             log.info("queue is empty - dalle3 ver");
         }
+    }
 
+    private void checkIfRequestCompleted(UUID requestId) {
+        // requestId에 해당하는 모든 SceneFormat을 가져옴
+        List<SceneFormat> tasks = requestTaskMap.get(requestId);
+        MonoSink<ResultApiResponseForm> resultApiResponseFormMonoSink = responseMap.get(requestId);
+
+        if (tasks == null) {
+            log.warn("No tasks found for requestId={}", requestId);
+            return;
+        }
+
+        // 모든 SceneFormat의 작업이 완료되었는지 확인
+        boolean allCompleted = tasks.stream().allMatch(SceneFormat::isCompleted);
+
+        if (allCompleted) {
+            log.info("All tasks for requestId={} have been completed", requestId);
+            sendResponseForRequest(requestId); // 응답 처리
+            requestTaskMap.remove(requestId); // 맵에서 해당 requestId 제거
+        }
+    }
+
+    private void sendResponseForRequest(UUID requestId, ResultApiResponseForm responseForm) {
+        // 요청에 대한 MonoSink를 찾아서 성공 응답을 보냄
+        MonoSink<ResultApiResponseForm> sink = responseMap.get(requestId);
+        if (sink != null) {
+            sink.success(responseForm); // 지연 해제 및 응답 반환
+            responseMap.remove(requestId); // 완료된 요청 삭제
+        } else {
+            log.error("No response sink found for requestId={}", requestId);
+        }
+    }
+
+    private void checkIfRequestCompleted(UUID requestId, ResultApiResponseForm form, MonoSink<ResultApiResponseForm> sink) {
+        log.info("checkIfRequestCompleted");
+        List<SceneFormat> tasks = requestTaskMap.get(requestId);
+
+        if (tasks == null) {
+            log.warn("No tasks found for requestId={}", requestId);
+            sink.error(new RuntimeException("No tasks found for the request."));
+            return;
+        }
+
+        boolean allCompleted = tasks.stream().allMatch(SceneFormat::isCompleted);
+
+        if (allCompleted) {
+            log.info("All tasks for requestId={} have been completed", requestId);
+            sink.success(form); // 모든 작업이 끝난 후 응답 반환
+            responseMap.remove(requestId);
+            requestTaskMap.remove(requestId); // 요청 제거
+        }
+    }
+
+    private void sendResponseForRequest(UUID requestId) {
+        // requestTaskMap에서 해당 요청에 대한 작업들을 가져옴
+        List<SceneFormat> tasks = requestTaskMap.get(requestId);
+
+        if (tasks == null) {
+            log.warn("No tasks found for requestId={}", requestId);
+            return;
+        }
+
+        // 응답 생성
+        ResultApiResponseForm responseForm = new ResultApiResponseForm();
+
+        // 실패한 작업의 시퀀스를 failedSeq에 저장
+        tasks.forEach(task -> {
+            if (!task.isCompleted()) {  // 작업이 완료되지 않은 경우 실패로 간주
+                responseForm.setFailSeq(task.getSceneSequence());
+                responseForm.setSingleResult(false);
+            }
+        });
+
+        // 요청에 대한 MonoSink를 찾아서 성공 응답을 보냄
+        MonoSink<ResultApiResponseForm> sink = responseMap.get(requestId);
+        if (sink != null) {
+            sink.success(responseForm); // 지연 해제 및 응답 반환
+            responseMap.remove(requestId); // 완료된 요청 삭제
+            requestTaskMap.remove(requestId); // 해당 요청의 작업 리스트 삭제
+        } else {
+            log.error("No response sink found for requestId={}", requestId);
+        }
     }
 }

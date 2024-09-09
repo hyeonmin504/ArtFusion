@@ -1,4 +1,4 @@
-package _2.ArtFusion.domain.user;
+package _2.ArtFusion.config;
 
 import _2.ArtFusion.config.jwt.TokenAuthenticationFilter;
 import _2.ArtFusion.config.jwt.TokenProvider;
@@ -37,7 +37,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers(HttpMethod.GET,"/api/users/{email}","/api/archives/**","/api/comments/**").permitAll()  // GET 요청은 인증 없이 접근 허용
+                                .requestMatchers(HttpMethod.GET,"/api/users/{email}","/api/archives","/api/comments/**").permitAll()  // GET 요청은 인증 없이 접근 허용
                                 .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/signup","/api/mail/code","/api/story/temporary").permitAll()  // POST 요청은 인증 없이 접근 허용
                                 .requestMatchers(HttpMethod.PUT, "/api/cuts/{sceneId}/**","/api/likes/{postId}").permitAll()
                                 .anyRequest().authenticated()  // 그 외 모든 경로는 인증 필요
@@ -58,9 +58,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://d3ao949apmj1lo.cloudfront.net",
-                "https://botox-chat.site",
-                "https://www.botox-chat.site",
+                "192.168.207.29:3000",
+                "http://192.168.207.29:3000",
+                "http://172.30.1.19:3000",
                 "http://localhost:3000"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -86,4 +86,5 @@ public class SecurityConfig {
                 "/api/comments/**","/api/mail/code"
         ), userRepository); // TokenRepository 전달
     }
+
 }

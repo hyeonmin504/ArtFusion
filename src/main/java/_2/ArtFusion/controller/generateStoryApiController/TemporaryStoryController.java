@@ -1,6 +1,7 @@
 package _2.ArtFusion.controller.generateStoryApiController;
 
 import _2.ArtFusion.controller.ResponseForm;
+import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +53,7 @@ public class TemporaryStoryController {
      * @return
      */
     @GetMapping("/story/temporary/{storyId}") //테스트 완료
-    public ResponseForm getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
@@ -75,45 +77,54 @@ public class TemporaryStoryController {
 
             StoryBoardForm storyBoardForm = new StoryBoardForm(storyBoard.getId(),sceneFormatForms);
 
-            return new ResponseForm<>(OK, storyBoardForm,"Scene data retrieved successfully");
+            ResponseForm<StoryBoardForm> body = new ResponseForm<>(OK, storyBoardForm, "Scene data retrieved successfully");
+            return ResponseEntity.status(OK).body(body);
         } catch (NoResultException | NotFoundUserException e) {
-            return new ResponseForm<>(NOT_FOUND, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
+            return ResponseEntity.status(NOT_FOUND).body(body);
         } catch (NotFoundContentsException e) {
-            return new ResponseForm<>(NO_CONTENT, null, e.getMessage());
+            ResponseForm<?> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
+            return ResponseEntity.status(NO_CONTENT).body(body);
         }
     }
 
     /**
      * 스토리 보드 -> 이미지 생성 api
+     *
      * @param form
      * @return
      */
     @PostMapping("/story/temporary") //테스트 완료
-    public Mono<ResponseForm<?>> generateTemporaryImageRequest(@RequestBody @Validated GenerateTemporaryForm form,HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    public Mono<ResponseEntity<ResponseForm<Object>>> generateTemporaryImageRequest(
+            @RequestBody @Validated GenerateTemporaryForm form,
+            HttpServletRequest request) {
 
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
 
         log.info("Start generating temporary image request");
         return storyBoardService.generateStoryBoardAndCharacter(form, userData.getId())
                 .flatMap(actorAndStoryIdForm ->
-                        sceneFormatWebClientService.processStoryBoard(Mono.just(actorAndStoryIdForm.getStoryId()),Mono.just(actorAndStoryIdForm.getCharacters()))
+                        sceneFormatWebClientService.processStoryBoard(
+                                        Mono.just(actorAndStoryIdForm.getStoryId()),
+                                        Mono.just(actorAndStoryIdForm.getCharacters()))
                                 .collectList()
                 )
-                //Mono<List<SceneFormat>> 값이 없을 경우
+                // Mono<List<SceneFormat>> 값이 없을 경우
                 .onErrorResume(e -> {
-                    log.error("error={}",e.getMessage());
+                    log.error("error={}", e.getMessage());
                     return Mono.just(new ArrayList<>());
                 })
                 .flatMap(sceneFormats -> {
                     // 반환 값이 없을 경우
-                    if (sceneFormats.isEmpty()){
-                        return Mono.just(new ResponseForm<>(NO_CONTENT, null, "값을 불러올 수 없습니다. 다시 시도해주세요"));
+                    if (sceneFormats.isEmpty()) {
+                        ResponseForm<Object> responseForm = new ResponseForm<>(NO_CONTENT, null, "해당 컨텐츠가 존재하지 않습니다.");
+                        return Mono.just(ResponseEntity.status(NO_CONTENT).body(responseForm));
                     }
                     log.info("Scene formats processed={}", sceneFormats.size());
 
-                    //이미지 생성
-                    return generateImageProcessor(sceneFormats,userData);
+                    // 이미지 생성
+                    return generateImageProcessor(sceneFormats, userData);
                 })
                 .doOnSuccess(response -> log.info("Temporary image request completed successfully"))
                 .doOnError(e -> log.error("error={}", e.getMessage()))
@@ -122,31 +133,38 @@ public class TemporaryStoryController {
                     if (status == REQUEST_TIMEOUT) {
                         status = (e instanceof IllegalStateException) ? NOT_ACCEPTABLE : REQUEST_TIMEOUT;
                     }
-                    return Mono.just(new ResponseForm<>(status, null, e.getMessage()));
+                    ResponseForm<Object> responseForm = new ResponseForm<>(status, null, e.getMessage());
+                    return Mono.just(ResponseEntity.status(status).body(responseForm));
                 });
     }
 
     /**
      * 이미지 요청 프로세스
+     *
      * @param sceneFormats
      * @return
      */
     @NotNull
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    protected Mono<ResponseForm<?>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats,User user) {
-        return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats),user)
+    protected Mono<ResponseEntity<ResponseForm<Object>>> generateImageProcessor(List<_2.ArtFusion.domain.r2dbcVersion.SceneFormat> sceneFormats, User user) {
+        return dallE3QueueProcessor.transImagesForDallE(Mono.just(sceneFormats), user)
                 .flatMap(failApiResponseForm -> {
-                    if (failApiResponseForm.getFailedSeq().isEmpty()) { // 이미지 생성 성공
+                    if (failApiResponseForm.getFailedSeq().isEmpty()) {
+                        // 이미지 생성 성공
                         log.info("failApiResponseForm.getFailedSeq={}", failApiResponseForm.getFailedSeq());
-                        return Mono.just(new ResponseForm<>(OK, null, "작품 이미지 생성중!"));
+                        ResponseForm<Object> body = new ResponseForm<>(OK, null, "작품 이미지 생성중!");
+                        return Mono.just(ResponseEntity.status(OK).body(body));
                     }
+
                     // 이미지 생성에 실패한 장면이 존재할 경우
                     List<Integer> failSeq = failApiResponseForm.getFailedSeq();
-                    return Mono.just(new ResponseForm<>(NO_CONTENT, failSeq, "토큰 부족으로 인해 일부 이미지 생성중 오류가 발생했습니다"));
+                    ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, failSeq, "토큰 부족으로 인해 일부 이미지 생성 중 오류가 발생했습니다.");
+                    return Mono.just(ResponseEntity.status(NO_CONTENT).body(body));
                 })
                 .onErrorResume(e -> {
                     log.error("error={}", e.getMessage());
-                    return Mono.just(new ResponseForm<>(INTERNAL_SERVER_ERROR, null, "이미지 생성중 오류 발생!"));
+                    ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, "이미지 생성 중 오류 발생!");
+                    return Mono.just(ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body));
                 });
     }
 

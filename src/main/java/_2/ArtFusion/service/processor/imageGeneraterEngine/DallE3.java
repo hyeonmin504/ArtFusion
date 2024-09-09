@@ -74,20 +74,10 @@ public class DallE3 {
                             });
                 })
                 .doOnSuccess(response -> log.info("이미지를 성공적으로 가져왔습니다"))
-                .retryWhen(reactor.util.retry.Retry.max(1) //1회 재시도
-                        .doBeforeRetry(retrySignal -> log.warn("Retrying request...")))
                 .onErrorResume(e -> {
-                    log.error("오류 발생: {}", e.getMessage());
 
-                    // 오류 발생 시 사용자 찾기
-                    return sceneFormatR2DBCRepository.findUserBySceneFormatId(Mono.just(sceneFormat.getId()))
-                            .flatMap(user -> {
-                                log.info("user.rollback.getToken={}",user.getToken());
-                                user.rollBackToken(); // 사용자 토큰 롤백'
-                                log.info("user.rollback.getToken={}",user.getToken());
-                                return userR2DBCRepository.save(user); // 롤백 후 사용자 정보 저장
-                            })
-                            .then(Mono.empty()); // 최종적으로 빈 Mono 반환
+                    log.error("Fallback error handling", e);
+                    return Mono.empty(); // 또는 원하는 대체 로직을 여기에 작성
                 })
                 .then();
     }

@@ -36,7 +36,7 @@ spring:
 
   mvc:
     async:
-      request-timeout: 60000
+      request-timeout: 300000
 
 logging:
   level:
@@ -55,7 +55,15 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     bucket: ${AWS_BUCKET_NAME}
     region: ${AWS_REGION}
-
 jwt:
   issuer: wookdong
   secret-key: c1b94a4daddfe04955067b09032a52c6e7b9433a5af91efbde4b44f69e99546e5713e30e4c5e5f2f22c21188f641d50fa97425724f2b8f0ad3d47c7d6bad1a6f
+
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        same-site: none  # SameSite 속성을 None으로 설정
+        secure: true      # Secure 속성을 true로 설정 (HTTPS 사용 시 적용)

@@ -2,11 +2,14 @@ package _2.ArtFusion.domain.scene;
 
 import _2.ArtFusion.domain.openai.DallEAi;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
+import _2.ArtFusion.service.util.convertUtil.BooleanToStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -30,6 +33,13 @@ public class SceneFormat {
     @Size(max = 4000)
     private String background;
     private String actors;
+
+    @Column(name= "request_id")
+    private String requestId;
+
+    @Convert(converter = BooleanToStringConverter.class)
+    private boolean completed;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "story_id")
