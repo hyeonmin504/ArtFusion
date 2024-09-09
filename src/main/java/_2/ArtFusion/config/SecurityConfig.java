@@ -3,6 +3,8 @@ package _2.ArtFusion.config;
 import _2.ArtFusion.config.jwt.TokenAuthenticationFilter;
 import _2.ArtFusion.config.jwt.TokenProvider;
 import _2.ArtFusion.repository.jpa.UserRepository;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.SessionCookieConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +60,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "20.22.126.143:3000",
+                "192.168.207.29:3000",
+                "http://192.168.207.29:3000",
+                "http://172.30.1.19:3000",
                 "http://localhost:3000"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -83,5 +87,14 @@ public class SecurityConfig {
                 "/api/cuts/{sceneId}/**","/api/likes/{postId}",
                 "/api/comments/**","/api/mail/code"
         ), userRepository); // TokenRepository 전달
+    }
+
+    // 일반 초기화 메서드로 변경
+    public void configureSessionCookie(ServletContext servletContext) {
+        SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
+        sessionCookieConfig.setSecure(false);  // Secure 플래그를 비활성화
+        sessionCookieConfig.setHttpOnly(true);  // HttpOnly 설정
+        sessionCookieConfig.setPath("/");  // 쿠키의 경로 설정
+        sessionCookieConfig.setMaxAge(1800);  // 세션 쿠키의 만료 시간 설정 (예: 30분)
     }
 }
