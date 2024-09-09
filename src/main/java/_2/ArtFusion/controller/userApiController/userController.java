@@ -104,7 +104,7 @@ public class userController {
             //세션이 있으면 있는 세션 반환, 없으면 신규 세션을 생성
             HttpSession session = request.getSession();
             //세션에 로그인 회원 정보 보관
-            session.setAttribute("LOGIN_USER", user.getEmail());
+            session.setAttribute("LOGIN_USER", new SessionLoginForm(user.getEmail()));
 
             ResponseForm<LoginResponseForm> responseForm = new ResponseForm<>(HttpStatus.OK, null, "로그인에 성공했습니다.");
             return ResponseEntity.status(HttpStatus.OK).body(responseForm);

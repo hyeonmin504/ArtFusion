@@ -101,7 +101,7 @@ public class ArchiveController {
      * @param nickname -> nickname 최적화로 사용 예정
      * @return
      */
-    @GetMapping("/archives/{nickname}/{postId}")
+    @GetMapping("/archives/{postId}")
     public ResponseEntity<ResponseForm<DetailArchivesResponse>> getArchiveDetail(@PathVariable Long postId,
                                                                                  @PathVariable String nickname) {
         try {

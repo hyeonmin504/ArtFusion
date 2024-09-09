@@ -7,4 +7,8 @@ import lombok.Getter;
 public class SessionLoginForm {
     @NotNull
     private String email;
+
+    public SessionLoginForm(String email) {
+        this.email = email;
+    }
 }

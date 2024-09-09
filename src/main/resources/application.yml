@@ -64,6 +64,7 @@ server:
   port: 8080
   servlet:
     session:
+      timeout: 3600
       cookie:
         same-site: none  # SameSite 속성을 None으로 설정
         secure: true      # Secure 속성을 true로 설정 (HTTPS 사용 시 적용)
