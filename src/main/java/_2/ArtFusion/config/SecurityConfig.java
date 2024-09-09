@@ -89,12 +89,4 @@ public class SecurityConfig {
         ), userRepository); // TokenRepository 전달
     }
 
-    // 일반 초기화 메서드로 변경
-    public void configureSessionCookie(ServletContext servletContext) {
-        SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
-        sessionCookieConfig.setSecure(false);  // Secure 플래그를 비활성화
-        sessionCookieConfig.setHttpOnly(true);  // HttpOnly 설정
-        sessionCookieConfig.setPath("/");  // 쿠키의 경로 설정
-        sessionCookieConfig.setMaxAge(1800);  // 세션 쿠키의 만료 시간 설정 (예: 30분)
-    }
 }
