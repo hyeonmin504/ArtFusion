@@ -11,7 +11,6 @@ import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +35,6 @@ public class ArchiveController {
 
     private final ArchiveService archiveService;
     private final UserRepository userRepository;
-
     /**
      * 모든 아카이브 가져오기
      * @param page -> 해당 페이지 번호
@@ -61,7 +59,13 @@ public class ArchiveController {
         return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 
-
+    /**
+     * 자신의 archives 조회
+     * @param page
+     * @param sort
+     * @param size
+     * @return
+     */
     @GetMapping("/archives/my")
     public ResponseEntity<ResponseForm> getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "id") String sort,
@@ -87,26 +91,41 @@ public class ArchiveController {
         } catch (Exception e) {
             ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, e.getMessage());
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body);
+
         }
     }
 
     /**
      * 해당 포스트 가져오기
-     * @param postId -> 해당하는 포스트 id
+     *
+     * @param postId   -> 해당하는 포스트 id
      * @param nickname -> nickname 최적화로 사용 예정
      * @return
      */
     @GetMapping("/archives/{nickname}/{postId}")
-    public ResponseEntity<ResponseForm> getArchiveDetail(@PathVariable Long postId,@PathVariable String nickname) {
+    public ResponseEntity<ResponseForm<DetailArchivesResponse>> getArchiveDetail(@PathVariable Long postId,
+                                                                                 @PathVariable String nickname) {
         try {
-            //아카이브 폼 데이터 조회
-            DetailArchivesResponse detailArchivesResponse = archiveService.getArchive(postId);
-            ResponseForm<DetailArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "Ok");
-            return ResponseEntity.status(HttpStatus.OK).body(body);
+            // 주어진 nickname과 postId로 아카이브 상세 정보를 조회
+            DetailArchivesResponse detailArchivesResponse = archiveService.getArchive(postId, nickname);
+
+            // 응답 객체 생성 (성공적인 조회)
+            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "아카이브 조회 성공");
+            return ResponseEntity.ok(responseForm);
+
         } catch (NotFoundContentsException | NotFoundImageException | NoResultException e) {
-            log.info("error={}",e);
-            ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
+            log.error("조회 오류: {}", e.getMessage());
+
+            // 조회 실패 시, DetailArchivesResponse 타입으로 null 처리
+            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseForm);
+
+        } catch (Exception e) {
+            log.error("예상치 못한 오류: {}", e);
+
+            // 예상치 못한 예외 처리 (DetailArchivesResponse 타입으로 반환)
+            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "서버 오류 발생");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseForm);
         }
     }
 

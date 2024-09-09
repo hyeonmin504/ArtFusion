@@ -16,7 +16,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,7 +55,7 @@ public class DeleteArchiveController {
             }
             archiveService.deleteArchive(postId);
             ResponseForm<Object> body = new ResponseForm<>(HttpStatus.OK, null, "200 ok");
-            return ResponseEntity.status(HttpStatus.OK).body(body);
+            return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
             log.info("error={}", e);
             ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, "작품이 존재하지 않습니다.");

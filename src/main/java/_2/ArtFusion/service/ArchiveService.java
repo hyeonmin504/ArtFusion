@@ -70,7 +70,7 @@ public class ArchiveService {
     }
 
     @Transactional(readOnly = true)
-    public DetailArchivesResponse getArchive(Long postId) {
+    public DetailArchivesResponse getArchive(Long postId,String nickname) {
         //해당 아카이브를 찾아오기
         DetailArchiveDataForm detailArchiveDataForm = archiveRepository.findDetailArchiveForm(postId).orElseThrow(
                 () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다"));
