@@ -1,13 +1,14 @@
 package _2.ArtFusion.controller.generateStoryApiController;
 
+import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
-import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
 import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.processor.DallE3QueueProcessor;
@@ -43,9 +44,7 @@ public class TemporaryStoryController {
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
     private final UserService userService;
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String TOKEN_PREFIX = "Bearer ";
-
+    private final UserRepository userRepository;
 
     /**
      * 현재 작업중인 스토리 보드 data 요청 api
@@ -53,9 +52,11 @@ public class TemporaryStoryController {
      * @return
      */
     @GetMapping("/story/temporary/{storyId}") //테스트 완료
-    public ResponseEntity<ResponseForm> getTemporaryImageRequest(@PathVariable Long storyId, HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+    public ResponseEntity<ResponseForm> getTemporaryImageRequest(@PathVariable Long storyId,
+                                                                 @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
+        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                () -> new NotFoundUserException("유저 정보 없슴니당")
+        );
 
         try {
             //SceneFormat 데이터를 가저오기
@@ -97,10 +98,18 @@ public class TemporaryStoryController {
     @PostMapping("/story/temporary") //테스트 완료
     public Mono<ResponseEntity<ResponseForm<Object>>> generateTemporaryImageRequest(
             @RequestBody @Validated GenerateTemporaryForm form,
-            HttpServletRequest request) {
+            @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
 
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+        User userData;
+        try {
+            userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                    () -> new NotFoundUserException("유저 정보 없슴니당")
+            );
+        }catch (NotFoundUserException e) {
+            ResponseForm<Object> responseForm = new ResponseForm<>(NOT_ACCEPTABLE, null, "로그인 먼저 해주세요.");
+            return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(responseForm));
+        }
+
 
         log.info("Start generating temporary image request");
         return storyBoardService.generateStoryBoardAndCharacter(form, userData.getId())

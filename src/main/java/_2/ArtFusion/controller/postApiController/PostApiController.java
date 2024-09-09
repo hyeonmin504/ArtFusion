@@ -1,9 +1,12 @@
 package _2.ArtFusion.controller.postApiController;
 
+import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
+import _2.ArtFusion.exception.NotFoundUserException;
+import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.CommentService;
 import _2.ArtFusion.service.LikeService;
 import _2.ArtFusion.service.UserService;
@@ -29,6 +32,7 @@ public class PostApiController {
     private final CommentService commentService;
     private final LikeService likeService;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -68,9 +72,12 @@ public class PostApiController {
      * @param form -> 받은 textBody
      */
     @PostMapping("/comments/{postId}") //테스트 완료
-    public ResponseEntity<ResponseForm> saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,HttpServletRequest request){
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+    public ResponseEntity<ResponseForm> saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,
+                                                        @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm){
+//        String bearerToken = loginForm.getHeader(AUTHORIZATION_HEADER);
+        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                () -> new NotFoundUserException("유저 없습니당")
+        );
         try {
             //서비스 호출하여 댓글 저장
             commentService.saveComments(form, userData.getId(), postId);
@@ -116,9 +123,11 @@ public class PostApiController {
      * @return
      */
     @PutMapping("/likes/{postId}") //테스트 완료
-    public ResponseEntity<ResponseForm> likeApi(@PathVariable Long postId, HttpServletRequest request){
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
+    public ResponseEntity<ResponseForm> likeApi(@PathVariable Long postId,
+                                                @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm){
+        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                () -> new NotFoundUserException("유저 정보 없슴니당")
+        );
 
         try {
             //서비스 호출하여 댓글 저장
