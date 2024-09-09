@@ -67,10 +67,8 @@ public class DallE3 {
                             });
                 })
                 .doOnSuccess(response -> log.info("이미지를 성공적으로 가져왔습니다"))
-                .retryWhen(reactor.util.retry.Retry.max(1) //1회 재시도
-                        .doBeforeRetry(retrySignal -> log.warn("Retrying request...")))
                 .onErrorResume(e -> {
-                    log.error("Fallback error handling: {}", e.getMessage());
+                    log.error("Fallback error handling", e);
                     return Mono.empty(); // 또는 원하는 대체 로직을 여기에 작성
                 })
                 .then();

@@ -8,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table("scene_format")
@@ -29,11 +31,18 @@ public class SceneFormat {
     @Size(max = 4000)
     private String background;
     private String actors;
+    @Column("request_id")
+    private String requestId;
+    private boolean completed;
 
     @Column("story_id")
     private Long storyId;
     @Column("image_id")
     private Long imageId;
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
     protected SceneFormat(int sceneSequence, String description, String dialogue, String background,String actors, Long storyId) {
         this.sceneSequence = sceneSequence;
@@ -42,6 +51,7 @@ public class SceneFormat {
         this.background = background;
         this.actors = actors;
         this.storyId = storyId;
+        this.completed = false;
     }
 
     public static SceneFormat createFormat(int sceneSequence, String description, String background, String dialogue, String actors, StoryBoard storyBoard) {
@@ -53,6 +63,10 @@ public class SceneFormat {
         this.background = background;
         this.dialogue = dialogue;
         return this;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public void setScenePromptEn(String scenePromptEn) {

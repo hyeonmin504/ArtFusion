@@ -18,9 +18,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,16 +107,28 @@ public class SceneFormatWebClientService {
     @NotNull
     public Mono<SceneFormat> generateSceneFormatForDallE(SceneFormat sceneFormat, String actorsPrompt, String style) {
         return getTranslatePrompt(sceneFormat, actorsPrompt, style)
-                .flatMap(translatePrompt ->
-                        openAiService.callGptApiCompletion(translatePrompt)
-                                .flatMap(translation -> {
-                                    String dallEPrompt = extractDallEPrompt(translation);
-
-                                    log.info("dallEPrompt={}", dallEPrompt);
-                                    sceneFormat.setScenePromptEn(dallEPrompt);
-                                    return sceneFormatR2DBCRepository.save(sceneFormat);
-                                })
-                );
+                .flatMap(translatePrompt -> openAiService.callGptApiCompletion(translatePrompt)
+                        .flatMap(translation -> {
+                            String dallEPrompt = extractDallEPrompt(translation);
+                            log.info("dallEPrompt={}", dallEPrompt);
+                            sceneFormat.setScenePromptEn(dallEPrompt);
+                            return sceneFormatR2DBCRepository.save(sceneFormat);
+                        })
+                )
+                // 타임아웃 30초 추가
+                .timeout(Duration.ofSeconds(20))
+                // 타임아웃 발생 시 1회만 재시도
+                .retryWhen(reactor.util.retry.Retry.max(1)
+                        .filter(throwable -> throwable instanceof TimeoutException) // 타임아웃 예외만 재시도
+                        .doBeforeRetry(retrySignal -> log.warn("Retrying due to timeout: attempt {}", retrySignal.totalRetries() + 1))
+                )
+                .doOnSuccess(scene -> log.info("Scene format successfully saved: {}", scene))
+                .doOnError(e -> log.error("Error during scene format processing: {}", e.getMessage()))
+                // 재시도 후에도 실패하면 빈 Mono 반환
+                .onErrorResume(TimeoutException.class, e -> {
+                    log.error("Timeout occurred after retry: {}", e.getMessage());
+                    return Mono.empty();
+                });
     }
 
     public String findMatchingActors(String actors, List<Actor> characters) {

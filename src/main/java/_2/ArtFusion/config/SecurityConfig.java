@@ -1,4 +1,4 @@
-package _2.ArtFusion.domain.user;
+package _2.ArtFusion.config;
 
 import _2.ArtFusion.config.jwt.TokenAuthenticationFilter;
 import _2.ArtFusion.config.jwt.TokenProvider;
