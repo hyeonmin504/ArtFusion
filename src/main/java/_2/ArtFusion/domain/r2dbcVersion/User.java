@@ -34,6 +34,10 @@ public class User {
         }
     }
 
+    public void rollBackToken() {
+        token += 50;
+    }
+
     public User(String nickName) {
         this.nickname = nickName;
     }
