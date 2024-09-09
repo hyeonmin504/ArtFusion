@@ -5,6 +5,7 @@ spring:
     password: ${PASSWORD}
     driver-class-name: ${DRIVER_NAME}
 
+
   servlet:
     multipart:
       enabled: true
@@ -55,7 +56,13 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     bucket: ${AWS_BUCKET_NAME}
     region: ${AWS_REGION}
-
 jwt:
   issuer: wookdong
   secret-key: c1b94a4daddfe04955067b09032a52c6e7b9433a5af91efbde4b44f69e99546e5713e30e4c5e5f2f22c21188f641d50fa97425724f2b8f0ad3d47c7d6bad1a6f
+
+  port: 8081
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
