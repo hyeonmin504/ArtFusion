@@ -53,7 +53,7 @@ public class ConvertUtil {
             log.info("Character build={}",characterForm.getName());
             characters.add(Actor.builder()
                     .characterPrompt(characterForm.getCharacterPrompt())
-                    .gender(convertToGenderEnum(characterForm.getGender()))
+                    //.gender(convertToGenderEnum(characterForm.getGender()))
                     .name(characterForm.getName())
                     .storyId(storyBoard.getId())
                     .build());

@@ -65,7 +65,7 @@ public class GenerateTemporaryForm {
     public static class CharacterForm {
         private String characterPrompt;
         private String name;
-        private GenderForm gender;
+        //private GenderForm gender;
     }
 }
 
