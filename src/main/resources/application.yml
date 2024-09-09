@@ -12,6 +12,7 @@ spring:
       max-request-size: 10MB
 
   r2dbc:
+    host: ${RDBHOST}
     url: ${RDB_URL}
     name: ${RDB_NAME}
     username: ${USER_NAME}

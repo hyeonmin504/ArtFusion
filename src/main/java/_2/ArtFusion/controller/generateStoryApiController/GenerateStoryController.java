@@ -53,7 +53,7 @@ public class GenerateStoryController {
             imageService.uploadImage(image,storyBoard);
 
             //post 생성
-            archiveService.registerStoryPost(storyBoard);
+            archiveService.registerStoryPost(storyBoard,userData);
 
             ResponseForm<Object> body = new ResponseForm<>(OK, null, "이미지 저장 완료");
             return ResponseEntity.status(OK).body(body);
