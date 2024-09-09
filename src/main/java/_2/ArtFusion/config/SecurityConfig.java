@@ -1,7 +1,5 @@
 package _2.ArtFusion.config;
 
-import _2.ArtFusion.config.jwt.TokenAuthenticationFilter;
-import _2.ArtFusion.config.jwt.TokenProvider;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,8 +27,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final TokenProvider tokenProvider;
-    private final UserRepository userRepository;
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();  // BCryptPasswordEncoder를 빈으로 등록
+    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -47,8 +47,6 @@ public class SecurityConfig {
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN))
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(tokenAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class)
                 .cors(withDefaults());
 
         return http.build();
@@ -70,21 +68,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter(tokenProvider, List.of(
-                "/api/story/temporary",
-                "/api/users/{email}","/api/archives/**",
-                "/api/users/login", "/api/users/signup",
-                "/api/cuts/{sceneId}/**","/api/likes/{postId}",
-                "/api/comments/**","/api/mail/code"
-        ), userRepository); // TokenRepository 전달
-    }
-
 }

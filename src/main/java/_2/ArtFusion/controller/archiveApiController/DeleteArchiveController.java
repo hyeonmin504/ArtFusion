@@ -8,8 +8,6 @@ import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
-import _2.ArtFusion.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -31,9 +29,6 @@ public class DeleteArchiveController {
 
     private final ArchiveService archiveService;
     private final UserRepository userRepository;
-
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String TOKEN_PREFIX = "Bearer ";
     /**
      *
      * @param postId -> 삭제하려는 포스트 id
@@ -57,7 +52,7 @@ public class DeleteArchiveController {
             ResponseForm<Object> body = new ResponseForm<>(HttpStatus.OK, null, "200 ok");
             return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
-            log.info("error={}", e);
+            log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, "작품이 존재하지 않습니다.");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
         } catch (NotFoundUserException e) {
