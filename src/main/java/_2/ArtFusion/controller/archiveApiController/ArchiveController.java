@@ -9,7 +9,6 @@ import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
-import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +110,7 @@ public class ArchiveController {
 
             // 응답 객체 생성 (성공적인 조회)
             ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "아카이브 조회 성공");
-            return ResponseEntity.ok(responseForm);
+            return ResponseEntity.status(HttpStatus.OK).body(responseForm);
 
         } catch (NotFoundContentsException | NotFoundImageException | NoResultException e) {
             log.error("조회 오류: {}", e.getMessage());

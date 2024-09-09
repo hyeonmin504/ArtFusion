@@ -53,12 +53,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StoryBoard> storyBoards = new ArrayList<>();
 
-    @Column(nullable = true)
-    private String refreshToken;
-
-    @Column(nullable = true)
-    private LocalDateTime refreshTokenExpiry;
-
     // 연관 관계를 위한 setter
     public void setHeart(Heart heart) {
         this.heart = heart;
@@ -77,19 +71,5 @@ public class User {
     // 권한 반환 메서드
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
-    }
-
-    // 리프레시 토큰 초기화 메서드
-    public void clearRefreshToken() {
-        this.refreshToken = null;
-        this.refreshTokenExpiry = null;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public void setRefreshTokenExpiry(LocalDateTime refreshTokenExpiry) {
-        this.refreshTokenExpiry = refreshTokenExpiry;
     }
 }
