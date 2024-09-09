@@ -3,8 +3,6 @@ package _2.ArtFusion.config;
 import _2.ArtFusion.config.jwt.TokenAuthenticationFilter;
 import _2.ArtFusion.config.jwt.TokenProvider;
 import _2.ArtFusion.repository.jpa.UserRepository;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.SessionCookieConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

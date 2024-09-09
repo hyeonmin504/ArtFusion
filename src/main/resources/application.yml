@@ -60,7 +60,7 @@ jwt:
   issuer: wookdong
   secret-key: c1b94a4daddfe04955067b09032a52c6e7b9433a5af91efbde4b44f69e99546e5713e30e4c5e5f2f22c21188f641d50fa97425724f2b8f0ad3d47c7d6bad1a6f
 
-  port: 8081
+  port: 8080
   servlet:
     session:
       cookie:
