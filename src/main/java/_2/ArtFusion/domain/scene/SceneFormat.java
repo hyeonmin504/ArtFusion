@@ -33,7 +33,8 @@ public class SceneFormat {
     private String background;
     private String actors;
 
-    private UUID requestId;
+    @Column(name= "request_id")
+    private String requestId;
     private boolean completed;
 
 

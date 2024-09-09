@@ -72,7 +72,7 @@ public class DallE3QueueProcessor {
                             .flatMapMany(Flux::fromIterable)
                             .flatMap(sceneFormat -> {
                                 try {
-                                    sceneFormat.setRequestId(requestId); // 요청 ID 추가
+                                    sceneFormat.setRequestId(requestId.toString()); // 요청 ID 추가
                                     queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
 
                                     // requestTaskMap에 작업 추가
@@ -133,7 +133,7 @@ public class DallE3QueueProcessor {
      */
     private void startQueueProcessor() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::processQueue, 45, REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::processQueue, 30, REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
     }
 
     /**
@@ -151,7 +151,7 @@ public class DallE3QueueProcessor {
                                 log.info("SceneFormat completed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
                             })
                             .doOnTerminate(() -> {
-                                checkIfRequestCompleted(sceneFormat.getRequestId()); // 요청 완료 여부 확인
+                                checkIfRequestCompleted(UUID.fromString(sceneFormat.getRequestId())); // 요청 완료 여부 확인
                             })
                             .subscribe();
                 } catch (InterruptedException e) {

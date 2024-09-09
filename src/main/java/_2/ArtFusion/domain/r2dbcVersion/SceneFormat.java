@@ -31,8 +31,8 @@ public class SceneFormat {
     @Size(max = 4000)
     private String background;
     private String actors;
-
-    private UUID requestId;
+    @Column("request_id")
+    private String requestId;
     private boolean completed;
 
     @Column("story_id")
@@ -40,7 +40,7 @@ public class SceneFormat {
     @Column("image_id")
     private Long imageId;
 
-    public void setRequestId(UUID requestId) {
+    public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
 
