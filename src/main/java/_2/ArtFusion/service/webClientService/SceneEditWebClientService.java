@@ -5,6 +5,7 @@ import _2.ArtFusion.controller.editStoryApiController.editForm.DetailEditForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.ResultApiResponseForm;
 import _2.ArtFusion.domain.r2dbcVersion.Actor;
 import _2.ArtFusion.domain.r2dbcVersion.SceneFormat;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.r2dbc.ActorR2DBCRepository;
 import _2.ArtFusion.repository.r2dbc.SceneFormatR2DBCRepository;
@@ -123,9 +124,9 @@ public class SceneEditWebClientService {
      * @return FailApiResponseForm -> 성공 여부
      */
     @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<ResultApiResponseForm> singleTransImage(Long sceneId) {
+    public Mono<ResultApiResponseForm> singleTransImage(Long sceneId, User user) {
         return sceneFormatR2DBCRepository.findById(sceneId)
-                .flatMap(sceneFormat -> dallE3QueueProcessor.transImageForDallE(Mono.just(sceneFormat)))
+                .flatMap(sceneFormat -> dallE3QueueProcessor.transImageForDallE(Mono.just(sceneFormat),user))
                 .switchIfEmpty(Mono.empty());
     }
 }

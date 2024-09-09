@@ -37,7 +37,7 @@ public class PostApiController {
      * 저장된 댓글 데이터 모두 가져오기
      * @param postId -> 현재 postId
      */
-    @GetMapping("/comment/{postId}") //수정
+    @GetMapping("/comments/{postId}") //수정
     public ResponseForm getAllCommentsApi(@PathVariable Long postId) {
         try {
             //commentForm 객체를 담을 리스트 초기화
@@ -64,7 +64,7 @@ public class PostApiController {
      * @param postId -> 현재 post
      * @param form -> 받은 textBody
      */
-    @PostMapping("/comment/{postId}") //테스트 완료
+    @PostMapping("/comments/{postId}") //테스트 완료
     public ResponseForm saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,HttpServletRequest request){
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
@@ -83,7 +83,7 @@ public class PostApiController {
      * 댓글 수 조회 API
      * @param postId -> 현재 postId
      */
-    @GetMapping("/comment/cnt/{postId}") //테스트 완료
+    @GetMapping("/comments/cnt/{postId}") //테스트 완료
     public ResponseForm getCommentCountApi(@PathVariable Long postId) {
         try {
             int count = commentService.countComments(postId);

@@ -48,25 +48,4 @@ public class DeleteArchiveController {
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "작품이 존재하지 않습니다.");
         }
     }
-
-    /**
-     *
-     * @param storyId -> 삭제하려는 스토리 id
-     */
-    @DeleteMapping("/story/temporary/{storyId}") //아마 될듯 이것도
-    public ResponseForm deleteStoryBoardRequest(@PathVariable("storyId") Long storyId,HttpServletRequest request){
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        User userData = userService.getUserData(bearerToken.substring(TOKEN_PREFIX.length()));
-        try {
-            StoryPost storyPost = archiveService.getStoryPostByStoryId(storyId);
-            if(!storyPost.getUser().getId().equals(userData.getId())){
-                return new ResponseForm<>(HttpStatus.FORBIDDEN,null,"스토리보드를 찾을 수 없습니다.");
-            }
-            archiveService.deleteStoryBoard(storyId);
-            return new ResponseForm<>(HttpStatus.OK, null, "200 ok");
-        } catch (NotFoundContentsException e) {
-            log.info("error={}", e);
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "스토리가 존재하지 않습니다.");
-        }
-    }
 }

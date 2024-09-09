@@ -37,8 +37,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'mysql:mysql-connector-java:8.0.33'
 
+	//동기 처리 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
 	// 비동기 처리 의존성
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 	// 비동기 처리 db 의존성
 	// https://github.com/mirromutth/r2dbc-mysql/tree/v0.8.2.RELEASE 참고
 	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'

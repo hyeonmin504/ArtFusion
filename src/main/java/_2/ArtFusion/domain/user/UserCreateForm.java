@@ -26,5 +26,4 @@ public class UserCreateForm {
 
     @NotBlank(message = "Nickname is required")
     private String nickname; // 사용자 닉네임
-
 }
