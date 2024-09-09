@@ -82,6 +82,7 @@ public class DallE3 {
                 .then();
     }
 
+
     @Data
     @Builder
     public static class ImageRequestForm {
