@@ -105,26 +105,47 @@ public class DallE3QueueProcessor {
     @Transactional(transactionManager = "r2dbcTransactionManager")
     public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene, User user) {
         ResultApiResponseForm form = new ResultApiResponseForm();
+        UUID requestId = UUID.randomUUID(); // 요청마다 고유한 ID 생성
 
-        return userR2DBCRepository.findByUserId(user.getId())
-                .flatMap(userData -> singleScene.flatMap(sceneFormat -> {
+        return Mono.create(sink -> {
+            responseMap.put(requestId, sink); // 지연된 응답을 처리할 MonoSink 저장
+
+            userR2DBCRepository.findByUserId(user.getId())
+                    .flatMap(userData -> singleScene.flatMap(sceneFormat -> {
                         try {
-                            queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
-                            userData.minusTokenForSingleImage();
-                            userR2DBCRepository.save(userData);
-                            form.setSingleResult(true); // 성공 처리
-                            log.info("Successfully enqueued sceneFormat, queue size={}", queue.getSize());
-                        } catch (IllegalStateException e) {
-                            log.error("Failed to enqueue sceneFormat={}, error={}", sceneFormat.getSceneSequence(), e.getMessage());
-                            form.setSingleResult(false); // 실패 처리
-                        } catch (NoTokenException e) {
-                            log.info("토큰이 부족합니다 user.getToken={}", userData.getToken());
-                            form.setSingleResult(false); // 실패 처리
+                            // SceneFormat에 Request ID 추가
+                            sceneFormat.setRequestId(requestId.toString());
+                            queue.enqueue(sceneFormat); // 큐에 작업 추가
+
+                            requestTaskMap.computeIfAbsent(requestId, k -> new ArrayList<>()).add(sceneFormat);
+
+                            log.info("user.getToken={}", userData.getToken());
+                            userData.minusTokenForSingleImage(); // 사용자 토큰 차감
+                            log.info("user.getToken={}", userData.getToken());
+
+                            return userR2DBCRepository.save(userData);
+                        } catch (IllegalStateException | NoTokenException e) {
+                            log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                            form.setSingleResult(false);
+                            return Mono.empty();
+                        } finally {
+                            log.info("queue.size={}", queue.getSize());
                         }
-                        return Mono.just(sceneFormat);
-                    }).then(Mono.just(form))
-                );
+                    }))
+                    .doOnSuccess(savedData -> {
+                        checkIfRequestCompleted(requestId, form, sink); // 모든 작업 완료 후에만 응답 보내기
+                    })
+                    .onErrorResume(e -> {
+                        log.error("Error during process: {}", e.getMessage());
+                        form.setSingleResult(false); // 실패 처리
+                        sink.success(form); // 즉시 실패 반환
+                        return Mono.empty();
+                    })
+                    .subscribe();
+        });
     }
+
+
 
     /**
      * ScheduledExecutorService -> 일정간격으로 작업을 실행시켜주는 서비스
@@ -151,7 +172,8 @@ public class DallE3QueueProcessor {
                                 log.info("SceneFormat completed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
                             })
                             .doOnTerminate(() -> {
-                                checkIfRequestCompleted(UUID.fromString(sceneFormat.getRequestId())); // 요청 완료 여부 확인
+                                UUID requestId = UUID.fromString(sceneFormat.getRequestId());
+                                checkIfRequestCompleted(requestId); // 요청 완료 여부 확인
                             })
                             .subscribe();
                 } catch (InterruptedException e) {
@@ -166,6 +188,7 @@ public class DallE3QueueProcessor {
     private void checkIfRequestCompleted(UUID requestId) {
         // requestId에 해당하는 모든 SceneFormat을 가져옴
         List<SceneFormat> tasks = requestTaskMap.get(requestId);
+        MonoSink<ResultApiResponseForm> resultApiResponseFormMonoSink = responseMap.get(requestId);
 
         if (tasks == null) {
             log.warn("No tasks found for requestId={}", requestId);
@@ -179,6 +202,37 @@ public class DallE3QueueProcessor {
             log.info("All tasks for requestId={} have been completed", requestId);
             sendResponseForRequest(requestId); // 응답 처리
             requestTaskMap.remove(requestId); // 맵에서 해당 requestId 제거
+        }
+    }
+
+    private void sendResponseForRequest(UUID requestId, ResultApiResponseForm responseForm) {
+        // 요청에 대한 MonoSink를 찾아서 성공 응답을 보냄
+        MonoSink<ResultApiResponseForm> sink = responseMap.get(requestId);
+        if (sink != null) {
+            sink.success(responseForm); // 지연 해제 및 응답 반환
+            responseMap.remove(requestId); // 완료된 요청 삭제
+        } else {
+            log.error("No response sink found for requestId={}", requestId);
+        }
+    }
+
+    private void checkIfRequestCompleted(UUID requestId, ResultApiResponseForm form, MonoSink<ResultApiResponseForm> sink) {
+        log.info("checkIfRequestCompleted");
+        List<SceneFormat> tasks = requestTaskMap.get(requestId);
+
+        if (tasks == null) {
+            log.warn("No tasks found for requestId={}", requestId);
+            sink.error(new RuntimeException("No tasks found for the request."));
+            return;
+        }
+
+        boolean allCompleted = tasks.stream().allMatch(SceneFormat::isCompleted);
+
+        if (allCompleted) {
+            log.info("All tasks for requestId={} have been completed", requestId);
+            sink.success(form); // 모든 작업이 끝난 후 응답 반환
+            responseMap.remove(requestId);
+            requestTaskMap.remove(requestId); // 요청 제거
         }
     }
 
@@ -198,6 +252,7 @@ public class DallE3QueueProcessor {
         tasks.forEach(task -> {
             if (!task.isCompleted()) {  // 작업이 완료되지 않은 경우 실패로 간주
                 responseForm.setFailSeq(task.getSceneSequence());
+                responseForm.setSingleResult(false);
             }
         });
 

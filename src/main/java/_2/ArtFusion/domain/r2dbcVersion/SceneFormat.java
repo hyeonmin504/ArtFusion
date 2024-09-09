@@ -1,5 +1,7 @@
 package _2.ArtFusion.domain.r2dbcVersion;
 
+import _2.ArtFusion.service.util.convertUtil.BooleanToStringConverter;
+import jakarta.persistence.Convert;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -33,6 +35,8 @@ public class SceneFormat {
     private String actors;
     @Column("request_id")
     private String requestId;
+
+    @Convert(converter = BooleanToStringConverter.class)
     private boolean completed;
 
     @Column("story_id")

@@ -5,7 +5,6 @@ spring:
     password: ${PASSWORD}
     driver-class-name: ${DRIVER_NAME}
 
-
   servlet:
     multipart:
       enabled: true
