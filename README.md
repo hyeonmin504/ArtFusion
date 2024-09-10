@@ -29,7 +29,7 @@
 ![WebStorm](https://img.shields.io/badge/WebStorm-000000.svg?style=for-the-badge&logo=webstorm&logoColor=white)
 ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
 ## 🛠️ Features
-- **GPT 4o, DALL 3, 클로드** 등의 **Generate Modal**을 활용해 **텍스트**와 **이미지** 생성
+- **GPT-4o, DALL-E, 클로드** 등의 **Generate Modal**을 활용해 **텍스트**로 **웹툰(이미지)** 생성
 - **파인튜닝**을 통한 **사용자 맞춤형 웹툰 생성**
 - **텍스트 기반**의 자유로운 창작물 생성
 - 작품에 대한 **수정** 기능
