@@ -4,7 +4,6 @@
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
 ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
 ![deepl](https://img.shields.io/badge/deepl-007EC6?style=for-the-badge&logo=deepL&logoColor=white)
-![mysql](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
 ![ChatGPT](https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white)
 ![dalle](https://img.shields.io/badge/dalle-74aa9c?style=for-the-badge&logo=openai&logoColor=white)
 ## ⚛️ Front-End Development
