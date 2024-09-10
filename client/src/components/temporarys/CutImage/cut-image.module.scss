@@ -1,0 +1,74 @@
+@keyframes opacity-ani {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.cut-img-container {
+  position: relative;
+  width: 100%;
+  img {
+    // position: absolute;
+    width: 100%;
+  }
+  .blur-container {
+    z-index: 1;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    backdrop-filter: blur(10px);
+    background-color: rgba($color: #000000, $alpha: 0.8);
+
+    display: none;
+    opacity: 0;
+
+    .contents {
+      white-space: pre-wrap;
+    }
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      button {
+        color: white;
+        margin-top: 18px;
+        font-size: 18px;
+      }
+      .btn-container-text {
+        background-color: $primary-color;
+        padding: 8px 16px;
+
+        border-radius: 32px;
+      }
+      .btn-container-refresh {
+        svg {
+          font-size: 48px;
+          color: $primary-color;
+        }
+      }
+    }
+  }
+  &:hover {
+    .blur-container {
+      display: flex;
+      animation-name: opacity-ani;
+      animation-duration: 0.2s;
+      animation-timing-function: ease-in-out;
+      animation-fill-mode: both;
+    }
+  }
+}

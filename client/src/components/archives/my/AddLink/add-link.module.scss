@@ -1,0 +1,42 @@
+.link-container {
+  .link-container-inner {
+    color: $link-sub-color;
+    text-decoration: none;
+    .box-container {
+      transition: all ease-in-out 0.15s;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      border: 3px dashed $link-sub-color;
+      border-radius: 6px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        font-size: 48px;
+      }
+    }
+    .add-text {
+      transition: all ease-in-out 0.15s;
+      margin-top: 8px;
+      font-weight: 300;
+    }
+    &:hover {
+      color: $btn-active-color;
+
+      .box-container {
+        border: 3px dashed $btn-active-color;
+      }
+      .add-text {
+        color: $btn-active-color;
+      }
+    }
+  }
+}

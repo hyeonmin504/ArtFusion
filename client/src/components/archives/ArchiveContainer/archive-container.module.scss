@@ -1,0 +1,59 @@
+.container {
+  transition: all ease-in-out 0.15s;
+  position: relative;
+  font-weight: 300;
+  .contents {
+    margin-top: 8px;
+
+    .title {
+      font-size: 16px;
+      font-weight: 400;
+    }
+    .description {
+      margin-top: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-all;
+
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+
+      color: $sub-text-color;
+      font-size: 12px;
+    }
+  }
+  .etc {
+    margin-top: 10px;
+    .profile {
+      font-size: 14px;
+    }
+    .tags {
+      margin-top: 9px;
+      display: flex;
+
+      overflow-x: scroll;
+      .tag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 57px;
+        height: 18px;
+        background-color: $sub-text-color;
+        border-radius: 24px;
+
+        margin-left: 4px;
+
+        font-size: 12px;
+
+        &:nth-child(1) {
+          margin-left: 0px;
+        }
+      }
+    }
+  }
+  &:hover {
+    cursor: pointer;
+    transform: translateY(-10px);
+  }
+}

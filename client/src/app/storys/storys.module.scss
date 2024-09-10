@@ -1,0 +1,22 @@
+.story-section {
+  align-items: center;
+  .story-sec-title {
+    font-size: 36px;
+    font-weight: 300;
+  }
+  .story-sec-dscr {
+    font-size: 20px;
+    font-weight: 300;
+    color: $sub-text-color;
+
+    margin-top: 4px;
+  }
+  .story-sec-btns {
+    margin-top: 36px;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 30px;
+  }
+}

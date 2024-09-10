@@ -1,0 +1,18 @@
+.ratio-container {
+  position: relative;
+  width: 100%;
+  // width: ${props => props.xPercent}%;
+  // max-width: ${props => props.maxWidth};
+  // padding-bottom: ${props => (props.y * props.xPercent) / props.x}%;
+  padding-bottom: 156%;
+
+  img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
