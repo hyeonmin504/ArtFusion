@@ -196,7 +196,7 @@ public class DallE3QueueProcessor {
         }
 
         // 모든 SceneFormat의 작업이 완료되었는지 확인
-        boolean allCompleted = tasks.stream().allMatch(SceneFormat::isCompleted);
+        boolean allCompleted = tasks.stream().allMatch(SceneFormat::getCompleted);
 
         if (allCompleted) {
             log.info("All tasks for requestId={} have been completed", requestId);
@@ -226,7 +226,7 @@ public class DallE3QueueProcessor {
             return;
         }
 
-        boolean allCompleted = tasks.stream().allMatch(SceneFormat::isCompleted);
+        boolean allCompleted = tasks.stream().allMatch(SceneFormat::getCompleted);
 
         if (allCompleted) {
             log.info("All tasks for requestId={} have been completed", requestId);
@@ -250,7 +250,7 @@ public class DallE3QueueProcessor {
 
         // 실패한 작업의 시퀀스를 failedSeq에 저장
         tasks.forEach(task -> {
-            if (!task.isCompleted()) {  // 작업이 완료되지 않은 경우 실패로 간주
+            if (!task.getCompleted()) {  // 작업이 완료되지 않은 경우 실패로 간주
                 responseForm.setFailSeq(task.getSceneSequence());
                 responseForm.setSingleResult(false);
             }
