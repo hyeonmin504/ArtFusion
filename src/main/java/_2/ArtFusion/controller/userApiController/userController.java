@@ -87,33 +87,44 @@ public class userController {
      * @return
      */
     @PostMapping("/users/login")
-    public ResponseEntity<ResponseForm<LoginResponseForm>> loginUser(@Validated @RequestBody LoginForm loginForm,
+    public ResponseEntity<ResponseForm<?>> loginUser(@Validated @RequestBody LoginForm loginForm,
                                                                      BindingResult bindingResult,HttpServletRequest request) {
         // 1. Form 데이터 검증
         if (bindingResult.hasErrors()) {
             List<String> errorMessages = new ArrayList<>();
             bindingResult.getAllErrors().forEach(error -> errorMessages.add(error.getDefaultMessage()));
-            ResponseForm<LoginResponseForm> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, null, String.join(", ", errorMessages));
-            return ResponseEntity.badRequest().body(responseForm);
+            ResponseForm<?> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, null, String.join(", ", errorMessages));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseForm);
         }
 
         try {
+            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                    () -> new NotFoundUserException("유저 정보가 없습니다")
+            );
             // 2. 사용자 검증 및 비밀 번호 검증(UserService 의 loginUser 메서드 에서 처리)
-            User user = userService.loginUser(loginForm);
 
-            //세션이 있으면 있는 세션 반환, 없으면 신규 세션을 생성
-            HttpSession session = request.getSession();
-            //세션에 로그인 회원 정보 보관
-            session.setAttribute("LOGIN_USER", new SessionLoginForm(user.getEmail()));
+            if (userData != null) {
+                User user = userService.loginUser(loginForm,userData);
 
-            ResponseForm<LoginResponseForm> responseForm = new ResponseForm<>(HttpStatus.OK, null, "로그인에 성공했습니다.");
-            return ResponseEntity.status(HttpStatus.OK).body(responseForm);
+                //세션이 있으면 있는 세션 반환, 없으면 신규 세션을 생성
+                HttpSession session = request.getSession();
+                //세션에 로그인 회원 정보 보관
+                session.setAttribute("LOGIN_USER", new SessionLoginForm(user.getEmail()));
 
-        } catch (InvalidFormatException e) {
-            ResponseForm<LoginResponseForm> responseForm = new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
+                ResponseForm<?> responseForm = new ResponseForm<>(HttpStatus.OK, null, "로그인에 성공했습니다.");
+                return ResponseEntity.status(HttpStatus.OK).body(responseForm);
+            } else {
+                ResponseForm<?> responseForm = new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "이메일 정보가 없습니다.");
+                return ResponseEntity.status(HttpStatus.OK).body(responseForm);
+            }
+
+        } catch (NotFoundUserException | InvalidFormatException e) {
+            log.error("error",e);
+            ResponseForm<?> responseForm = new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseForm);
         } catch (Exception e) {
-            ResponseForm<LoginResponseForm> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "토큰 생성에 실패했습니다. 오류: " + e.getMessage());
+            log.error("error",e);
+            ResponseForm<?> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "토큰 생성에 실패했습니다. 오류: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseForm);
         }
     }

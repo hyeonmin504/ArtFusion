@@ -9,6 +9,7 @@ import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
+import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class ArchiveController {
 
     private final ArchiveService archiveService;
-    private final UserRepository userRepository;
+    private final UserService userService;
     /**
      * 모든 아카이브 가져오기
      * @param page -> 해당 페이지 번호
@@ -71,9 +72,7 @@ public class ArchiveController {
                                                                  @RequestParam(defaultValue = "6") int size,
                                                                   @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보를 찾을 수 없습니다")
-            );
+            User userData = userService.checkUserSession(loginForm);
 
             // Pageable 객체 생성
             Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
@@ -85,9 +84,11 @@ public class ArchiveController {
             ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundUserException e) {
+            log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         } catch (Exception e) {
+            log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, e.getMessage());
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body);
 
@@ -101,7 +102,7 @@ public class ArchiveController {
      * @param nickname -> nickname 최적화로 사용 예정
      * @return
      */
-    @GetMapping("/archives/{postId}")
+    @GetMapping("/archives/{nickname}/{postId}")
     public ResponseEntity<ResponseForm<DetailArchivesResponse>> getArchiveDetail(@PathVariable Long postId,
                                                                                  @PathVariable String nickname) {
         try {
