@@ -7,6 +7,7 @@ import _2.ArtFusion.repository.jpa.query.StoryBoardRepositoryQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class StoryBoardRepositoryQueryImpl implements StoryBoardRepositoryQuery {
 
     private final EntityManager em;
@@ -31,8 +33,8 @@ public class StoryBoardRepositoryQueryImpl implements StoryBoardRepositoryQuery 
                     .setParameter("storyId", storyId)
                     .getSingleResult());
         } catch (NoResultException e) {
+            log.error("No StoryBoard found for user {} and storyId {}", user.getId(), storyId, e);
             throw new NotFoundContentsException("해당 스토리보드를 찾을 수 없습니다");
         }
-
     }
 }

@@ -8,8 +8,8 @@ import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
+import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.processor.DallE3QueueProcessor;
 import _2.ArtFusion.service.webClientService.SceneFormatWebClientService;
 import _2.ArtFusion.service.StoryBoardService;
@@ -41,7 +41,7 @@ public class TemporaryStoryController {
     private final DallE3QueueProcessor dallE3QueueProcessor;
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * 현재 작업중인 스토리 보드 data 요청 api
@@ -53,12 +53,17 @@ public class TemporaryStoryController {
                                                                  @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
 
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보 없슴니당")
-            );
+            User userData = userService.checkUserSession(loginForm);
 
             //SceneFormat 데이터를 가저오기
-            StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
+            StoryBoard storyBoard;
+            try {
+                storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
+            } catch (NotFoundContentsException e) {
+                log.error("error",e);
+                ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
+                return ResponseEntity.status(NOT_FOUND).body(body);
+            }
 
             log.info("storyBoard={}",storyBoard);
 
@@ -79,12 +84,15 @@ public class TemporaryStoryController {
             ResponseForm<StoryBoardForm> body = new ResponseForm<>(OK, storyBoardForm, "Scene data retrieved successfully");
             return ResponseEntity.status(OK).body(body);
         } catch (NoResultException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
             return ResponseEntity.status(NOT_FOUND).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(NO_CONTENT).body(body);
         } catch (NotFoundUserException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         }
@@ -104,9 +112,8 @@ public class TemporaryStoryController {
         User userData;
 
         try {
-            userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보 없슴니당")
-            );
+            userData = userService.checkUserSession(loginForm);
+
         } catch (NotFoundUserException e) {
             ResponseForm<Object> responseForm = new ResponseForm<>(UNAUTHORIZED, null, "로그인 먼저 해주세요.");
             return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(responseForm));
