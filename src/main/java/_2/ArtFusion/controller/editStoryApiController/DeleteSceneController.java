@@ -10,6 +10,7 @@ import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.SceneEditService;
+import _2.ArtFusion.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class DeleteSceneController {
 
     private final SceneEditService sceneEditService;
     private final ArchiveService archiveService;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
 
@@ -33,10 +34,7 @@ public class DeleteSceneController {
     public ResponseEntity<ResponseForm> deleteSceneRequest(@PathVariable Long sceneId,
                                                            @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보를 찾을 수 없습니다")
-            );
-            //유저에 대한 검증도 추가 해야 함 -> 완료
+            User userData = userService.checkUserSession(loginForm);
 
             SceneFormat sceneFormat = sceneEditService.getSceneFormatById(sceneId);
         if(!sceneFormat.getStoryBoard().getUser().getId().equals(userData.getId())){
@@ -48,9 +46,11 @@ public class DeleteSceneController {
             ResponseForm<Object> body = new ResponseForm<>(OK, null, "OK");
             return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(NO_CONTENT).body(body);
         } catch (NotFoundUserException e) {
+            log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         }
@@ -64,9 +64,7 @@ public class DeleteSceneController {
     public ResponseEntity<ResponseForm> deleteStoryBoardRequest(@PathVariable("storyId") Long storyId,
                                                                 @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm){
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보를 찾을 수 없습니다")
-            );
+            User userData = userService.checkUserSession(loginForm);
 
             StoryPost storyPost = archiveService.getStoryPostByStoryId(storyId);
             if(!storyPost.getUser().getId().equals(userData.getId())){
@@ -80,10 +78,10 @@ public class DeleteSceneController {
             return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
             log.info("error", e);
-
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "스토리가 존재하지 않습니다.");
             return ResponseEntity.status(NO_CONTENT).body(body);
         } catch (NotFoundUserException e) {
+            log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         }

@@ -9,6 +9,7 @@ import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.CommentService;
 import _2.ArtFusion.service.LikeService;
+import _2.ArtFusion.service.UserService;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ public class PostApiController {
 
     private final CommentService commentService;
     private final LikeService likeService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * 저장된 댓글 데이터 모두 가져오기
@@ -54,6 +55,7 @@ public class PostApiController {
             ResponseForm<List<CommentForm>> body = new ResponseForm<>(HttpStatus.OK, commentForms, "OK");
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, "해당 댓글을 찾을 수 없습니다");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
         }
@@ -69,9 +71,7 @@ public class PostApiController {
                                                         @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm){
 //        String bearerToken = loginForm.getHeader(AUTHORIZATION_HEADER);
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 없습니당")
-            );
+            User userData = userService.checkUserSession(loginForm);
 
             //서비스 호출하여 댓글 저장
             commentService.saveComments(form, userData.getId(), postId);
@@ -79,9 +79,11 @@ public class PostApiController {
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.OK, null, "200 ok");
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(body);
         } catch (NotFoundUserException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
         }
@@ -99,6 +101,7 @@ public class PostApiController {
             ResponseForm<Integer> body = new ResponseForm<>(HttpStatus.OK, count, "OK");
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
         }
@@ -123,18 +126,18 @@ public class PostApiController {
     public ResponseEntity<ResponseForm> likeApi(@PathVariable Long postId,
                                                 @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm){
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보 없슴니당")
-            );
+            User userData = userService.checkUserSession(loginForm);
 
             //서비스 호출하여 댓글 저장
             likeService.isLikeStatus(postId,userData.getId());
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.OK, null, "200 ok");
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.METHOD_NOT_ALLOWED, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(body);
         } catch (NotFoundUserException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
         }

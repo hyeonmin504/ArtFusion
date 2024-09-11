@@ -11,10 +11,12 @@ import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneEditService;
+import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.webClientService.SceneEditWebClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +32,7 @@ public class CutEditStoryController {
 
     private final SceneEditService sceneEditService;
     private final SceneEditWebClientService sceneEditWebClientService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -46,9 +48,14 @@ public class CutEditStoryController {
     public Mono<ResponseEntity<ResponseForm<Object>>> imageContentsEdit(@Validated @RequestBody ContentEditForm form,
                                                                         @PathVariable Long sceneId,@PathVariable int mode,
                                                                         @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
-        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                () -> new NotFoundUserException("유저 정보를 찾을 수 없슴다")
-        );
+        User userData;
+
+        try {
+             userData = userService.checkUserSession(loginForm);
+        } catch (NotFoundUserException e) {
+            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(body));
+        }
 
         return sceneEditWebClientService.contentEdit(Mono.just(form), Mono.just(sceneId), mode)
                 .flatMap(sceneFormatId -> {
@@ -103,9 +110,14 @@ public class CutEditStoryController {
     @PutMapping("/{sceneId}/refresh") //테스트 완료
     public Mono<ResponseEntity<ResponseForm<Object>>> imageRandomEdit(@PathVariable Long sceneId,
                                                                       @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
-        User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                () -> new NotFoundUserException("유저 정보를 찾을 수 없슴다")
-        );
+        User userData;
+
+        try {
+            userData = userService.checkUserSession(loginForm);
+        } catch (NotFoundUserException e) {
+            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(body));
+        }
 
         return sceneEditWebClientService.singleTransImage(sceneId,userData)
                 .flatMap(resultApiResponseForm -> {
@@ -135,8 +147,18 @@ public class CutEditStoryController {
      * @return
      */
     @PutMapping("/{sceneId}/detail")//테스트 완료
-    public Mono<ResponseEntity<ResponseForm<Object>>> imageVariation(@Validated @RequestBody DetailEditForm form,
-                                        @PathVariable Long sceneId) {
+    public Mono<ResponseEntity<ResponseForm<Object>>> imageVariation(
+            @Validated @RequestBody DetailEditForm form,
+            @PathVariable Long sceneId,
+            @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
+        User userData;
+
+        try {
+            userData = userService.checkUserSession(loginForm);
+        } catch (NotFoundUserException e) {
+            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(body));
+        }
         return sceneEditWebClientService.detailEdit(form, sceneId)
                 .flatMap(resultApiResponseForm -> {
                     if (resultApiResponseForm.isSingleResult()) {
@@ -169,6 +191,7 @@ public class CutEditStoryController {
             ResponseForm<Object> body = new ResponseForm<>(OK, null, "200 ok");
             return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {
+            log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(NO_CONTENT).body(body);
         }
