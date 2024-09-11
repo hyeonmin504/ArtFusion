@@ -25,6 +25,8 @@ public class User {
     private UserRole role;
     private int token;
     private LocalDateTime joinDate;
+    @Column("session_id")
+    private Long sessionId;
 
     public void minusTokenForSingleImage(){
         if (token < 50) {

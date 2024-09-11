@@ -38,7 +38,7 @@ public class SceneFormat {
     private String requestId;
 
     @Convert(converter = BooleanToStringConverter.class)
-    private boolean completed;
+    private Boolean completed;
 
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -8,6 +8,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface UserR2DBCRepository extends ReactiveCrudRepository<User, Long>{
-    @Query("select * from User where user_id=:userId")
+    @Query("select * from user where user_id=:userId")
     Mono<User> findByUserId(Long userId);
 }

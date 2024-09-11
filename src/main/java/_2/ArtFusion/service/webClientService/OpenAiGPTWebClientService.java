@@ -4,7 +4,6 @@ import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.scene.SceneImage;
 import _2.ArtFusion.repository.jpa.SceneImageRepository;
 import com.theokanning.openai.OpenAiHttpException;
-import com.theokanning.openai.completion.chat.ChatCompletionChoice;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;

@@ -34,6 +34,9 @@ public class User {
     private String nickname;
     private int token;
 
+    @Column(name = "session_id")
+    private Long sessionId;
+
     @Enumerated(value = EnumType.STRING)
     private UserRole role;  // 기존 role 필드와 userRole 필드를 통일했습니다.
 
@@ -56,6 +59,9 @@ public class User {
     // 연관 관계를 위한 setter
     public void setHeart(Heart heart) {
         this.heart = heart;
+    }
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
     }
 
     // 회원 가입 생성자 User

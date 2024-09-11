@@ -7,8 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Setter
-
 public class LoginForm {
 
     //각 필드에 검증 어노테이션 추가

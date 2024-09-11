@@ -37,7 +37,7 @@ public class SceneFormat {
     private String requestId;
 
     @Convert(converter = BooleanToStringConverter.class)
-    private boolean completed;
+    private Boolean completed;
 
     @Column("story_id")
     private Long storyId;
@@ -56,6 +56,10 @@ public class SceneFormat {
         this.actors = actors;
         this.storyId = storyId;
         this.completed = false;
+    }
+
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
     }
 
     public static SceneFormat createFormat(int sceneSequence, String description, String background, String dialogue, String actors, StoryBoard storyBoard) {

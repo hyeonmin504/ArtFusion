@@ -4,6 +4,7 @@ import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
+import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.repository.jpa.ArchiveRepository;
@@ -117,8 +118,8 @@ public class ArchiveService {
     }
 
     @Transactional
-    public void registerStoryPost(StoryBoard storyBoard) {
-        StoryPost storyPost = new StoryPost(storyBoard);
+    public void registerStoryPost(StoryBoard storyBoard, User user) {
+        StoryPost storyPost = new StoryPost("summary","hashTag","coverImg",user,storyBoard);
         archiveRepository.save(storyPost);
     }
 
