@@ -1,7 +1,6 @@
 package _2.ArtFusion.service;
 
 import _2.ArtFusion.config.session.SessionLoginForm;
-import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.user.*;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
@@ -9,8 +8,6 @@ import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

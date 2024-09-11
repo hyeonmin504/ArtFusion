@@ -96,7 +96,6 @@ public class GlobalExceptionHandler {
         body.put("error", "Internal Server Error");
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
-        System.out.println("Exception caught: " + ex.getMessage());
         log.error("error",ex);
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, body, "An unexpected error occurred.");
         return new ResponseEntity<>(responseForm, HttpStatus.INTERNAL_SERVER_ERROR);

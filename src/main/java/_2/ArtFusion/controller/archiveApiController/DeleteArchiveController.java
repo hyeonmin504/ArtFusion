@@ -6,7 +6,6 @@ import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.UserService;
 import lombok.RequiredArgsConstructor;

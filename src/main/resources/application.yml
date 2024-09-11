@@ -59,6 +59,7 @@ aws:
 
 server:
   connection-timeout: 60000 # 클라이언트와 연결되는 시간
+  port: 8080
   servlet:
     session:
       timeout: 3600

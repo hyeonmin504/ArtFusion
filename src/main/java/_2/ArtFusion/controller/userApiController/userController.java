@@ -3,7 +3,6 @@ package _2.ArtFusion.controller.userApiController;
 import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.domain.user.LoginForm;
-import _2.ArtFusion.domain.user.LoginResponseForm;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.domain.user.UserCreateForm;
 import _2.ArtFusion.exception.ExistsUserException;

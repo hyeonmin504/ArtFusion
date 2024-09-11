@@ -6,7 +6,6 @@ import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.CommentService;
 import _2.ArtFusion.service.LikeService;
 import _2.ArtFusion.service.UserService;

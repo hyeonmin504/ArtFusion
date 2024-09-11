@@ -7,7 +7,6 @@ import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.UserService;
 import jakarta.persistence.NoResultException;
@@ -121,7 +120,7 @@ public class ArchiveController {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseForm);
 
         } catch (Exception e) {
-            log.error("예상치 못한 오류: {}", e);
+            log.error("예상치 못한 오류", e);
 
             // 예상치 못한 예외 처리 (DetailArchivesResponse 타입으로 반환)
             ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "서버 오류 발생");

@@ -6,7 +6,6 @@ import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.ImageService;
 import _2.ArtFusion.service.SceneFormatService;
