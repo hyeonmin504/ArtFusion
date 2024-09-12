@@ -58,7 +58,7 @@ public class GenerateStoryController {
         } catch (NotFoundContentsException e) {
             log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(NO_CONTENT).body(body);
+            return ResponseEntity.status(NOT_ACCEPTABLE).body(body);
         } catch (NotFoundUserException e) {
             log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());

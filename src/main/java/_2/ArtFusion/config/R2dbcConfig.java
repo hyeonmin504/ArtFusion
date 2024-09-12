@@ -85,6 +85,4 @@ public class R2dbcConfig  {
                 .namedParameters(true)
                 .build();
     }
-
-
 }

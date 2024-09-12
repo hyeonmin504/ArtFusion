@@ -61,7 +61,6 @@ public class UserService implements UserDetailsService {
         if (loginForm == null) {
             throw new NotFoundUserException("유저 정보 없음");
         }
-
         return userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
                 () -> new NotFoundUserException("유저 정보 없음")
         );
