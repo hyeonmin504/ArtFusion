@@ -7,7 +7,6 @@ import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.SceneEditService;
 import _2.ArtFusion.service.UserService;
@@ -48,7 +47,7 @@ public class DeleteSceneController {
         } catch (NotFoundContentsException e) {
             log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(NO_CONTENT).body(body);
+            return ResponseEntity.status(NOT_ACCEPTABLE).body(body);
         } catch (NotFoundUserException e) {
             log.error("error",e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
@@ -79,7 +78,7 @@ public class DeleteSceneController {
         } catch (NotFoundContentsException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "스토리가 존재하지 않습니다.");
-            return ResponseEntity.status(NO_CONTENT).body(body);
+            return ResponseEntity.status(NOT_ACCEPTABLE).body(body);
         } catch (NotFoundUserException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());

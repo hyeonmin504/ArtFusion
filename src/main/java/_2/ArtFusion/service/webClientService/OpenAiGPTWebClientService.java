@@ -27,7 +27,7 @@ public class OpenAiGPTWebClientService {
 
     @Transactional(transactionManager = "r2dbcTransactionManager")
     public Mono<String> callGptApiCompletion(String prompt) {
-        log.info("start callGptApi");
+        log.info("start callGptApi prompt={}",prompt);
         return Mono.fromCallable(() -> {
             try {
                 ChatMessage message = new ChatMessage("user", prompt);
@@ -49,7 +49,7 @@ public class OpenAiGPTWebClientService {
             }
 
         })
-        .timeout(Duration.ofSeconds(30)) // 타임아웃 설정
+        .timeout(Duration.ofSeconds(15)) // 타임아웃 설정
         .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))) // 재시도 로직 설정, 3번 재시도, 2초 간격으로 백오프
         .doOnError(OpenAiHttpException.class, e -> log.error("OpenAI API 호출 에러", e))
         .doOnError(Exception.class, e -> log.error("기타 에러", e))

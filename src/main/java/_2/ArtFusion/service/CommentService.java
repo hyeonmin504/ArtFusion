@@ -10,13 +10,11 @@ import _2.ArtFusion.repository.jpa.CommentRepository;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@RequestMapping("/api")
 public class CommentService {
 
     private final UserRepository userRepository;
@@ -54,7 +52,7 @@ public class CommentService {
     public int countComments(Long postId){
         //postId로 StoryPost 검색하고 없으면 예외 반환
         StoryPost storyPost = archiveRepository.findById(postId).orElseThrow(
-                () -> new NotFoundContentsException("해당 스토리를 팢을 수 없습니다.")
+                () -> new NotFoundContentsException("해당 스토리를 찾을 수 없습니다.")
         );
         // 검색된 storyPost에 대한 댓글 수 반환
         return commentRepository.countComments(storyPost);

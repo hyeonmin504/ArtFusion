@@ -6,7 +6,6 @@ import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +52,7 @@ public class DeleteArchiveController {
         } catch (NotFoundContentsException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, "작품이 존재하지 않습니다.");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundUserException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());

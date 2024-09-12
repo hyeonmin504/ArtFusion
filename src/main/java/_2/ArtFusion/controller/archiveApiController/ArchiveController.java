@@ -7,10 +7,8 @@ import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.ArchiveService;
 import _2.ArtFusion.service.UserService;
-import jakarta.persistence.NoResultException;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -24,8 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,17 +43,21 @@ public class ArchiveController {
     //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
     public ResponseEntity<ResponseForm> getAllArchives(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "id") String sort,
-                                       @RequestParam(defaultValue = "6") int size
-    ) {
-        // Pageable 객체 생성
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+                                       @RequestParam(defaultValue = "6") int size) {
+        try {
+            // Pageable 객체 생성
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        // ArchiveService를 통해 PostFormResponse 객체를 가져옴
-        AllArchivesResponse archiveList = archiveService.getArchiveList(pageable);
+            // ArchiveService를 통해 PostFormResponse 객체를 가져옴
+            AllArchivesResponse archiveList = archiveService.getArchiveList(pageable);
 
-        // ResponseForm 객체 생성 및 반환
-        ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
-        return ResponseEntity.status(HttpStatus.OK).body(body);
+            // ResponseForm 객체 생성 및 반환
+            ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
+        } catch (NotFoundContentsException e) {
+            ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.NO_CONTENT, new AllArchivesResponse() , "Ok");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
+        }
     }
 
     /**
@@ -87,11 +88,10 @@ public class ArchiveController {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
-        } catch (Exception e) {
+        } catch (NotFoundContentsException e) {
             log.info("error", e);
-            ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, e.getMessage());
-            return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body);
-
+            ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, new AllArchivesResponse(), e.getMessage());
+            return ResponseEntity.status(OK).body(body);
         }
     }
 
@@ -113,19 +113,11 @@ public class ArchiveController {
             ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "아카이브 조회 성공");
             return ResponseEntity.status(HttpStatus.OK).body(responseForm);
 
-        } catch (NotFoundContentsException | NotFoundImageException | NoResultException e) {
+        } catch (NotFoundContentsException | NotFoundImageException e) {
             log.error("조회 오류: {}", e.getMessage());
-
             // 조회 실패 시, DetailArchivesResponse 타입으로 null 처리
-            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseForm);
-
-        } catch (Exception e) {
-            log.error("예상치 못한 오류: {}", e);
-
-            // 예상치 못한 예외 처리 (DetailArchivesResponse 타입으로 반환)
-            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "서버 오류 발생");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseForm);
+            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.NO_CONTENT, new DetailArchivesResponse(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK).body(responseForm);
         }
     }
 

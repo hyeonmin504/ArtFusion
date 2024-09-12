@@ -6,7 +6,6 @@ import _2.ArtFusion.domain.archive.Comment;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.CommentService;
 import _2.ArtFusion.service.LikeService;
 import _2.ArtFusion.service.UserService;
@@ -56,8 +55,8 @@ public class PostApiController {
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, "해당 댓글을 찾을 수 없습니다");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
+            ResponseForm<Object> body = new ResponseForm<>(HttpStatus.NO_CONTENT, new ArrayList<CommentForm>(), "댓글이 없습니다");
+            return ResponseEntity.status(HttpStatus.OK).body(body);
         }
     }
 
@@ -103,7 +102,7 @@ public class PostApiController {
         } catch (NotFoundContentsException e) {
             log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body);
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(body);
         }
     }
 
