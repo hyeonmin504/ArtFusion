@@ -68,3 +68,13 @@ server:
       cookie:
         same-site: none  # SameSite 속성을 None으로 설정
         secure: true      # Secure 속성을 true로 설정 (HTTPS 사용 시 적용)
+
+management:
+  endpoints:
+    web:
+      base-path: /api
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
