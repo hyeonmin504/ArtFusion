@@ -93,6 +93,7 @@ public class SceneFormatWebClientService {
     @Transactional(transactionManager = "r2dbcTransactionManager")
     public Mono<SceneFormat> translateSceneFormat(SceneFormat sceneFormat, Mono<List<Actor>> characterMono, Mono<String> styleMono) {
 
+
         return Mono.zip(characterMono, styleMono)
                 .flatMap(tuple -> {
                     //현재 장면의 배우들을 db에서 prompt로 찾아온다
@@ -115,7 +116,7 @@ public class SceneFormatWebClientService {
                             return sceneFormatR2DBCRepository.save(sceneFormat);
                         })
                 )
-                // 타임아웃 30초 추가
+                // 타임아웃 20초 추가
                 .timeout(Duration.ofSeconds(20))
                 // 타임아웃 발생 시 1회만 재시도
                 .retryWhen(reactor.util.retry.Retry.max(1)

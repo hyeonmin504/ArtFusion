@@ -41,6 +41,8 @@ spring:
 
 logging:
   level:
+    reactor:
+      netty: DEBUG
     org.hibernate.SQL: info
     org.hibernate.type: trace
     org:

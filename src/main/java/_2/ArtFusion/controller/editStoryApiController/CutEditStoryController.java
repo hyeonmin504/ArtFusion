@@ -15,7 +15,6 @@ import _2.ArtFusion.service.webClientService.SceneEditWebClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -97,7 +96,7 @@ public class CutEditStoryController {
             return Mono.just(ResponseEntity.status(OK).body(body));
         } else {
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "token이 부족합니다");
-            return Mono.just(ResponseEntity.status(NO_CONTENT).body(body));
+            return Mono.just(ResponseEntity.status(OK).body(body));
         }
     }
 
@@ -135,7 +134,7 @@ public class CutEditStoryController {
                 })
                 .switchIfEmpty(Mono.defer(() -> {
                     ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "해당 장면이 존재하지 않습니다");
-                    return Mono.just(ResponseEntity.status(NO_CONTENT).body(body));
+                    return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(body));
                 }));
     }
 
@@ -172,7 +171,7 @@ public class CutEditStoryController {
                     // 이 곳에서 예외를 처리할 수 있습니다.
                     log.error("Error editing detail: {}", e.getMessage());
                     ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-                    return Mono.just(ResponseEntity.status(NO_CONTENT).body(body));
+                    return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(body));
                 });
     }
 
@@ -192,7 +191,7 @@ public class CutEditStoryController {
         } catch (NotFoundContentsException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(NO_CONTENT).body(body);
+            return ResponseEntity.status(NOT_ACCEPTABLE).body(body);
         }
     }
 }
