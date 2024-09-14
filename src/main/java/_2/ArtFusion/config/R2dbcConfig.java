@@ -1,23 +1,25 @@
 package _2.ArtFusion.config;
 
+import _2.ArtFusion.service.util.convertUtil.BooleanToIntegerConverter;
+import _2.ArtFusion.service.util.convertUtil.IntegerToBooleanConverter;
 import io.asyncer.r2dbc.mysql.MySqlConnectionConfiguration;
 import io.asyncer.r2dbc.mysql.MySqlConnectionFactory;
-import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.r2dbc.convert.R2dbcCustomConversions;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.transaction.ReactiveTransactionManager;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.time.Duration;
 import java.time.ZoneId;
-
-import static io.r2dbc.pool.PoolingConnectionFactoryProvider.*;
-import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 
 @Configuration
 @EnableR2dbcRepositories(basePackages = "_2.ArtFusion.repository.r2dbc")
@@ -85,4 +87,15 @@ public class R2dbcConfig  {
                 .namedParameters(true)
                 .build();
     }
+
+//    @Bean
+//    public R2dbcCustomConversions r2dbcCustomConversions(DatabaseClient databaseClient) {
+//        List<Converter<?, ?>> converters = new ArrayList<>();
+//        converters.add(new BooleanToIntegerConverter());  // Boolean -> Integer 변환기
+//        converters.add(new IntegerToBooleanConverter());  // Integer -> Boolean 변환기
+//        // MySQL Dialect를 가져오는 방식
+//        var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
+//
+//        return R2dbcCustomConversions.of(dialect, converters);
+//    }
 }

@@ -26,24 +26,47 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * api 요청 로직과 transImageForDallE 메서드를 분리 시켜서 독립적으로 프로세스가 돌아가도록 설계했습니다.
- *
  * 1. transImageForDallE 를 통해 이미지 변환을 요청
  * 2. 동시성 문제 처리를 한 싱글톤 큐에 여러개의 sceneFormat을 enqueue
  * 3. 달리 api의 60초당 5번의 요청 제한 규제 때문에 스케줄러를 사용
  * 4. 스케줄러를 통해 (안정적으로)65초당 큐에서 5개의 sceneFormat을 dequeue
  * 5. WebClient를 통해 달리 api 요청 및 저장
  */
+
+/**
+ * ConcurrentHashMap를 사용하는 이유
+ * ConcurrentHashMap은 Java의 멀티스레드 환경에서 안전하게 사용될 수 있도록 설계된 HashMap의 구현체입니다.
+ * ConcurrentHashMap의 특징
+ * 1. 스레드 안전성 - 여러 스레드가 동시에 데이터를 읽고 쓸 수 있도록 설계되었습니다.
+ * 2. 분할 잠금 - 전체 맵을 잠그는 대신, 데이터를 저장하는 버킷(bucket) 단위로 락을 걸어줍니다.
+ * 3. 읽기 작업의 무락 - 읽기 작업이 대부분 락 없이 수행됩니다.
+ * 4. Null 값 허용 안함 - null 값을 키나 값으로 허용하지 않습니다. 이는 스레드 간의 동기화 문제를 방지하기 위한 조치입니다.
+ *      null의 2중성, 연산의 호환성 문제 때문에
+ */
+
+/**
+ * MonoSink
+ * 응답을 지연시키고 요청을 처리한 후,
+ * 비동기적으로 완료되었을 때만 응답을 보냅니다.
+ * requestId를 통해 해당 작업이 완료되면
+ * MonoSink.success(ResultApiResponseForm)을 통해 응답이 반환됩니다.
+ */
 @Service
 @Slf4j
 public class DallE3QueueProcessor {
 
     private final DallE3 dallE3;
-    private static final int REQUEST_COUNT = 5;
+    private static final int REQUEST_COUNT = 7;
     private static final int REQUEST_INTERVAL_SEC = 65;
+
+    // 싱글톤 큐를 사용하여 여러 스레드에서 안전하게 작업을 처리
     private final SingletonQueueUtilForDallE3<SceneFormat> queue = SingletonQueueUtilForDallE3.getInstance();
 
-    private final Map<UUID, MonoSink<ResultApiResponseForm>> responseMap = new ConcurrentHashMap<>(); // 응답을 저장하는 Map
-    private final Map<UUID, List<SceneFormat>> requestTaskMap = new ConcurrentHashMap<>(); // 요청에 대한 작업을 저장하는 Map
+    // UUID를 키로 사용하여 응답을 기다리는 sink를 저장하는 Map
+    private final Map<UUID, MonoSink<ResultApiResponseForm>> responseMap = new ConcurrentHashMap<>();
+
+    // 각 요청 ID에 대해 처리 중인 SceneFormat 리스트를 저장하는 Map
+    private final Map<UUID, List<SceneFormat>> requestTaskMap = new ConcurrentHashMap<>();
 
     @Autowired
     private UserR2DBCRepository userR2DBCRepository;
@@ -53,99 +76,6 @@ public class DallE3QueueProcessor {
         this.dallE3 = dallE3;
         startQueueProcessor();
     }
-
-    /**
-     * 생성 요청 시 큐에 삽입해서 별도로 큐를 관리
-     * @param sceneFormats
-     * @return
-     */
-    @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats, User user) {
-        ResultApiResponseForm form = new ResultApiResponseForm();
-        UUID requestId = UUID.randomUUID(); // 요청마다 고유한 ID 생성
-
-        return Mono.create(sink -> {
-            responseMap.put(requestId, sink); // 지연된 응답을 처리할 MonoSink 저장
-
-            userR2DBCRepository.findByUserId(user.getId())
-                    .flatMap(userData -> sceneFormats
-                            .flatMapMany(Flux::fromIterable)
-                            .flatMap(sceneFormat -> {
-                                try {
-                                    sceneFormat.setRequestId(requestId.toString()); // 요청 ID 추가
-                                    queue.enqueue(sceneFormat); // 큐에 sceneFormat 추가
-
-                                    // requestTaskMap에 작업 추가
-                                    requestTaskMap.computeIfAbsent(requestId, k -> new ArrayList<>()).add(sceneFormat);
-
-                                    log.info("user.getToken={}", userData.getToken());
-                                    userData.minusTokenForSingleImage();
-                                    log.info("user.getToken={}", userData.getToken());
-                                    return userR2DBCRepository.save(userData)
-                                            .then(Mono.just(sceneFormat));
-                                } catch (IllegalStateException | NoTokenException e) {
-                                    log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
-                                    form.setFailSeq(sceneFormat.getSceneSequence()); // 실패한 항목 기록
-                                    return Mono.empty(); // 실패한 경우 빈 Mono 반환
-                                } finally {
-                                    log.info("queue.size={}", queue.getSize());
-                                }
-                            })
-                            .collectList()
-                            .doOnTerminate(() -> log.info("All scenes enqueued, waiting for completion..."))
-                    ).subscribe();
-        });
-    }
-
-    /**
-     * 단일 생성 요청 시 큐에 삽입해서 별도로 큐를 관리
-     * @param singleScene
-     * @return
-     */
-    @Transactional(transactionManager = "r2dbcTransactionManager")
-    public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene, User user) {
-        ResultApiResponseForm form = new ResultApiResponseForm();
-        UUID requestId = UUID.randomUUID(); // 요청마다 고유한 ID 생성
-
-        return Mono.create(sink -> {
-            responseMap.put(requestId, sink); // 지연된 응답을 처리할 MonoSink 저장
-
-            userR2DBCRepository.findByUserId(user.getId())
-                    .flatMap(userData -> singleScene.flatMap(sceneFormat -> {
-                        try {
-                            // SceneFormat에 Request ID 추가
-                            sceneFormat.setRequestId(requestId.toString());
-                            queue.enqueue(sceneFormat); // 큐에 작업 추가
-
-                            requestTaskMap.computeIfAbsent(requestId, k -> new ArrayList<>()).add(sceneFormat);
-
-                            log.info("user.getToken={}", userData.getToken());
-                            userData.minusTokenForSingleImage(); // 사용자 토큰 차감
-                            log.info("user.getToken={}", userData.getToken());
-
-                            return userR2DBCRepository.save(userData);
-                        } catch (IllegalStateException | NoTokenException e) {
-                            log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
-                            form.setSingleResult(false);
-                            return Mono.empty();
-                        } finally {
-                            log.info("queue.size={}", queue.getSize());
-                        }
-                    }))
-                    .doOnSuccess(savedData -> {
-                        checkIfRequestCompleted(requestId, form, sink); // 모든 작업 완료 후에만 응답 보내기
-                    })
-                    .onErrorResume(e -> {
-                        log.error("Error during process: {}", e.getMessage());
-                        form.setSingleResult(false); // 실패 처리
-                        sink.success(form); // 즉시 실패 반환
-                        return Mono.empty();
-                    })
-                    .subscribe();
-        });
-    }
-
-
 
     /**
      * ScheduledExecutorService -> 일정간격으로 작업을 실행시켜주는 서비스
@@ -168,12 +98,16 @@ public class DallE3QueueProcessor {
                     SceneFormat sceneFormat = queue.dequeue();
                     dallE3.processDallE3Api(sceneFormat)
                             .doOnSuccess(response -> {
-                                sceneFormat.setCompleted(true); // 작업 완료 후 isCompleted를 true로 설정
                                 log.info("SceneFormat completed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
                             })
+                            .doOnError(response -> {
+                                log.warn("SceneFormat failed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
+                            })
                             .doOnTerminate(() -> {
+                                // 작업이 끝나면 현재 장면의 requestId를 가져옴
                                 UUID requestId = UUID.fromString(sceneFormat.getRequestId());
-                                checkIfRequestCompleted(requestId); // 요청 완료 여부 확인
+                                // 요청 완료 여부 확인 (성공 여부 x)
+                                checkIfRequestCompleted(requestId);
                             })
                             .subscribe();
                 } catch (InterruptedException e) {
@@ -185,85 +119,150 @@ public class DallE3QueueProcessor {
         }
     }
 
-    private void checkIfRequestCompleted(UUID requestId) {
-        // requestId에 해당하는 모든 SceneFormat을 가져옴
-        List<SceneFormat> tasks = requestTaskMap.get(requestId);
-        MonoSink<ResultApiResponseForm> resultApiResponseFormMonoSink = responseMap.get(requestId);
+    /**
+     * 여러 SceneFormat을 받아서 처리하는 메서드.
+     */
+    @Transactional(transactionManager = "r2dbcTransactionManager")
+    public Mono<ResultApiResponseForm> transImagesForDallE(Mono<List<SceneFormat>> sceneFormats, User user) {
+        // 장면마다 지연에 대한 고유한 ID 생성
+        UUID requestId = UUID.randomUUID();
 
-        if (tasks == null) {
-            log.warn("No tasks found for requestId={}", requestId);
-            return;
-        }
+        //Mono.create -> 응답 지연
+        return Mono.create(sink -> {
+            responseMap.put(requestId, sink); //UUID를 키로 응답을 기다리는 sink를 저장
+
+            userR2DBCRepository.findByUserId(user.getId())
+                    .flatMap(userData -> sceneFormats
+                            .flatMapMany(Flux::fromIterable)
+                            .flatMap(sceneFormat -> {
+                                try {
+                                    //각 장면에 대기 ID 추가
+                                    sceneFormat.setRequestId(requestId.toString());
+                                    // DallE 프로세서에 등록
+                                    queue.enqueue(sceneFormat);
+
+                                    //Map에 응답을 기다리는 requestId가 없으면 현재 장면을 리스트에 추가
+                                    requestTaskMap.computeIfAbsent(requestId, uuid -> new ArrayList<>()).add(sceneFormat);
+
+                                    log.info("user.getToken={}", userData.getToken());
+                                    //유저의 토큰 감소
+                                    userData.minusTokenForSingleImage();
+                                    log.info("user.getToken={}", userData.getToken());
+                                    return userR2DBCRepository.save(userData)
+                                            .then(Mono.just(sceneFormat));
+                                } catch (IllegalStateException | NoTokenException e) {
+                                    log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                                    //토큰을 다시 증가
+
+                                    return Mono.empty();
+                                } finally {
+                                    log.info("queue.size={}", queue.getSize());
+                                }
+                            })
+                            //반환할 ResultApiResponseForm은 모든 SceneFormat의 처리 결과를 바탕으로 만들어지므로 다시 합치고 다음 로직을 실행한다.
+                            .collectList()
+                            .onErrorResume(e -> {
+                                log.error("error",e);
+                                return Mono.empty();
+                            })
+                            .doOnTerminate(() -> {
+                                log.info("All scenes enqueued, waiting for completion...");
+                            })
+                    ).subscribe();
+        });
+    }
+
+    /**
+     * 단일 SceneFormat을 처리하는 메서드.
+     * @param singleScene
+     * @return
+     */
+    @Transactional(transactionManager = "r2dbcTransactionManager")
+    public Mono<ResultApiResponseForm> transImageForDallE(Mono<SceneFormat> singleScene, User user) {
+        // 장면의 지연에 대한 고유한 ID 생성
+        UUID requestId = UUID.randomUUID();
+
+        return Mono.create(sink -> {
+            responseMap.put(requestId, sink); //UUID를 키로 응답을 기다리는 sink를 저장
+
+            userR2DBCRepository.findByUserId(user.getId())
+                    .flatMap(userData -> singleScene.flatMap(sceneFormat -> {
+                        try {
+                            //장면에 대기 ID 추가
+                            sceneFormat.setRequestId(requestId.toString());
+                            // DallE 프로세서에 등록
+                            queue.enqueue(sceneFormat);
+
+                            //Map에 응답을 기다리는 requestId가 없으면 현재 장면을 리스트에 추가
+                            requestTaskMap.computeIfAbsent(requestId, k -> new ArrayList<>()).add(sceneFormat);
+
+                            log.info("user.getToken={}", userData.getToken());
+                            //유저의 토큰 감소
+                            userData.minusTokenForSingleImage();
+                            log.info("user.getToken={}", userData.getToken());
+
+                            return userR2DBCRepository.save(userData);
+                        } catch (IllegalStateException | NoTokenException e) {
+                            log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                            return Mono.empty();
+                        } finally {
+                            log.info("queue.size={}", queue.getSize());
+                        }
+                    }))
+                    .doOnSuccess(savedData -> {
+                        log.info("{}님 뒤에 {}개의 요청이 남아있습니다", savedData.getNickname(),responseMap.size());
+                    })
+                    .onErrorResume(e -> {
+                        log.error("error",e);
+                        return Mono.empty();
+                    })
+                    .doOnTerminate(() -> {
+                        log.info("All scenes enqueued, waiting for completion...");
+                    })
+                    .subscribe();
+        });
+    }
+
+    /**
+     * 하나의 작업 내 모든 장면 이미지 요청 완료 체크 로직
+     * @param requestId
+     */
+    private void checkIfRequestCompleted(UUID requestId) {
+        // requestId에 해당하는 이미지 생성이 완료된 작업을 가져온다.
+        List<SceneFormat> tasks = requestTaskMap.get(requestId);
+
+        log.info("tasks.size()={}",tasks.size());
 
         // 모든 SceneFormat의 작업이 완료되었는지 확인
-        boolean allCompleted = tasks.stream().allMatch(SceneFormat::getCompleted);
-
-        if (allCompleted) {
-            log.info("All tasks for requestId={} have been completed", requestId);
-            sendResponseForRequest(requestId); // 응답 처리
-            requestTaskMap.remove(requestId); // 맵에서 해당 requestId 제거
-        }
-    }
-
-    private void sendResponseForRequest(UUID requestId, ResultApiResponseForm responseForm) {
-        // 요청에 대한 MonoSink를 찾아서 성공 응답을 보냄
-        MonoSink<ResultApiResponseForm> sink = responseMap.get(requestId);
-        if (sink != null) {
-            sink.success(responseForm); // 지연 해제 및 응답 반환
-            responseMap.remove(requestId); // 완료된 요청 삭제
+        if (tasks.stream().allMatch(SceneFormat::getCompleted)) {
+            log.info("모든 작업이 성공적으로 완료되었습니다. ");
+            //응답 반환 로직
+            sendResponseForRequest(requestId);
         } else {
-            log.error("No response sink found for requestId={}", requestId);
+            log.info("아직 완료되지 않는 작업이 있습니다");
         }
     }
 
-    private void checkIfRequestCompleted(UUID requestId, ResultApiResponseForm form, MonoSink<ResultApiResponseForm> sink) {
-        log.info("checkIfRequestCompleted");
-        List<SceneFormat> tasks = requestTaskMap.get(requestId);
-
-        if (tasks == null) {
-            log.warn("No tasks found for requestId={}", requestId);
-            sink.error(new RuntimeException("No tasks found for the request."));
-            return;
-        }
-
-        boolean allCompleted = tasks.stream().allMatch(SceneFormat::getCompleted);
-
-        if (allCompleted) {
-            log.info("All tasks for requestId={} have been completed", requestId);
-            sink.success(form); // 모든 작업이 끝난 후 응답 반환
-            responseMap.remove(requestId);
-            requestTaskMap.remove(requestId); // 요청 제거
-        }
-    }
-
+    /**
+     * 응답 반환 및 temp Map 삭제 로직
+     * @param requestId
+     */
     private void sendResponseForRequest(UUID requestId) {
         // requestTaskMap에서 해당 요청에 대한 작업들을 가져옴
         List<SceneFormat> tasks = requestTaskMap.get(requestId);
-
-        if (tasks == null) {
-            log.warn("No tasks found for requestId={}", requestId);
-            return;
-        }
-
         // 응답 생성
         ResultApiResponseForm responseForm = new ResultApiResponseForm();
 
-        // 실패한 작업의 시퀀스를 failedSeq에 저장
-        tasks.forEach(task -> {
-            if (!task.getCompleted()) {  // 작업이 완료되지 않은 경우 실패로 간주
-                responseForm.setFailSeq(task.getSceneSequence());
-                responseForm.setSingleResult(false);
-            }
-        });
-
-        // 요청에 대한 MonoSink를 찾아서 성공 응답을 보냄
+        // requestId에 해당하는 작업의 지연 정보를 가져온다
         MonoSink<ResultApiResponseForm> sink = responseMap.get(requestId);
+
         if (sink != null) {
-            sink.success(responseForm); // 지연 해제 및 응답 반환
+            // 지연 해제 및 응답 반환
+            sink.success(responseForm);
             responseMap.remove(requestId); // 완료된 요청 삭제
             requestTaskMap.remove(requestId); // 해당 요청의 작업 리스트 삭제
         } else {
-            log.error("No response sink found for requestId={}", requestId);
+            log.error("지연 정보 없음 storyId={}", tasks.get(0).getStoryId());
         }
     }
 }

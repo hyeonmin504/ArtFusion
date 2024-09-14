@@ -16,7 +16,7 @@ public class ResultApiResponseForm {
         failedSeq = new ArrayList<>();
     }
 
-    public void setFailSeq(Integer failNum) {
+    public void addFailSeq(Integer failNum) {
         failedSeq.add(failNum);
     }
 
