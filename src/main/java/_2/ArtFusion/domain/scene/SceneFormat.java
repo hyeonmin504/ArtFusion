@@ -2,7 +2,6 @@ package _2.ArtFusion.domain.scene;
 
 import _2.ArtFusion.domain.openai.DallEAi;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
-import _2.ArtFusion.service.util.convertUtil.BooleanToStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -37,7 +36,7 @@ public class SceneFormat {
     @Column(name= "request_id")
     private String requestId;
 
-    @Convert(converter = BooleanToStringConverter.class)
+    @Column(name = "completed", columnDefinition = "TINYINT(1)")
     private Boolean completed;
 
 
@@ -51,19 +50,6 @@ public class SceneFormat {
 
     @OneToOne(mappedBy = "sceneFormat", cascade = CascadeType.ALL, orphanRemoval = true)
     private DallEAi dallEAi;
-
-    public static SceneFormat createFormat(int sceneSequence, String description, String dialogue, String background,String actors, StoryBoard storyBoard) {
-        return new SceneFormat(sceneSequence, description, dialogue, background, actors, storyBoard);
-    }
-
-    protected SceneFormat(int sceneSequence, String description, String dialogue, String background,String actors, StoryBoard storyBoard) {
-        this.sceneSequence = sceneSequence;
-        this.description = description;
-        this.dialogue = dialogue;
-        this.background = background;
-        this.actors = actors;
-        setStoryBoard(storyBoard);
-    }
 
     public SceneFormat(String description) {
         this.description = description;

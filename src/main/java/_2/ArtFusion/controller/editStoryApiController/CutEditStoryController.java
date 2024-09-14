@@ -96,7 +96,7 @@ public class CutEditStoryController {
             return Mono.just(ResponseEntity.status(OK).body(body));
         } else {
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "token이 부족합니다");
-            return Mono.just(ResponseEntity.status(OK).body(body));
+            return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(body));
         }
     }
 
