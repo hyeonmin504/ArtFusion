@@ -39,9 +39,9 @@ public class DallE3 {
         this.webClient = webClient;
         this.sceneImageR2DBCRepository = sceneImageR2DBCRepository;
         this.sceneFormatR2DBCRepository = sceneFormatR2DBCRepository;
-
         this.userR2DBCRepository = userR2DBCRepository;
     }
+
     /**
      * 달리 api 요청 프로세스 (프롬프트 -> 이미지 url)
      * @param sceneFormat 요청할 장면
@@ -69,15 +69,17 @@ public class DallE3 {
                     SceneImage sceneImage = new SceneImage(imageUrl);
                     return sceneImageR2DBCRepository.save(sceneImage)
                             .flatMap(savedImage -> {
-                                sceneFormat.setImageId(savedImage.getId());
+                                sceneFormat.setCompletedAndImageId(savedImage.getId(),true);
                                 return sceneFormatR2DBCRepository.save(sceneFormat);
                             });
                 })
                 .doOnSuccess(response -> log.info("이미지를 성공적으로 가져왔습니다"))
                 .onErrorResume(e -> {
-
                     log.error("Fallback error handling", e);
-                    return Mono.empty(); // 또는 원하는 대체 로직을 여기에 작성
+                    SceneImage sceneImage = new SceneImage("기본 url");
+                    sceneFormat.setCompletedAndImageId(sceneImage.getId(),true);
+                    return sceneFormatR2DBCRepository.save(sceneFormat)
+                            .then(Mono.empty()); // 또는 원하는 대체 로직을 여기에 작성
                 })
                 .then();
     }

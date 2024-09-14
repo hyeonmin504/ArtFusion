@@ -1,5 +1,8 @@
 spring:
   datasource:
+    hikari:
+      idle-timeout: 600000
+      connection-timeout: 65000
     url: ${DB_URL}
     username: ${USER_NAME}
     password: ${PASSWORD}
@@ -12,6 +15,9 @@ spring:
       max-request-size: 10MB
 
   r2dbc:
+    pool:
+      max-idle-time: 600000
+      max-acquire-time: 65000
     host: ${RDBHOST}
     url: ${RDB_URL}
     name: ${RDB_NAME}

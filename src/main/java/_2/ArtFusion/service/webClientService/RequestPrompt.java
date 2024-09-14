@@ -32,7 +32,7 @@ public class RequestPrompt {
                             ]
                         }
                         """,
-                cutcnt, storyBoard.getGenre(), storyBoard.getPromptKor());
+                storyBoard.getGenre(), storyBoard.getPromptKor(), cutcnt);
     }
 
     public static String getFormat(SceneFormat sceneFormat, String charactersPrompt, String style) {
