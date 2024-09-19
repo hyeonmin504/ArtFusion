@@ -27,6 +27,10 @@ public class SceneImage {
         setSceneFormat(sceneFormat);
     }
 
+    public void updateUrl(String url) {
+        this.url = url;
+    }
+
     // -- 연관 관계 세팅 메서드 -- //
     public void setSceneFormat(SceneFormat sceneFormat) {
         this.sceneFormat = sceneFormat;

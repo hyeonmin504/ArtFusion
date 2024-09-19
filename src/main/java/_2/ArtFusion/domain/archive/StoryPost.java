@@ -27,6 +27,7 @@ public class StoryPost {
     private String coverImg;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @OneToOne(mappedBy = "storyPost", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -38,6 +39,24 @@ public class StoryPost {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "story_id")
     private StoryBoard storyBoard;
+
+    public StoryPost(String summary, String hashTag, String coverImg, User user, StoryBoard storyBoard) {
+        this.summary = summary;
+        this.hashTag = hashTag;
+        this.coverImg = coverImg;
+        this.createDate = LocalDateTime.now();
+        setUser(user);
+        setStoryBoard(storyBoard);
+    }
+
+    public void updatePost(String summary, String hashTag, String coverImg, User user, StoryBoard storyBoard) {
+        this.summary = summary;
+        this.hashTag = hashTag;
+        this.coverImg = coverImg;
+        this.createDate = LocalDateTime.now();
+        setUser(user);
+        setStoryBoard(storyBoard);
+    }
 
     // -- 연관 관계 세팅 메서드 -- //
     public void setUser(User user) {
@@ -52,14 +71,6 @@ public class StoryPost {
     // 연관 관계를 위한 setter
     public void setHeart(Heart heart) {
         this.heart = heart;
-    }
-
-    public StoryPost(String summary, String hashTag, String coverImg, User user, StoryBoard storyBoard) {
-        this.summary = summary;
-        this.hashTag = hashTag;
-        this.coverImg = coverImg;
-        this.user = user;
-        this.storyBoard = storyBoard;
     }
 
     public StoryPost(StoryBoard storyBoard) {

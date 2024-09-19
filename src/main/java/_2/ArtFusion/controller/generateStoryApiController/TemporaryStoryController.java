@@ -29,6 +29,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -147,7 +148,8 @@ public class TemporaryStoryController {
                             });
                 })
                 .doOnSuccess(response -> log.info("Temporary image request completed successfully"))
-                .doOnError(e -> log.error("error={}", e.getMessage()))
+                .doOnError(e -> log.error("error={}"
+                        , e.getMessage()))
                 .onErrorResume(e -> {
                     HttpStatus status;
                     if (e instanceof NotFoundContentsException) status = NO_CONTENT;
@@ -180,11 +182,17 @@ public class TemporaryStoryController {
 
                     // 이미지 생성에 실패한 장면이 존재할 경우
                     List<Integer> failSeq = failApiResponseForm.getFailedSeq();
-                    ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, failSeq, "토큰 부족으로 인해 일부 이미지 생성 중 오류가 발생했습니다.");
-                    return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(body));
+                    ResponseForm<Object> body = new ResponseForm<>(OK, storyId, "일부 이미지 생성에 실패했습니다. 랜덤 생성을 통해 재 요청해주세요 실패한 번호="+
+                            failSeq.stream().map(String::valueOf).collect(Collectors.joining(", ")));
+                    return Mono.just(ResponseEntity.status(OK).body(body));
                 })
                 .onErrorResume(e -> {
                     log.error("error={}", e.getMessage());
+                    if (e instanceof IllegalStateException || e instanceof NoTokenException) {
+                        ResponseForm<Object> body = new ResponseForm<>(NOT_ACCEPTABLE, null, e.getMessage());
+                        return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(body));
+                    }
+
                     ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, "이미지 생성 중 오류 발생!");
                     return Mono.just(ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body));
                 });
