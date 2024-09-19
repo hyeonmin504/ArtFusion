@@ -3,7 +3,7 @@ image: openjdk:17-jdk-alpine
 pipelines:
   default:
     - step:
-        name: 도커 이미지 빌드 및 푸시 1
+        name: 도커 이미지 빌드 및 푸시
         caches:
           - gradle
           - docker
@@ -28,8 +28,10 @@ pipelines:
           - echo "=== Docker 이미지 푸시 ==="
           - docker push $DOCKERHUB_USERNAME/$APP_NAME
           - wget --post-data '{"text":"도커 이미지 빌드 및 푸시 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
+
+    # Blue 컨테이너에 배포
     - step:
-        name: BLUE EC2에 배포
+        name: Blue 컨테이너에 배포
         script:
           - echo "=== OpenSSH 클라이언트 설치 ==="
           - apk add --no-cache openssh-client
@@ -39,14 +41,22 @@ pipelines:
           - chmod 600 ~/.ssh/id_rsa
           - echo "=== SSH 키 내용 확인 ==="
           - cat ~/.ssh/id_rsa
-          - echo "=== Green EC2의 SSH 키 스캔 ==="
-          - ssh-keyscan -H "${BLUE_SERVER_IP}" >> ~/.ssh/known_hosts
-          - echo "=== known_hosts 파일 내용 ==="
-          - cat ~/.ssh/known_hosts
-          - echo "=== Green EC2에 배포 ==="
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker stop ${APP_NAME} || true"
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker rm ${APP_NAME} || true"
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker run --env-file /home/ubuntu/.env -d --name ${APP_NAME} -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${BLUE_SERVER_IP}" "docker ps -a"
-          - wget --post-data '{"text":"blue EC2 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
+          - echo "=== 동일 서버에서 Blue 컨테이너 배포 ==="
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker stop ${APP_NAME}-blue || true"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker rm ${APP_NAME}-blue || true"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker run --env-file /home/ubuntu/.env -d --name ${APP_NAME}-blue -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker ps -a"
+          - wget --post-data '{"text":"Blue 컨테이너 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
+
+    # Green 컨테이너에 배포
+    - step:
+        name: Green 컨테이너에 배포
+        script:
+          - echo "=== 동일 서버에서 Green 컨테이너 배포 ==="
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker stop ${APP_NAME}-green || true"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker rm ${APP_NAME}-green || true"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker run --env-file /home/ubuntu/.env -d --name ${APP_NAME}-green -p 8081:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker ps -a"
+          - wget --post-data '{"text":"Green 컨테이너 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
