@@ -1,6 +1,5 @@
 package _2.ArtFusion.config;
 
-import _2.ArtFusion.service.util.convertUtil.BooleanToIntegerConverter;
 import _2.ArtFusion.service.util.convertUtil.IntegerToBooleanConverter;
 import io.asyncer.r2dbc.mysql.MySqlConnectionConfiguration;
 import io.asyncer.r2dbc.mysql.MySqlConnectionFactory;
