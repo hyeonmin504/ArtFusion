@@ -65,6 +65,10 @@ aws:
     bucket: ${AWS_BUCKET_NAME}
     region: ${AWS_REGION}
 
+file:
+  upload:
+    dir: ${IMAGE_FILE_DIRECTORY}
+
 server:
   connection-timeout: 60000 # 클라이언트와 연결되는 시간
   port: 8080

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
 
@@ -119,8 +120,17 @@ public class ArchiveService {
 
     @Transactional
     public void registerStoryPost(StoryBoard storyBoard, User user) {
-        StoryPost storyPost = new StoryPost("summary","hashTag","coverImg",user,storyBoard);
-        archiveRepository.save(storyPost);
+        //프롬프트의 앞 부분 30자만 추출
+        String shortenedPrompt = storyBoard.getPromptKor().length() > 30 ? storyBoard.getPromptKor().substring(0, 30) : storyBoard.getPromptKor();
+
+        //첫 째 장면 이미지 추출
+        String url = storyBoard.getSceneFormats().get(0).getSceneImage().getUrl();
+
+        StoryPost post = archiveRepository.findByStoryBoard(storyBoard);
+        if (post == null){
+            StoryPost storyPost = new StoryPost(shortenedPrompt,storyBoard.getGenre(),url, user, storyBoard);
+            archiveRepository.save(storyPost);
+        } else post.updatePost(shortenedPrompt,storyBoard.getGenre(),url, user, storyBoard);
     }
 
     @Transactional

@@ -1,5 +1,6 @@
 package _2.ArtFusion.domain.storyboard;
 
+import _2.ArtFusion.domain.scene.SceneImage;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import lombok.AccessLevel;
@@ -24,6 +25,12 @@ public class StoryImage {
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "story_id")
     private StoryBoard storyBoard;
+
+    public void updateImage(String imageUrl, int imageSequence, StoryBoard storyBoard) {
+        this.imageUrl = imageUrl;
+        this.imageSequence = imageSequence;
+        setStoryBoard(storyBoard);
+    }
 
     // -- 연관 관계 세팅 메서드 -- //
     public void setStoryBoard(StoryBoard storyBoard) {

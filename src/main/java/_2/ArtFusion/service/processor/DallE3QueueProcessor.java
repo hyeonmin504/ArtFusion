@@ -96,18 +96,23 @@ public class DallE3QueueProcessor {
             for (int i = 0; i < REQUEST_COUNT && !queue.getIsEmpty(); i++) {
                 try {
                     SceneFormat sceneFormat = queue.dequeue();
+                    // 현재 장면의 requestId를 가져옴
+                    UUID requestId = UUID.fromString(sceneFormat.getRequestId());
+
+                    //빈 응답 생성
+                    ResultApiResponseForm form = new ResultApiResponseForm();
+
                     dallE3.processDallE3Api(sceneFormat)
                             .doOnSuccess(response -> {
                                 log.info("SceneFormat completed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
                             })
                             .doOnError(response -> {
+                                form.addFailSeq(sceneFormat.getSceneSequence());
                                 log.warn("SceneFormat failed, ID={}, sequence={}", sceneFormat.getRequestId(), sceneFormat.getSceneSequence());
                             })
                             .doOnTerminate(() -> {
-                                // 작업이 끝나면 현재 장면의 requestId를 가져옴
-                                UUID requestId = UUID.fromString(sceneFormat.getRequestId());
-                                // 요청 완료 여부 확인 (성공 여부 x)
-                                checkIfRequestCompleted(requestId);
+                                // 작업 완료 여부 확인 (성공 여부 x)
+                                checkIfRequestCompleted(requestId,form);
                             })
                             .subscribe();
                 } catch (InterruptedException e) {
@@ -150,11 +155,13 @@ public class DallE3QueueProcessor {
                                     log.info("user.getToken={}", userData.getToken());
                                     return userR2DBCRepository.save(userData)
                                             .then(Mono.just(sceneFormat));
-                                } catch (IllegalStateException | NoTokenException e) {
-                                    log.error("Failed to enqueue sceneFormat={}", sceneFormat.getSceneSequence(), e);
+                                } catch (IllegalStateException e) {
+                                    log.error("요청 실패 번호={}", sceneFormat.getSceneSequence(), e);
                                     //토큰을 다시 증가
-
-                                    return Mono.empty();
+                                    throw new IllegalStateException("요청이 포화 상태입니다.");
+                                } catch (NoTokenException e) {
+                                    log.error("요청 실패 번호={}", sceneFormat.getSceneSequence(), e);
+                                    throw new NoTokenException("토큰이 부족합니다");
                                 } finally {
                                     log.info("queue.size={}", queue.getSize());
                                 }
@@ -227,7 +234,7 @@ public class DallE3QueueProcessor {
      * 하나의 작업 내 모든 장면 이미지 요청 완료 체크 로직
      * @param requestId
      */
-    private void checkIfRequestCompleted(UUID requestId) {
+    private void checkIfRequestCompleted(UUID requestId,ResultApiResponseForm form) {
         // requestId에 해당하는 이미지 생성이 완료된 작업을 가져온다.
         List<SceneFormat> tasks = requestTaskMap.get(requestId);
 
@@ -237,7 +244,7 @@ public class DallE3QueueProcessor {
         if (tasks.stream().allMatch(SceneFormat::getCompleted)) {
             log.info("모든 작업이 성공적으로 완료되었습니다. ");
             //응답 반환 로직
-            sendResponseForRequest(requestId);
+            sendResponseForRequest(requestId, form);
         } else {
             log.info("아직 완료되지 않는 작업이 있습니다");
         }
@@ -247,18 +254,16 @@ public class DallE3QueueProcessor {
      * 응답 반환 및 temp Map 삭제 로직
      * @param requestId
      */
-    private void sendResponseForRequest(UUID requestId) {
+    private void sendResponseForRequest(UUID requestId,ResultApiResponseForm form) {
         // requestTaskMap에서 해당 요청에 대한 작업들을 가져옴
         List<SceneFormat> tasks = requestTaskMap.get(requestId);
-        // 응답 생성
-        ResultApiResponseForm responseForm = new ResultApiResponseForm();
 
         // requestId에 해당하는 작업의 지연 정보를 가져온다
         MonoSink<ResultApiResponseForm> sink = responseMap.get(requestId);
 
         if (sink != null) {
             // 지연 해제 및 응답 반환
-            sink.success(responseForm);
+            sink.success(form);
             responseMap.remove(requestId); // 완료된 요청 삭제
             requestTaskMap.remove(requestId); // 해당 요청의 작업 리스트 삭제
         } else {
