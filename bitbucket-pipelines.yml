@@ -41,6 +41,8 @@ pipelines:
           - chmod 600 ~/.ssh/id_rsa
           - echo "=== SSH 키 내용 확인 ==="
           - cat ~/.ssh/id_rsa
+          - echo "=== EC2의 SSH 키 스캔 ==="
+          - ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
           - echo "=== 동일 서버에서 Blue 컨테이너 배포 ==="
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker stop ${APP_NAME}-blue || true"
