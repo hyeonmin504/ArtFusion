@@ -55,6 +55,16 @@ pipelines:
     - step:
         name: Green 컨테이너에 배포
         script:
+          - echo "=== OpenSSH 클라이언트 설치 ==="
+          - apk add --no-cache openssh-client
+          - echo "=== SSH 키 설정 ==="
+          - mkdir -p ~/.ssh
+          - echo "$ENCODED_SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+          - chmod 600 ~/.ssh/id_rsa
+          - echo "=== SSH 키 내용 확인 ==="
+          - cat ~/.ssh/id_rsa
+          - echo "=== EC2의 SSH 키 스캔 ==="
+          - ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
           - echo "=== 동일 서버에서 Green 컨테이너 배포 ==="
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker stop ${APP_NAME}-green || true"
