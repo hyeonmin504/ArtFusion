@@ -25,7 +25,7 @@ public class RequestPrompt {
                                 {
                                     "event": "",
                                     "background": "",
-                                    "characters": "name1=dialogue,name2=dialogue,...",
+                                    "characters": "name1:dialogue,name2:dialogue,...",
                                     "actors": "actor1, actor2 ..."
                                 },
                                 ...
