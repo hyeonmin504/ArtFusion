@@ -47,7 +47,7 @@ pipelines:
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker stop ${APP_NAME}-blue || true"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker rm ${APP_NAME}-blue || true"
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker run --env-file /home/ubuntu/.env -d --name ${APP_NAME}-blue -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker run --env COLOR=blue --env-file /home/ubuntu/.env -d --name ${APP_NAME}-blue -p 8080:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker ps -a"
           - wget --post-data '{"text":"Blue 컨테이너 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
 
@@ -69,6 +69,6 @@ pipelines:
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker pull ${DOCKERHUB_USERNAME}/${APP_NAME}"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker stop ${APP_NAME}-green || true"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker rm ${APP_NAME}-green || true"
-          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker run --env-file /home/ubuntu/.env -d --name ${APP_NAME}-green -p 8081:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+          - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker run --env COLOR=green --env-file /home/ubuntu/.env -d --name ${APP_NAME}-green -p 8081:8080 ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
           - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker ps -a"
           - wget --post-data '{"text":"Green 컨테이너 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
