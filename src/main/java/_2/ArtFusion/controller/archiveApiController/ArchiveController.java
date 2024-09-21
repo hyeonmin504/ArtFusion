@@ -116,7 +116,7 @@ public class ArchiveController {
             return ResponseEntity.status(HttpStatus.OK).body(responseForm);
 
         } catch (NotFoundContentsException | NotFoundImageException e) {
-            log.error("조회 오류: {}", e.getMessage());
+            log.error("error", e);
             // 조회 실패 시, DetailArchivesResponse 타입으로 null 처리
             ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.NO_CONTENT, new DetailArchivesResponse(), e.getMessage());
             return ResponseEntity.status(HttpStatus.OK).body(responseForm);

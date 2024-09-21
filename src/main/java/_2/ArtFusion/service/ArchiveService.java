@@ -87,9 +87,9 @@ public class ArchiveService {
 
         List<String> hashTags = Arrays.asList(detailArchiveDataForm.getHashTag().split(","));
 
-        log.info("findStoryImagesByStoryId");
-        //시퀀스에따라 이미지를 불러옴
-        List<String> urls = storyImageRepository.findStoryImagesByStoryId(detailArchiveDataForm.getStoryId());
+//        log.info("findStoryImagesByStoryId");
+//        //시퀀스에따라 이미지를 불러옴
+//        List<String> urls = storyImageRepository.findStoryImagesByStoryId(detailArchiveDataForm.getStoryId());
 
         log.info("getSceneFormatData");
         //모든 장면의 데이터도 불러옴
@@ -105,10 +105,6 @@ public class ArchiveService {
             SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getSceneImage().getId(),
                     format.getSceneSequence(),format.getSceneImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
             sceneFormatForms.add(sceneFormatForm);
-        }
-
-        if (urls.isEmpty()) {
-            throw new NotFoundImageException("해당 이미지를 불러올 수 없습니다");
         }
 
         return DetailArchivesResponse.builder()
