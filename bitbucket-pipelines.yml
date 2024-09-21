@@ -42,8 +42,9 @@ pipelines:
             - cat ~/.ssh/id_rsa
             - echo "=== EC2의 SSH 키 스캔 ==="
             - ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
-            - echo "=== Green 컨테이너 완전 종료 (Down) ==="
-            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml down artfusion-green"
+            - echo "=== Green 컨테이너 중지 및 삭제 ==="
+            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml stop artfusion-green"
+            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml rm -f artfusion-green"
             - echo "=== Green 컨테이너 배포 ==="
             - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml up -d artfusion-green"
             - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "bash /home/ubuntu/artfusion-deployment/change_color.sh"
@@ -53,8 +54,9 @@ pipelines:
           name: Blue 컨테이너에 배포
           trigger: manual
           script:
-            - echo "=== Green 컨테이너 완전 종료 (Down) ==="
-            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml down artfusion-blue"
+            - echo "=== Blue 컨테이너 중지 및 삭제 ==="
+            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml stop artfusion-blue"
+            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml rm -f artfusion-blue"
             - echo "=== SSH를 통해 Blue에 배포 ==="
             - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "docker-compose -f /home/ubuntu/artfusion-deployment/docker-compose.yml up -d artfusion-blue"
             - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "bash /home/ubuntu/artfusion-deployment/change_color.sh"
