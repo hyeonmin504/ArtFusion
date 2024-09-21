@@ -2,13 +2,11 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
-import _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
-import _2.ArtFusion.exception.NotFoundImageException;
 import _2.ArtFusion.repository.jpa.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
 import static _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController.*;
@@ -31,7 +28,6 @@ import static _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryC
 public class ArchiveService {
 
     private final ArchiveRepository archiveRepository;
-    private final StoryImageRepository storyImageRepository;
     private final StoryBoardRepository storyBoardRepository;
     private final SceneFormatService sceneFormatService;
     private final UserRepository userRepository;

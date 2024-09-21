@@ -137,6 +137,7 @@ public class ImageService {
     public File convertByteArrayResourceToFile(ByteArrayResource byteArrayResource, String fileName) throws IOException {
         // 해당 경로에 파일 생성
         File file = new File(uploadDir + fileName + ".png");
+        //File file = File.createTempFile(fileName, ".png");
 
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
             // ByteArrayResource의 데이터를 파일에 쓰기

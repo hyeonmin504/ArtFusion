@@ -73,7 +73,9 @@ public class SecurityConfig {
                 "172.30.1.39:3000",
                 "http://192.168.207.29:3000",
                 "http://172.30.1.19:3000",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://art-fusion.site:3000",
+                "https://art-fusion.site"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
