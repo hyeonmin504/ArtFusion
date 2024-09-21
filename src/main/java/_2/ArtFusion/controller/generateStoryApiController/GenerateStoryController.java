@@ -33,7 +33,7 @@ public class GenerateStoryController {
     private final ArchiveService archiveService;
 
     @PostMapping("/story/generate")//테스트 완료
-    public ResponseEntity<ResponseForm> getFinalStory(@RequestParam Long storyId, @RequestParam MultipartFile image,
+    public ResponseEntity<ResponseForm> getFinalStory(@RequestParam Long storyId,
                                                       @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
             User userData = userService.checkUserSession(loginForm);
@@ -44,7 +44,7 @@ public class GenerateStoryController {
 
             //이미지 저장
             log.info("uploadImage");
-            StoryBoard savedStoryBoard = imageService.uploadImage(image, storyBoard);
+            StoryBoard savedStoryBoard = imageService.uploadImage(storyBoard);
 
             //post 생성
             archiveService.registerStoryPost(savedStoryBoard,userData);
