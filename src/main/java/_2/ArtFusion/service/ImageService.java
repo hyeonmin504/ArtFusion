@@ -42,24 +42,30 @@ public class ImageService {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
+    //이미지 업로드
     @Transactional
-    public StoryBoard uploadImage(MultipartFile image, StoryBoard storyBoard) throws IOException {
-        //마지막 이미지 번호
-        int maxSequence = storyImageRepository.findMaxSequenceByStoryBoard(storyBoard);
-        int newSequence = maxSequence + 1;
+    public StoryBoard uploadImage(StoryBoard storyBoard) throws IOException {
 
         //장면 저장
         saveScenes(storyBoard);
 
-        File file = convertMultiPartFileToFile(image);
-        String fileName = image.getOriginalFilename() + "_" + newSequence;
-        //s3 저장
-        s3Saver(fileName, file);
+        return storyBoard;
+
+        //마지막 이미지 번호
+//        int maxSequence = storyImageRepository.findMaxSequenceByStoryBoard(storyBoard);
+//        int newSequence = maxSequence + 1;
+
+        //전체 캡쳐본 임시 비활성화
+//        File file = convertMultiPartFileToFile(image);
+//        String fileName = image.getOriginalFilename() + "_" + newSequence;
+//        //s3 저장
+//        s3Saver(fileName, file);
 
         //db에 이미지 s3 url 저장
-        return saveImage(storyBoard, fileName, newSequence);
+        //return saveImage(storyBoard, fileName, newSequence);
     }
 
+    //해당 스토리보드의 장면을 저장
     @Transactional
     protected void saveScenes(StoryBoard storyBoard) {
         log.info("saveScenes");
@@ -90,7 +96,8 @@ public class ImageService {
         });
     }
 
-    protected StoryBoard saveImage(StoryBoard storyBoard, String fileName, int newSequence) {
+    //전체 캡쳐본 이미지 저장 로직
+    protected StoryBoard saveImage(StoryBoard storyBoard,String fileName, int newSequence) {
         //S3에서 URL 가져와서 저장하기
         String imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(fileName)).toExternalForm();
         log.info("imageUrl={}",imageUrl);
@@ -104,6 +111,7 @@ public class ImageService {
         return storyBoard;
     }
 
+    //s3에 저장하는 로직
     protected void s3Saver(String fileName, File file) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -116,6 +124,7 @@ public class ImageService {
         log.info("저장 완료");
     }
 
+    //캡쳐본 이미지 파일에 임시 저장및 png 변환
     private File convertMultiPartFileToFile(MultipartFile file) throws IOException {
         File convFile = new File(uploadDir + Objects.requireNonNull(file.getOriginalFilename()));
         FileOutputStream fos = new FileOutputStream(convFile);
@@ -124,6 +133,7 @@ public class ImageService {
         return convFile;
     }
 
+    //장면 이미지 png 변환 및 저장
     public File convertByteArrayResourceToFile(ByteArrayResource byteArrayResource, String fileName) throws IOException {
         // 해당 경로에 파일 생성
         File file = new File(uploadDir + fileName + ".png");
