@@ -84,10 +84,12 @@ public class ImageUrlConvertToPng {
                 return new ByteArrayResource(outputStream.toByteArray());
 
             } catch (IOException e) {
+                log.error("error",e);
                 throw new IOException("url을 이미지로 변환 중 예외 발생! url: " + imageUrl, e);
             }
 
         } catch (Exception e) {
+            log.error("error",e);
             throw new TimeOverException("이미지 시간이 만료되었습니다", e);
         }
     }

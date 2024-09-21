@@ -1,5 +1,6 @@
 package _2.ArtFusion.repository.jpa.query.Imple;
 
+import _2.ArtFusion.domain.scene.SceneImage;
 import _2.ArtFusion.repository.jpa.query.StoryImageRepositoryQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;

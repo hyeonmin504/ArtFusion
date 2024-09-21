@@ -3,6 +3,7 @@ package _2.ArtFusion.controller.archiveApiController;
 import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
+import _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController.*;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
@@ -141,15 +143,15 @@ public class ArchiveController {
         private String nickName;
         private LocalDateTime createDate;
         private List<String> hashTag = new ArrayList<>();
-        private List<String> captureImage = new ArrayList<>();
+        private List<SceneFormatForm> sceneImage = new ArrayList<>();
 
         @Builder
-        public DetailArchivesResponse(Long storyId, String nickName, LocalDateTime createDate, List<String> hashTag, List<String> captureImage) {
+        public DetailArchivesResponse(Long storyId, String nickName, LocalDateTime createDate, List<String> hashTag, List<SceneFormatForm> sceneImage) {
             this.storyId = storyId;
             this.nickName = nickName;
             this.createDate = createDate;
             this.hashTag = hashTag != null ? hashTag : new ArrayList<>();
-            this.captureImage = captureImage != null ? captureImage : new ArrayList<>();
+            this.sceneImage = sceneImage != null ? sceneImage : new ArrayList<>();
         }
     }
 

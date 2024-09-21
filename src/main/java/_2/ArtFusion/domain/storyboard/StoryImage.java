@@ -3,6 +3,7 @@ package _2.ArtFusion.domain.storyboard;
 import _2.ArtFusion.domain.scene.SceneImage;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class StoryImage {
     @Column(name = "image_id")
     private Long id;
     @Column(name = "image_url")
+    @Size(max = 512)
     private String imageUrl;
 
     @Column(name = "image_sequence")

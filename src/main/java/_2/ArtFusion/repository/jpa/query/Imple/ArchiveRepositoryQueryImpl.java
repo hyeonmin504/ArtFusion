@@ -79,7 +79,7 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
                                     "(s.id, u.nickname, p.createDate, p.hashTag) " +
                                     "from StoryBoard s " +
                                     "join s.storyPost p " +
-                                    "join p.user u " +
+                                    "join s.user u " +
                                     "where s.id =:storyId", DetailArchiveDataForm.class)
                     .setParameter("storyId", storyId)
                     .getSingleResult();

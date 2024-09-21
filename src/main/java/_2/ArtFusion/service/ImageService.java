@@ -84,6 +84,7 @@ public class ImageService {
                 log.info("imageUrl={}",imageUrl + ".png");
                 sceneFormat.getSceneImage().updateUrl(imageUrl + ".png");
             } catch (IOException e) {
+                log.error("error",e);
                 throw new ConvertException("이미지 파일 변환 중 오류 발생");
             }
         });
@@ -131,6 +132,7 @@ public class ImageService {
             // ByteArrayResource의 데이터를 파일에 쓰기
             outputStream.write(byteArrayResource.getByteArray());
         } catch (IOException e) {
+            log.error("error",e);
             throw new ConnectException("이미지 변환중 오류 발생");
         }
         return file;
