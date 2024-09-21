@@ -2,34 +2,39 @@ package _2.ArtFusion.service;
 
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
+import _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController;
 import _2.ArtFusion.domain.archive.StoryPost;
+import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
-import _2.ArtFusion.repository.jpa.ArchiveRepository;
-import _2.ArtFusion.repository.jpa.StoryImageRepository;
-import _2.ArtFusion.repository.jpa.StoryBoardRepository;
+import _2.ArtFusion.repository.jpa.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
+import static _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ArchiveService {
 
     private final ArchiveRepository archiveRepository;
     private final StoryImageRepository storyImageRepository;
     private final StoryBoardRepository storyBoardRepository;
-
+    private final SceneFormatService sceneFormatService;
+    private final UserRepository userRepository;
 
 
     @Transactional(readOnly = true)
@@ -73,14 +78,34 @@ public class ArchiveService {
 
     @Transactional(readOnly = true)
     public DetailArchivesResponse getArchive(Long postId,String nickname) {
+        User userData = userRepository.findByNickname(nickname);
+
+        log.info("findDetailArchiveForm");
         //해당 아카이브를 찾아오기
         DetailArchiveDataForm detailArchiveDataForm = archiveRepository.findDetailArchiveForm(postId).orElseThrow(
                 () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다"));
 
         List<String> hashTags = Arrays.asList(detailArchiveDataForm.getHashTag().split(","));
 
+        log.info("findStoryImagesByStoryId");
         //시퀀스에따라 이미지를 불러옴
         List<String> urls = storyImageRepository.findStoryImagesByStoryId(detailArchiveDataForm.getStoryId());
+
+        log.info("getSceneFormatData");
+        //모든 장면의 데이터도 불러옴
+        StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(), detailArchiveDataForm.getStoryId());
+
+        /**
+         * 해당 작품을 폼으로 변환 하는 로직
+         */
+        List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
+
+        for (SceneFormat format : storyBoard.getSceneFormats()) {
+            log.info("sceneFormat 생성");
+            SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getSceneImage().getId(),
+                    format.getSceneSequence(),format.getSceneImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
+            sceneFormatForms.add(sceneFormatForm);
+        }
 
         if (urls.isEmpty()) {
             throw new NotFoundImageException("해당 이미지를 불러올 수 없습니다");
@@ -91,7 +116,7 @@ public class ArchiveService {
                 .nickName(detailArchiveDataForm.getNickName())
                 .createDate(detailArchiveDataForm.getCreateDate())
                 .hashTag(hashTags)
-                .captureImage(urls)
+                .sceneImage(sceneFormatForms)
                 .build();
     }
 
