@@ -230,7 +230,7 @@ public class TemporaryStoryController {
      */
     @Data
     @AllArgsConstructor
-    static class StoryBoardForm {
+    public static class StoryBoardForm {
         private Long storyId;
         private List<SceneFormatForm> sceneFormatForms;
     }
@@ -246,7 +246,7 @@ public class TemporaryStoryController {
      */
     @Data
     @AllArgsConstructor
-    static class SceneFormatForm {
+    public static class SceneFormatForm {
         private Long sceneId;
         private Long imageId;
         private int sceneSeq;
