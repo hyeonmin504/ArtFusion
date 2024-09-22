@@ -6,6 +6,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.awt.image.BufferedImage;
@@ -55,12 +57,15 @@ public class ImageUrlConvertToPng {
     }
 
     public ByteArrayResource downloadImageAndConvertToPng(String imageUrl) {
-        log.info("imageUrl={}", imageUrl);
+
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(imageUrl).build(true);
+        URI uri = uriComponents.toUri();
+        log.info("imageUri={}",uri);
 
         try {
             // WebClient로 동기 호출을 위해 block() 사용
             byte[] imageBytes = webClient.get()
-                    .uri(URI.create(imageUrl))
+                    .uri(uri)
                     .accept(MediaType.APPLICATION_OCTET_STREAM)
                     .retrieve()
                     .bodyToMono(byte[].class)
