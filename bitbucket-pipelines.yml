@@ -51,6 +51,25 @@ pipelines:
             - wget --post-data '{"text":"Green 컨테이너 배포 완료"}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
 
       - step:
+          name: Blue 컨테이너로 롤백 (문제발생시 수동트리거)
+          trigger: manual
+          script:
+            - echo "=== OpenSSH 클라이언트 설치 ==="
+            - apk add --no-cache openssh-client
+            - echo "=== SSH 키 설정 ==="
+            - mkdir -p ~/.ssh
+            - echo "$ENCODED_SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+            - chmod 600 ~/.ssh/id_rsa
+            - echo "=== SSH 키 내용 확인 ==="
+            - cat ~/.ssh/id_rsa
+            - echo "=== EC2의 SSH 키 스캔 ==="
+            - ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
+            - echo "=== nginx Blue로 롤백 ==="
+            - ssh -i ~/.ssh/id_rsa ubuntu@"${SERVER_IP}" "bash /home/ubuntu/artfusion-deployment/nginx_to_blue.sh"
+            - wget --post-data '{"text":"Blue 컨테이너로 롤백 완료. 오류 수정 바랍니다."}' --header="Content-Type:application/json" ${SLACK_WEBHOOK}
+
+
+      - step:
           name: Blue 컨테이너에 배포
           trigger: manual
           script:
