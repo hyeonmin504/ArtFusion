@@ -72,7 +72,7 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
     }
 
     @Override
-    public Optional<DetailArchiveDataForm> findDetailArchiveForm(Long storyId) {
+    public Optional<DetailArchiveDataForm> findDetailArchiveForm(Long postId) {
         try {
             DetailArchiveDataForm detailArchiveDataForm = em.createQuery(
                             "select new _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm" +
@@ -80,8 +80,8 @@ public class ArchiveRepositoryQueryImpl implements ArchiveRepositoryQuery {
                                     "from StoryBoard s " +
                                     "join s.storyPost p " +
                                     "join s.user u " +
-                                    "where s.id =:storyId", DetailArchiveDataForm.class)
-                    .setParameter("storyId", storyId)
+                                    "where p.id =:postId", DetailArchiveDataForm.class)
+                    .setParameter("postId", postId)
                     .getSingleResult();
             return Optional.ofNullable(detailArchiveDataForm);
         } catch (NoResultException | EmptyResultDataAccessException e) {
