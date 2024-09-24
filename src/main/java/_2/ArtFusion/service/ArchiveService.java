@@ -32,7 +32,6 @@ public class ArchiveService {
     private final SceneFormatService sceneFormatService;
     private final UserRepository userRepository;
 
-
     @Transactional(readOnly = true)
     public AllArchivesResponse getArchiveList(Pageable pageable) {
         // Slice 객체로 Form 데이터를 가져옴
@@ -132,13 +131,12 @@ public class ArchiveService {
         // 아카이브 삭제
         storyBoardRepository.deleteById(storyPost.getStoryBoard().getId());
         archiveRepository.deleteById(postId);
-
     }
 
     @Transactional
     public void registerStoryPost(StoryBoard storyBoard, User user) {
         //프롬프트의 앞 부분 30자만 추출
-        String shortenedPrompt = storyBoard.getPromptKor().length() > 30 ? storyBoard.getPromptKor().substring(0, 30) : storyBoard.getPromptKor();
+        String shortenedPrompt = storyBoard.getPromptKor().length() > 60 ? storyBoard.getPromptKor().substring(0, 60) : storyBoard.getPromptKor();
 
         //첫 째 장면 이미지 추출
         String url = storyBoard.getSceneFormats().get(0).getSceneImage().getUrl();

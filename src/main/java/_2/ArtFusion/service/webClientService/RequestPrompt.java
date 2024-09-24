@@ -5,7 +5,6 @@ import _2.ArtFusion.domain.r2dbcVersion.StoryBoard;
 import _2.ArtFusion.domain.storyboard.Style;
 
 public class RequestPrompt {
-
     public static String getFormat(StoryBoard storyBoard) {
         String cutcnt = String.valueOf(storyBoard.getCutCnt());
         if (storyBoard.getCutCnt() == 0) cutcnt = "주요 사건, 대화나 장면의 변화에 따른 어울리는 장면의 수로";
@@ -31,8 +30,18 @@ public class RequestPrompt {
                                 ...
                             ]
                         }
-                        """,
+                """,
                 storyBoard.getGenre(), storyBoard.getPromptKor(), cutcnt);
+    }
+
+    public static String getFormatForFineTune(StoryBoard storyBoard) {
+        return String.format(
+                """
+                '컷 수': %d,
+                '장르': %s,
+                '스토리 내용': %s
+                """,
+                storyBoard.getCutCnt(), storyBoard.getGenre(), storyBoard.getPromptKor());
     }
 
     public static String getFormat(SceneFormat sceneFormat, String charactersPrompt, String style) {

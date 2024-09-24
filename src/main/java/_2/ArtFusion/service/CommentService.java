@@ -56,6 +56,5 @@ public class CommentService {
         );
         // 검색된 storyPost에 대한 댓글 수 반환
         return commentRepository.countComments(storyPost);
-
     }
 }

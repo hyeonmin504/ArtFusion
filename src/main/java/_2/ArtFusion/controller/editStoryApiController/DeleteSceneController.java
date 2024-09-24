@@ -72,7 +72,6 @@ public class DeleteSceneController {
             }
             archiveService.deleteStoryBoard(storyId);
 
-
             ResponseForm<Object> body = new ResponseForm<>(OK, null, "200 ok");
             return ResponseEntity.status(OK).body(body);
         } catch (NotFoundContentsException e) {

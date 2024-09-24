@@ -3,7 +3,6 @@ package _2.ArtFusion.controller.archiveApiController;
 import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
-import _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
@@ -71,7 +70,7 @@ public class ArchiveController {
      */
     @GetMapping("/archives/my")
     public ResponseEntity<ResponseForm> getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
-                                                                 @RequestParam(defaultValue = "id") String sort,
+                                                                 @RequestParam(defaultValue = "id") String sort, // 좋아요 기준으로 수정 예정
                                                                  @RequestParam(defaultValue = "6") int size,
                                                                   @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
@@ -158,5 +157,4 @@ public class ArchiveController {
     public enum HashTag {
         SAMPLE,DATA
     }
-
 }

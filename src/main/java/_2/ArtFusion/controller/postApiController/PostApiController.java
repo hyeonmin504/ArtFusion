@@ -88,7 +88,6 @@ public class PostApiController {
         }
     }
 
-
     /**
      * 댓글 수 조회 API
      * @param postId -> 현재 postId
