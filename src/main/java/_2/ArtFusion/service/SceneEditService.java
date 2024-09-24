@@ -5,8 +5,6 @@ import _2.ArtFusion.controller.editStoryApiController.editForm.SequenceForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.jpa.SceneFormatRepository;
-import _2.ArtFusion.repository.jpa.SceneImageRepository;
-import _2.ArtFusion.service.webClientService.OpenAiGPTWebClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,14 +40,13 @@ public class SceneEditService {
     public SceneFormat getSceneFormatById(Long sceneId){
         return sceneFormatRepository.findById(sceneId).orElseThrow(
                 ()-> new NotFoundContentsException("해당 장면을 찾을 수 없습니다."));
-
     }
+
     @Transactional
     public void deleteScene(Long sceneId) {
         SceneFormat sceneFormat = sceneFormatRepository.findById(sceneId).orElseThrow(
                 () -> new NotFoundContentsException("해당 장면을 찾을 수 없습니다")
         );
-
         sceneFormatRepository.delete(sceneFormat);
     }
 }

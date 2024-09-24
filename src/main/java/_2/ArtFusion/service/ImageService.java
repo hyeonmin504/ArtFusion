@@ -10,7 +10,6 @@ import _2.ArtFusion.service.util.convertUtil.ImageUrlConvertToPng;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

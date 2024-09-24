@@ -51,7 +51,6 @@ public class UserService implements UserDetailsService {
                 1000,
                 BASIC
         );
-
         // 사용자 저장
         return userRepository.save(user);
     }
@@ -86,7 +85,6 @@ public class UserService implements UserDetailsService {
         if (!matcher.matches()) {
             throw new InvalidFormatException("이메일 형식에 맞지 않습니다.");
         }
-
         return !userRepository.existsUserByEmail(email);
     }
 
@@ -97,7 +95,6 @@ public class UserService implements UserDetailsService {
         if (registeredUser.isEmpty()) {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
-
         return convertToSpringUserDetails(registeredUser.get());
     }
 
