@@ -118,6 +118,7 @@ public class ArchiveService {
 
         return DetailArchivesResponse.builder()
                 .storyId(detailArchiveDataForm.getStoryId())
+                .title(storyBoard.getTitle())
                 .nickName(detailArchiveDataForm.getNickName())
                 .createDate(detailArchiveDataForm.getCreateDate())
                 .hashTag(hashTags)
