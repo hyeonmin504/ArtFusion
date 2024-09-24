@@ -1,5 +1,6 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveData;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
 import _2.ArtFusion.domain.archive.StoryPost;
@@ -40,9 +41,16 @@ public class ArchiveService {
         // 아카이브 데이터를 리스트로 변환
         List<ArchiveDataForm> archiveDataForms = archiveDataFormsSlice.getContent();
 
+        List<ArchiveData> archiveData = new ArrayList<>();
+        for (ArchiveDataForm archiveDataForm : archiveDataForms) {
+            ArchiveData archiveDataSet = new ArchiveData(archiveDataForm.getPostId(), archiveDataForm.getCoverImg(), archiveDataForm.getTitle(), archiveDataForm.getSummary(), archiveDataForm.getNickname());
+            archiveDataSet.addHashTags(archiveDataForm.getHashTag());
+            archiveData.add(archiveDataSet);
+        }
+
         // PostFormResponse 객체 생성 및 반환
         return AllArchivesResponse.builder()
-                .archiveDataForms(archiveDataForms)
+                .archiveDataForms(archiveData)
                 .offset(pageable.getOffset())
                 .pageNum(archiveDataFormsSlice.getNumber())
                 .numberOfElements(archiveDataFormsSlice.getNumberOfElements())
@@ -59,9 +67,16 @@ public class ArchiveService {
         // 아카이브 데이터를 리스트로 변환
         List<ArchiveDataForm> archiveDataForms = archiveDataFormsSlice.getContent();
 
+        List<ArchiveData> archiveData = new ArrayList<>();
+        for (ArchiveDataForm archiveDataForm : archiveDataForms) {
+            ArchiveData archiveDataSet = new ArchiveData(archiveDataForm.getPostId(), archiveDataForm.getCoverImg(), archiveDataForm.getTitle(), archiveDataForm.getSummary(), archiveDataForm.getNickname());
+            archiveDataSet.addHashTags(archiveDataForm.getHashTag());
+            archiveData.add(archiveDataSet);
+        }
+
         // PostFormResponse 객체 생성 및 반환
         return AllArchivesResponse.builder()
-                .archiveDataForms(archiveDataForms)
+                .archiveDataForms(archiveData)
                 .offset(pageable.getOffset())
                 .pageNum(archiveDataFormsSlice.getNumber())
                 .numberOfElements(archiveDataFormsSlice.getNumberOfElements())

@@ -2,6 +2,7 @@ package _2.ArtFusion.controller.archiveApiController;
 
 import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveData;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
@@ -127,7 +128,7 @@ public class ArchiveController {
     @NoArgsConstructor
     @Builder
     public static class AllArchivesResponse {
-        private List<ArchiveDataForm> archiveDataForms;
+        private List<ArchiveData> archiveDataForms;
         private long offset;
         private int pageNum;
         private int numberOfElements;
