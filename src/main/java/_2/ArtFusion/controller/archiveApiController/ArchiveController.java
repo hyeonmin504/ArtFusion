@@ -140,14 +140,16 @@ public class ArchiveController {
     @NoArgsConstructor
     public static class DetailArchivesResponse {
         private Long storyId;
+        private String title;
         private String nickName;
         private LocalDateTime createDate;
         private List<String> hashTag = new ArrayList<>();
         private List<SceneFormatForm> sceneImage = new ArrayList<>();
 
         @Builder
-        public DetailArchivesResponse(Long storyId, String nickName, LocalDateTime createDate, List<String> hashTag, List<SceneFormatForm> sceneImage) {
+        public DetailArchivesResponse(Long storyId,String title, String nickName, LocalDateTime createDate, List<String> hashTag, List<SceneFormatForm> sceneImage) {
             this.storyId = storyId;
+            this.title = title;
             this.nickName = nickName;
             this.createDate = createDate;
             this.hashTag = hashTag != null ? hashTag : new ArrayList<>();
