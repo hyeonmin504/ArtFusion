@@ -49,7 +49,6 @@ public class ArchiveService {
                 .size(pageable.getPageSize())
                 .isLast(archiveDataFormsSlice.isLast())
                 .build();
-
     }
 
     @Transactional(readOnly = true)
