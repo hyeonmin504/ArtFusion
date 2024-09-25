@@ -45,7 +45,7 @@ public class ArchiveController {
     //페이지 번호, 정렬 기준, 페이지 크기를 요청 파라미터로 받아 아카이브 목록 조회
     public ResponseEntity<ResponseForm> getAllArchives(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "id") String sort,
-                                       @RequestParam(defaultValue = "6") int size) {
+                                       @RequestParam(defaultValue = "12") int size) {
         try {
             // Pageable 객체 생성
             Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
@@ -72,7 +72,7 @@ public class ArchiveController {
     @GetMapping("/archives/my")
     public ResponseEntity<ResponseForm> getAllArchivesForNickname(@RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "id") String sort, // 좋아요 기준으로 수정 예정
-                                                                 @RequestParam(defaultValue = "6") int size,
+                                                                 @RequestParam(defaultValue = "12") int size,
                                                                   @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
             User userData = userService.checkUserSession(loginForm);
