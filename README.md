@@ -1,9 +1,7 @@
 ## 🌿 Back-End Development
 ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-F2F4F9?style=for-the-badge&logo=spring-boot)
-![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
 ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
-![deepl](https://img.shields.io/badge/deepl-007EC6?style=for-the-badge&logo=deepL&logoColor=white)
 ![ChatGPT](https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white)
 ![dalle](https://img.shields.io/badge/dalle-74aa9c?style=for-the-badge&logo=openai&logoColor=white)
 ## ⚛️ Front-End Development
@@ -29,7 +27,7 @@
 ![WebStorm](https://img.shields.io/badge/WebStorm-000000.svg?style=for-the-badge&logo=webstorm&logoColor=white)
 ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
 ## 🛠️ Features
-- **GPT-4o, DALL-E, 클로드** 등의 **Generate Modal**을 활용해 **텍스트**로 **웹툰(이미지)** 생성
+- **GPT-4o, DALL-E 등의 **Generate Modal**을 활용해 **텍스트**로 **웹툰(이미지)** 생성
 - **파인튜닝**을 통한 **사용자 맞춤형 웹툰 생성**
 - **텍스트 기반**의 자유로운 창작물 생성
 - 작품에 대한 **수정** 기능
