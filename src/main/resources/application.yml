@@ -1,5 +1,8 @@
 spring:
   datasource:
+    hikari:
+      idle-timeout: 600000
+      connection-timeout: 65000
     url: ${DB_URL}
     username: ${USER_NAME}
     password: ${PASSWORD}
@@ -12,6 +15,9 @@ spring:
       max-request-size: 10MB
 
   r2dbc:
+    pool:
+      max-idle-time: 600000
+      max-acquire-time: 65000
     host: ${RDBHOST}
     url: ${RDB_URL}
     name: ${RDB_NAME}
@@ -41,6 +47,8 @@ spring:
 
 logging:
   level:
+    reactor:
+      netty: DEBUG
     org.hibernate.SQL: info
     org.hibernate.type: trace
     org:
@@ -56,13 +64,13 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     bucket: ${AWS_BUCKET_NAME}
     region: ${AWS_REGION}
-jwt:
-  issuer: wookdong
-  secret-key: c1b94a4daddfe04955067b09032a52c6e7b9433a5af91efbde4b44f69e99546e5713e30e4c5e5f2f22c21188f641d50fa97425724f2b8f0ad3d47c7d6bad1a6f
 
+file:
+  upload:
+    dir: ${IMAGE_FILE_DIRECTORY}
 
 server:
-  connection-timeout: 600000
+  connection-timeout: 60000 # 클라이언트와 연결되는 시간
   port: 8080
   servlet:
     session:
@@ -70,3 +78,13 @@ server:
       cookie:
         same-site: none  # SameSite 속성을 None으로 설정
         secure: true      # Secure 속성을 true로 설정 (HTTPS 사용 시 적용)
+
+management:
+  endpoints:
+    web:
+      base-path: /api
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

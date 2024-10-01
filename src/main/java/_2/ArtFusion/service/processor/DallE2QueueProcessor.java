@@ -82,7 +82,7 @@ public class DallE2QueueProcessor {
      */
     private Mono<Void> processDallE2Api(UpdateForm updateForm) {
         //이미지를 먼저 Png로 변환
-        return imageUrlConvertToPng.downloadImageAndConvertToPng(updateForm.getSceneImage().getUrl())
+        return imageUrlConvertToPng.downloadImageAndConvertToPngMono(updateForm.getSceneImage().getUrl())
                 .flatMap(imageResource -> {
                     MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
                     bodyBuilder.part("image", imageResource)
