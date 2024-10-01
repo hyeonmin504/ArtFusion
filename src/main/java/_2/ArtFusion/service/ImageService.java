@@ -88,6 +88,7 @@ public class ImageService {
                 String imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(fileName)).toExternalForm();
                 log.info("imageUrl={}",imageUrl + ".png");
                 sceneFormat.getSceneImage().updateUrl(imageUrl + ".png");
+                file.deleteOnExit();
             } catch (IOException e) {
                 log.error("error",e);
                 throw new ConvertException("이미지 파일 변환 중 오류 발생");
