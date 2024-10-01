@@ -1,0 +1,22 @@
+.archive-section {
+  align-items: center;
+  .archive-sec-title {
+    font-size: 36px;
+    font-weight: 300;
+  }
+  .archive-sec-dscr {
+    font-size: 20px;
+    font-weight: 300;
+    color: $sub-text-color;
+
+    margin-top: 4px;
+  }
+  .archive-sec-main {
+    margin-top: 36px;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px 24px;
+  }
+}

@@ -1,0 +1,51 @@
+.btn-container {
+  color: $btn-color;
+  text-decoration: none;
+
+  transition: all ease-in-out 0.15s;
+  .btn-container-box {
+    position: relative;
+    width: 100%;
+    padding-bottom: 91%;
+
+    border: 3px solid $btn-color;
+    border-radius: 8px;
+    div {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      svg {
+        font-size: 96px;
+      }
+    }
+  }
+  .btn-title {
+    font-size: 24px;
+    font-weight: 600;
+
+    margin-top: 16px;
+    span {
+      font-size: 16px;
+    }
+  }
+  .btn-dscr {
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: 300;
+  }
+  &:hover {
+    color: $btn-active-color;
+
+    .btn-container-box {
+      border: 3px solid $btn-active-color;
+    }
+  }
+}

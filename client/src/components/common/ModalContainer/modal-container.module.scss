@@ -1,0 +1,19 @@
+.container {
+  background-color: $modal-color;
+  padding: 63px;
+
+  width: 100%;
+  max-width: 768px;
+
+  border-radius: 6px;
+  &.absolute {
+    position: absolute;
+
+    background-color: $modal-absolute-color;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+
+    overflow-y: scroll;
+  }
+}

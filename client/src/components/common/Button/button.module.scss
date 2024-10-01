@@ -1,0 +1,116 @@
+.button {
+  transition: background-color ease-in-out 0.15s;
+  &.normal {
+    color: #ffffff;
+    width: 100%;
+    height: 59px;
+
+    font-size: 16px;
+
+    border-radius: 6px;
+    &.primary {
+      background-color: $primary-color;
+      &:hover {
+        background-color: $btn-primary-active-color;
+      }
+    }
+    &.white {
+      background-color: $btn-color;
+    }
+    &.gray {
+      background-color: $btn-gray-color;
+      &:hover {
+        background-color: $btn-gray-active-color;
+      }
+    }
+  }
+  &.link {
+    color: #ffffff;
+    width: 100%;
+    height: 59px;
+
+    font-size: 16px;
+
+    border-radius: 6px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-decoration: none;
+    &.primary {
+      background-color: $primary-color;
+      &:hover {
+        background-color: $btn-primary-active-color;
+      }
+    }
+    &.white {
+      background-color: $btn-color;
+    }
+    &.gray {
+      background-color: $btn-gray-color;
+      &:hover {
+        background-color: $btn-gray-active-color;
+      }
+    }
+  }
+  &.border {
+    color: $btn-color;
+    background-color: transparent;
+    width: 100%;
+    height: 73px;
+
+    font-size: 24px;
+    font-weight: 300;
+    border-radius: 6px;
+
+    transition: all ease-in-out 0.15s;
+    &.primary {
+      border: 3px solid $btn-color;
+      &:hover {
+        color: $btn-active-color;
+        font-weight: 600;
+        border: 3px solid $btn-active-color;
+      }
+      &.active {
+        color: $primary-color;
+        font-weight: 600;
+        border: 3px solid $primary-color;
+      }
+    }
+  }
+  .btn-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .loader {
+      color: #ffffff;
+      width: 4px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      box-shadow:
+        19px 0 0 7px,
+        38px 0 0 3px,
+        57px 0 0 0;
+      transform: translateX(-38px);
+      animation: l21 0.5s infinite alternate linear;
+    }
+
+    @keyframes l21 {
+      50% {
+        box-shadow:
+          19px 0 0 3px,
+          38px 0 0 7px,
+          57px 0 0 3px;
+      }
+      100% {
+        box-shadow:
+          19px 0 0 0,
+          38px 0 0 3px,
+          57px 0 0 7px;
+      }
+    }
+  }
+}
