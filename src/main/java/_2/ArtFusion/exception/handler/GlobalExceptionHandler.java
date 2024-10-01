@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -45,8 +46,8 @@ public class GlobalExceptionHandler {
         body.put("error", "Bad Request");
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
+        log.error("error",ex);
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, body, "올바른 입력값이 아닙니다");
-        log.info("error",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.BAD_REQUEST);
     }
 
@@ -62,8 +63,8 @@ public class GlobalExceptionHandler {
         body.put("error", "Not Found");
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
+        log.error("error",ex);
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.NOT_FOUND, body, "올바른 경로가 아닙니다");
-        log.info("error",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.NOT_FOUND);
     }
 
@@ -72,7 +73,8 @@ public class GlobalExceptionHandler {
             SocketTimeoutException.class, //api 연결 시간 장애
             UnknownHostException.class,
             OpenAiHttpException.class, //openai 연결 장애
-            HttpException.class //openai 연결 장애 + api 연결 장애
+            HttpException.class, //openai 연결 장애 + api 연결 장애
+            HttpMessageNotReadableException.class
     })
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public ResponseEntity<ResponseForm<Map<String, Object>>> handleNetworkException(Exception ex, WebRequest request) {
@@ -82,8 +84,8 @@ public class GlobalExceptionHandler {
         body.put("error", "Service Unavailable");
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
+        log.error("error", ex);
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.SERVICE_UNAVAILABLE, body, "네트워크 문제로 인해 서비스를 다시 이용해주세요.");
-        log.info("error", ex);
         return new ResponseEntity<>(responseForm, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
@@ -96,8 +98,8 @@ public class GlobalExceptionHandler {
         body.put("error", "Internal Server Error");
         body.put("path", request.getDescription(false).replace("uri=", ""));
 
+        log.error("error",ex);
         ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, body, "An unexpected error occurred.");
-        log.info("error",ex);
         return new ResponseEntity<>(responseForm, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -1,8 +1,10 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.domain.user.*;
 import _2.ArtFusion.exception.ExistsUserException;
 import _2.ArtFusion.exception.InvalidFormatException;
+import _2.ArtFusion.exception.NotFoundUserException;
 import _2.ArtFusion.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,23 +51,28 @@ public class UserService implements UserDetailsService {
                 1000,
                 BASIC
         );
-
         // 사용자 저장
         return userRepository.save(user);
     }
 
-
-    public User loginUser(LoginForm loginForm) {
-        // 로그인을 위한 사용자 정보 검증 로직 추가 가능
-
-        Optional<User> userOptional = userRepository.findByEmail(loginForm.getEmail());
-        if (userOptional.isEmpty() || !passwordEncoder.matches(loginForm.getPassword(), userOptional.get().getPassword())) {
-            log.info("loginForm.getPassword={}",loginForm.getPassword());
-            log.info("userOptional.get().getPassword())={}",userOptional.get().getPassword());
-            throw new InvalidFormatException("잘못된 이메일 또는 비밀번호입니다.");
+    public User checkUserSession(SessionLoginForm loginForm) {
+        // 세션이 없을 경우 로그인 요청
+        if (loginForm == null) {
+            throw new NotFoundUserException("유저 정보 없음");
         }
+        return userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
+                () -> new NotFoundUserException("유저 정보 없음")
+        );
+    }
 
-        return userOptional.get();
+    public User loginUser(LoginForm loginForm, User user) {
+        // 로그인을 위한 사용자 정보 검증 로직 추가 가능
+        if (!passwordEncoder.matches(loginForm.getPassword(), user.getPassword())) {
+            log.info("loginForm.getPassword={}",loginForm.getPassword());
+            log.info("userOptional.get().getPassword())={}",user.getPassword());
+            throw new InvalidFormatException("비밀번호가 맞지 않습니다");
+        }
+        return user;
     }
 
     @Transactional(readOnly = true)
@@ -78,7 +85,6 @@ public class UserService implements UserDetailsService {
         if (!matcher.matches()) {
             throw new InvalidFormatException("이메일 형식에 맞지 않습니다.");
         }
-
         return !userRepository.existsUserByEmail(email);
     }
 
@@ -89,7 +95,6 @@ public class UserService implements UserDetailsService {
         if (registeredUser.isEmpty()) {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
-
         return convertToSpringUserDetails(registeredUser.get());
     }
 

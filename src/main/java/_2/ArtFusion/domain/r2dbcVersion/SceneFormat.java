@@ -1,7 +1,5 @@
 package _2.ArtFusion.domain.r2dbcVersion;
 
-import _2.ArtFusion.service.util.convertUtil.BooleanToStringConverter;
-import jakarta.persistence.Convert;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -9,8 +7,6 @@ import org.springframework.data.relational.core.mapping.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,14 +17,14 @@ public class SceneFormat {
     @Column("scene_id")
     private Long id;
 
-    @Size(max = 4000)
+    @Size(max = 5000)
     private String description;
-    @Size(max = 60000)
+    @Size(max = 10000)
     @Column("scene_prompt")
     private String scenePromptEn;
     @Column("scene_sequence")
     private int sceneSequence;
-    @Size(max = 4000)
+    @Size(max = 1000)
     private String dialogue;
     @Size(max = 4000)
     private String background;
@@ -36,7 +32,6 @@ public class SceneFormat {
     @Column("request_id")
     private String requestId;
 
-    @Convert(converter = BooleanToStringConverter.class)
     private Boolean completed;
 
     @Column("story_id")
@@ -81,7 +76,8 @@ public class SceneFormat {
         this.scenePromptEn = scenePromptEn;
     }
 
-    public void setImageId(Long imageId) {
+    public void setCompletedAndImageId(Long imageId,Boolean is) {
         this.imageId = imageId;
+        this.completed = is;
     }
 }

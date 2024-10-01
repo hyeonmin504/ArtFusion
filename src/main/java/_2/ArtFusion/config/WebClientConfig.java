@@ -24,7 +24,7 @@ public class WebClientConfig {
     ReactorClientHttpConnector httpConnector = new ReactorClientHttpConnector(
             HttpClient.create()
                     //netty서버와 연결하기 전 time out 설정
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 120000)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                     .responseTimeout(Duration.ofSeconds(120))
                     //netty서버와 연결한 후 time out 설정
                     .doOnConnected(conn -> conn

@@ -2,16 +2,14 @@ package _2.ArtFusion;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.unit.DataSize;
 
 import jakarta.servlet.MultipartConfigElement;
 
+//@EntityScan(basePackages = {"_2.ArtFusion.config.jwt"})  // Token 클래스가 있는 패키지를 명시
 @SpringBootApplication
-@EntityScan(basePackages = {"_2.ArtFusion.config.jwt"})  // Token 클래스가 있는 패키지를 명시
-
 public class ArtFusionApplication {
 
 	public static void main(String[] args) {

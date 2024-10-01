@@ -1,35 +1,37 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveData;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
 import _2.ArtFusion.domain.archive.StoryPost;
+import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
-import _2.ArtFusion.exception.NotFoundImageException;
-import _2.ArtFusion.repository.jpa.ArchiveRepository;
-import _2.ArtFusion.repository.jpa.StoryImageRepository;
-import _2.ArtFusion.repository.jpa.StoryBoardRepository;
+import _2.ArtFusion.repository.jpa.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static _2.ArtFusion.controller.archiveApiController.ArchiveController.*;
+import static _2.ArtFusion.controller.generateStoryApiController.TemporaryStoryController.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ArchiveService {
 
     private final ArchiveRepository archiveRepository;
-    private final StoryImageRepository storyImageRepository;
     private final StoryBoardRepository storyBoardRepository;
-
-
+    private final SceneFormatService sceneFormatService;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public AllArchivesResponse getArchiveList(Pageable pageable) {
@@ -39,16 +41,22 @@ public class ArchiveService {
         // 아카이브 데이터를 리스트로 변환
         List<ArchiveDataForm> archiveDataForms = archiveDataFormsSlice.getContent();
 
+        List<ArchiveData> archiveData = new ArrayList<>();
+        for (ArchiveDataForm archiveDataForm : archiveDataForms) {
+            ArchiveData archiveDataSet = new ArchiveData(archiveDataForm.getPostId(), archiveDataForm.getCoverImg(), archiveDataForm.getTitle(), archiveDataForm.getSummary(), archiveDataForm.getNickname());
+            archiveDataSet.addHashTags(archiveDataForm.getHashTag());
+            archiveData.add(archiveDataSet);
+        }
+
         // PostFormResponse 객체 생성 및 반환
         return AllArchivesResponse.builder()
-                .archiveDataForms(archiveDataForms)
+                .archiveDataForms(archiveData)
                 .offset(pageable.getOffset())
                 .pageNum(archiveDataFormsSlice.getNumber())
                 .numberOfElements(archiveDataFormsSlice.getNumberOfElements())
                 .size(pageable.getPageSize())
                 .isLast(archiveDataFormsSlice.isLast())
                 .build();
-
     }
 
     @Transactional(readOnly = true)
@@ -59,9 +67,16 @@ public class ArchiveService {
         // 아카이브 데이터를 리스트로 변환
         List<ArchiveDataForm> archiveDataForms = archiveDataFormsSlice.getContent();
 
+        List<ArchiveData> archiveData = new ArrayList<>();
+        for (ArchiveDataForm archiveDataForm : archiveDataForms) {
+            ArchiveData archiveDataSet = new ArchiveData(archiveDataForm.getPostId(), archiveDataForm.getCoverImg(), archiveDataForm.getTitle(), archiveDataForm.getSummary(), archiveDataForm.getNickname());
+            archiveDataSet.addHashTags(archiveDataForm.getHashTag());
+            archiveData.add(archiveDataSet);
+        }
+
         // PostFormResponse 객체 생성 및 반환
         return AllArchivesResponse.builder()
-                .archiveDataForms(archiveDataForms)
+                .archiveDataForms(archiveData)
                 .offset(pageable.getOffset())
                 .pageNum(archiveDataFormsSlice.getNumber())
                 .numberOfElements(archiveDataFormsSlice.getNumberOfElements())
@@ -72,25 +87,42 @@ public class ArchiveService {
 
     @Transactional(readOnly = true)
     public DetailArchivesResponse getArchive(Long postId,String nickname) {
+        User userData = userRepository.findByNickname(nickname);
+
+        log.info("findDetailArchiveForm");
         //해당 아카이브를 찾아오기
         DetailArchiveDataForm detailArchiveDataForm = archiveRepository.findDetailArchiveForm(postId).orElseThrow(
                 () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다"));
 
         List<String> hashTags = Arrays.asList(detailArchiveDataForm.getHashTag().split(","));
 
-        //시퀀스에따라 이미지를 불러옴
-        List<String> urls = storyImageRepository.findStoryImagesByStoryId(detailArchiveDataForm.getStoryId());
+//        log.info("findStoryImagesByStoryId");
+//        //시퀀스에따라 이미지를 불러옴
+//        List<String> urls = storyImageRepository.findStoryImagesByStoryId(detailArchiveDataForm.getStoryId());
 
-        if (urls.isEmpty()) {
-            throw new NotFoundImageException("해당 이미지를 불러올 수 없습니다");
+        log.info("getSceneFormatData");
+        //모든 장면의 데이터도 불러옴
+        StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(), detailArchiveDataForm.getStoryId());
+
+        /**
+         * 해당 작품을 폼으로 변환 하는 로직
+         */
+        List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
+
+        for (SceneFormat format : storyBoard.getSceneFormats()) {
+            log.info("sceneFormat 생성");
+            SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getSceneImage().getId(),
+                    format.getSceneSequence(),format.getSceneImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
+            sceneFormatForms.add(sceneFormatForm);
         }
 
         return DetailArchivesResponse.builder()
                 .storyId(detailArchiveDataForm.getStoryId())
+                .title(storyBoard.getTitle())
                 .nickName(detailArchiveDataForm.getNickName())
                 .createDate(detailArchiveDataForm.getCreateDate())
                 .hashTag(hashTags)
-                .captureImage(urls)
+                .sceneImage(sceneFormatForms)
                 .build();
     }
 
@@ -114,13 +146,21 @@ public class ArchiveService {
         // 아카이브 삭제
         storyBoardRepository.deleteById(storyPost.getStoryBoard().getId());
         archiveRepository.deleteById(postId);
-
     }
 
     @Transactional
     public void registerStoryPost(StoryBoard storyBoard, User user) {
-        StoryPost storyPost = new StoryPost("summary","hashTag","coverImg",user,storyBoard);
-        archiveRepository.save(storyPost);
+        //프롬프트의 앞 부분 30자만 추출
+        String shortenedPrompt = storyBoard.getPromptKor().length() > 60 ? storyBoard.getPromptKor().substring(0, 60) : storyBoard.getPromptKor();
+
+        //첫 째 장면 이미지 추출
+        String url = storyBoard.getSceneFormats().get(0).getSceneImage().getUrl();
+
+        StoryPost post = archiveRepository.findByStoryBoard(storyBoard);
+        if (post == null){
+            StoryPost storyPost = new StoryPost(shortenedPrompt,storyBoard.getGenre(),url, user, storyBoard);
+            archiveRepository.save(storyPost);
+        } else post.updatePost(shortenedPrompt,storyBoard.getGenre(),url, user, storyBoard);
     }
 
     @Transactional

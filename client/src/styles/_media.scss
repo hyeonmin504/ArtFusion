@@ -1,0 +1,32 @@
+$note-book: 1880px; //노트북
+$tablet-small: 1280px; //normal
+$ipad-pro: 1225px;
+$ipad: 1024px; //ipad
+$mobile-screen: 768px; //mobile normal(아이패드 등)
+$mobile-small: 479px; //mobile small(스마트폰)
+$mobile-mini: 410px; //flex (스마트폰)
+$fold: 281px; //폴드
+
+@mixin desktop {
+  @media (min-width: #{$mobile-screen}) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: #{$mobile-screen - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-mini {
+  @media (max-width: #{$mobile-small}) {
+    @content;
+  }
+}
+
+@mixin mobile-fold {
+  @media (max-width: #{$fold}) {
+    @content;
+  }
+}
