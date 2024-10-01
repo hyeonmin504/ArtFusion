@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface ArchiveRepositoryQuery {
     Slice<ArchiveDataForm> findAllArchiveForm(Pageable pageable);
     Slice<ArchiveDataForm> findAllArchiveFormForNickname(Pageable pageable, String nickname);
-    Optional<DetailArchiveDataForm> findDetailArchiveForm(Long storyId);
+    Optional<DetailArchiveDataForm> findDetailArchiveForm(Long postId);
 }

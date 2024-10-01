@@ -13,4 +13,6 @@ public interface StoryImageRepository extends JpaRepository<StoryImage, Long>, S
     int findMaxSequenceByStoryBoard(@Param("storyBoard") StoryBoard storyBoard);
 
     void deleteByStoryBoard_Id(Long storyId);
+
+    StoryImage findByStoryBoard(StoryBoard storyBoard);
 }

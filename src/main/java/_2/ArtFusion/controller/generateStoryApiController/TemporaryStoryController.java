@@ -6,10 +6,11 @@ import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemp
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.exception.NoTokenException;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundUserException;
-import _2.ArtFusion.repository.jpa.UserRepository;
 import _2.ArtFusion.service.SceneFormatService;
+import _2.ArtFusion.service.UserService;
 import _2.ArtFusion.service.processor.DallE3QueueProcessor;
 import _2.ArtFusion.service.webClientService.SceneFormatWebClientService;
 import _2.ArtFusion.service.StoryBoardService;
@@ -28,6 +29,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -41,7 +43,7 @@ public class TemporaryStoryController {
     private final DallE3QueueProcessor dallE3QueueProcessor;
     private final SceneFormatService sceneFormatService;
     private final StoryBoardService storyBoardService;;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * 현재 작업중인 스토리 보드 data 요청 api
@@ -53,11 +55,10 @@ public class TemporaryStoryController {
                                                                  @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
 
         try {
-            User userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보 없슴니당")
-            );
+            User userData = userService.checkUserSession(loginForm);
 
             //SceneFormat 데이터를 가저오기
+
             StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
 
             log.info("storyBoard={}",storyBoard);
@@ -79,12 +80,15 @@ public class TemporaryStoryController {
             ResponseForm<StoryBoardForm> body = new ResponseForm<>(OK, storyBoardForm, "Scene data retrieved successfully");
             return ResponseEntity.status(OK).body(body);
         } catch (NoResultException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
             return ResponseEntity.status(NOT_FOUND).body(body);
         } catch (NotFoundContentsException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(NO_CONTENT).body(body);
+            return ResponseEntity.status(NOT_FOUND).body(body);
         } catch (NotFoundUserException e) {
+            log.error("error",e);
             ResponseForm<?> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         }
@@ -100,16 +104,20 @@ public class TemporaryStoryController {
     public Mono<ResponseEntity<ResponseForm<Object>>> generateTemporaryImageRequest(
             @RequestBody @Validated GenerateTemporaryForm form,
             @SessionAttribute(name = "LOGIN_USER", required = false) SessionLoginForm loginForm) {
-
         User userData;
 
         try {
-            userData = userRepository.findByEmail(loginForm.getEmail()).orElseThrow(
-                    () -> new NotFoundUserException("유저 정보 없슴니당")
-            );
+            userData = userService.checkUserSession(loginForm);
+            //wishCutCnt 를 정채준 경우
+            if (userData.getToken() < form.getWishCutCnt() * 50 || userData.getToken() == 0) {
+                throw new NoTokenException("토큰이 부족합니다");
+            }
         } catch (NotFoundUserException e) {
             ResponseForm<Object> responseForm = new ResponseForm<>(UNAUTHORIZED, null, "로그인 먼저 해주세요.");
             return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(responseForm));
+        } catch (NoTokenException e) {
+            ResponseForm<Object> responseForm = new ResponseForm<>(NOT_ACCEPTABLE, null, e.getMessage());
+            return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(responseForm));
         }
 
         log.info("userData={}", userData.getEmail());
@@ -127,8 +135,11 @@ public class TemporaryStoryController {
                             .flatMap(sceneFormats -> {
                                 // 반환 값이 없을 경우
                                 if (sceneFormats.isEmpty()) {
-                                    ResponseForm<Object> responseForm = new ResponseForm<>(NO_CONTENT, null, "해당 컨텐츠가 존재하지 않습니다.");
-                                    return Mono.just(ResponseEntity.status(NO_CONTENT).body(responseForm));
+                                    return Mono.error(new NotFoundContentsException("해당 컨텐츠가 없습니다"));
+                                }
+                                if (userData.getToken() < sceneFormats.size() * 50 ) {
+                                    log.info("userData.getToken()={}, sceneFormats.size()={}",userData.getToken(),sceneFormats.size());
+                                    return Mono.error(new NoTokenException("토큰이 부족합니다 현재 토큰=" + userData.getToken()));
                                 }
                                 log.info("Scene formats processed={}", sceneFormats.size());
 
@@ -137,14 +148,16 @@ public class TemporaryStoryController {
                             });
                 })
                 .doOnSuccess(response -> log.info("Temporary image request completed successfully"))
-                .doOnError(e -> log.error("error={}", e.getMessage()))
+                .doOnError(e -> log.error("error={}"
+                        , e.getMessage()))
                 .onErrorResume(e -> {
-                    HttpStatus status = (e instanceof NotFoundContentsException) ? NO_CONTENT : REQUEST_TIMEOUT;
-                    if (status == REQUEST_TIMEOUT) {
-                        status = (e instanceof IllegalStateException) ? NOT_ACCEPTABLE : REQUEST_TIMEOUT;
-                    }
+                    HttpStatus status;
+                    if (e instanceof NotFoundContentsException) status = NO_CONTENT;
+                    else if (e instanceof IllegalStateException) status = NOT_ACCEPTABLE;
+                    else if (e instanceof NoTokenException) status = NOT_ACCEPTABLE;
+                    else status = INTERNAL_SERVER_ERROR;
                     ResponseForm<Object> responseForm = new ResponseForm<>(status, null, e.getMessage());
-                    return Mono.just(ResponseEntity.status(status).body(responseForm));
+                    return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(responseForm));
                 });
     }
 
@@ -163,17 +176,23 @@ public class TemporaryStoryController {
                     if (failApiResponseForm.getFailedSeq().isEmpty()) {
                         // 이미지 생성 성공
                         log.info("failApiResponseForm.getFailedSeq={}", failApiResponseForm.getFailedSeq());
-                        ResponseForm<Object> body = new ResponseForm<>(OK, storyId, "작품 이미지 생성중!"); // storyId 반환
+                        ResponseForm<Object> body = new ResponseForm<>(OK, storyId, "작품 이미지를 생성했습니다!"); // storyId 반환
                         return Mono.just(ResponseEntity.status(OK).body(body));
                     }
 
                     // 이미지 생성에 실패한 장면이 존재할 경우
                     List<Integer> failSeq = failApiResponseForm.getFailedSeq();
-                    ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, failSeq, "토큰 부족으로 인해 일부 이미지 생성 중 오류가 발생했습니다.");
-                    return Mono.just(ResponseEntity.status(NO_CONTENT).body(body));
+                    ResponseForm<Object> body = new ResponseForm<>(OK, storyId, "일부 이미지 생성에 실패했습니다. 랜덤 생성을 통해 재 요청해주세요 실패한 번호="+
+                            failSeq.stream().map(String::valueOf).collect(Collectors.joining(", ")));
+                    return Mono.just(ResponseEntity.status(OK).body(body));
                 })
                 .onErrorResume(e -> {
                     log.error("error={}", e.getMessage());
+                    if (e instanceof IllegalStateException || e instanceof NoTokenException) {
+                        ResponseForm<Object> body = new ResponseForm<>(NOT_ACCEPTABLE, null, e.getMessage());
+                        return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(body));
+                    }
+
                     ResponseForm<Object> body = new ResponseForm<>(INTERNAL_SERVER_ERROR, null, "이미지 생성 중 오류 발생!");
                     return Mono.just(ResponseEntity.status(INTERNAL_SERVER_ERROR).body(body));
                 });
@@ -211,7 +230,7 @@ public class TemporaryStoryController {
      */
     @Data
     @AllArgsConstructor
-    static class StoryBoardForm {
+    public static class StoryBoardForm {
         private Long storyId;
         private List<SceneFormatForm> sceneFormatForms;
     }
@@ -227,7 +246,7 @@ public class TemporaryStoryController {
      */
     @Data
     @AllArgsConstructor
-    static class SceneFormatForm {
+    public static class SceneFormatForm {
         private Long sceneId;
         private Long imageId;
         private int sceneSeq;

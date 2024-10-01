@@ -37,22 +37,24 @@ public class SceneFormatService {
                     () -> new NotFoundContentsException("해당 유저의 스토리보드를 찾을 수 없습니다")
             );
 
-            //장면 순서대로 검색
-            List<SceneFormat> scenes = sceneFormatRepository.findScenesByStoryBoard(storyBoard);
-            if (scenes.isEmpty()) {
-                return storyBoard;
-            }
+            log.info("storyBoard != null");
+            if (storyBoard != null) {
+                log.info("findScenesByStoryBoard");
+                //장면 순서대로 검색
+                List<SceneFormat> scenes = sceneFormatRepository.findScenesByStoryBoard(storyBoard);
 
-            //연결
-            storyBoard.setSceneFormats(scenes);
-
-            //장면에 해당하는 image 검색
-            for (SceneFormat scene : scenes) {
-                SceneImage sceneImage = sceneImageRepository.findBySceneFormat(scene).orElseGet(
-                        () -> new SceneImage("기본 이미지 url", scene)
-                );
-                //연결
-                sceneImage.setSceneFormat(scene);
+                if (!scenes.isEmpty()) {
+                    //장면에 해당하는 image 검색
+                    for (SceneFormat scene : scenes) {
+                        log.info("findBySceneFormat");
+                        SceneImage sceneImage = sceneImageRepository.findBySceneFormat(scene).orElseGet(
+                                () -> new SceneImage("기본 이미지 url", scene)
+                        );
+                        //연결
+                        sceneImage.setSceneFormat(scene);
+                    }
+                    storyBoard.setSceneFormats(scenes);
+                }
             }
 
             return storyBoard;
