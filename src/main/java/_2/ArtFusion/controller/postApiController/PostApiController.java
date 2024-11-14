@@ -42,7 +42,6 @@ public class PostApiController {
             List<CommentForm> commentForms = new ArrayList<>();
             //commentService를 통해 storyId에 해당하는 모든 댓글 가져옴
             List<Comment> comments = commentService.getAllComments(postId);
-
             //가져온 댓글 리스트 반복하면서 각 댓글을 form형태로 바꾸고, commentForm 리스트에 추가
             for (Comment comment : comments) {
                 //comment 객체 속성을 사용해 Form 객체 생성
@@ -50,7 +49,6 @@ public class PostApiController {
                 //리스트에 추가
                 commentForms.add(commentForm);
             }
-
             ResponseForm<List<CommentForm>> body = new ResponseForm<>(HttpStatus.OK, commentForms, "OK");
             return ResponseEntity.status(HttpStatus.OK).body(body);
         } catch (NotFoundContentsException e) {
@@ -68,7 +66,6 @@ public class PostApiController {
     @PostMapping("/comments/{postId}") //테스트 완료
     public ResponseEntity<ResponseForm> saveCommentsApi(@PathVariable Long postId, @RequestBody @Validated getCommentForm form,
                                                         @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm){
-//        String bearerToken = loginForm.getHeader(AUTHORIZATION_HEADER);
         try {
             User userData = userService.checkUserSession(loginForm);
 

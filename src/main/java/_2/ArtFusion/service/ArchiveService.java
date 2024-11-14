@@ -1,21 +1,27 @@
 package _2.ArtFusion.service;
 
+import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveData;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.DetailArchiveDataForm;
+import _2.ArtFusion.controller.userApiController.userController;
 import _2.ArtFusion.domain.archive.StoryPost;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
 import _2.ArtFusion.domain.user.User;
+import _2.ArtFusion.exception.NoPermissionException;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.repository.jpa.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +38,8 @@ public class ArchiveService {
     private final StoryBoardRepository storyBoardRepository;
     private final SceneFormatService sceneFormatService;
     private final UserRepository userRepository;
+    private final ArchiveService archiveService;
+    private final ImageService imageService;
 
     @Transactional(readOnly = true)
     public AllArchivesResponse getArchiveList(Pageable pageable) {
@@ -138,16 +146,31 @@ public class ArchiveService {
         );
     }
     @Transactional
-    public void deleteArchive(Long postId) {
-        StoryPost storyPost = archiveRepository.findById(postId).orElseThrow(
-                () -> new NotFoundContentsException("해당 아카이브를 찾을 수 없습니다.")
-        );
+    public void deleteArchive(Long postId, User userData) {
+        StoryPost storyPost = archiveService.getStoryPostById(postId);
+        //게시글 작성자와 요청한 사용자가 동일한지 확인
+        if(!storyPost.getUser().getId().equals(userData.getId())){
+            throw new NoPermissionException("권한이 없습니다");
+        }
 
         // 아카이브 삭제
         storyBoardRepository.deleteById(storyPost.getStoryBoard().getId());
         archiveRepository.deleteById(postId);
     }
 
+    @Transactional
+    public void registerStoryPostBefore(Long storyId, User userData) throws IOException {
+        StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
+
+        log.info("storyBoard={}",storyBoard);
+
+        //이미지 저장
+        log.info("uploadImage");
+        StoryBoard savedStoryBoard = imageService.uploadImage(storyBoard);
+
+        //post 생성
+        archiveService.registerStoryPost(savedStoryBoard,userData);
+    }
     @Transactional
     public void registerStoryPost(StoryBoard storyBoard, User user) {
         //프롬프트의 앞 부분 30자만 추출

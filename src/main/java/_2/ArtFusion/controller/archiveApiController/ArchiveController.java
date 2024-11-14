@@ -3,7 +3,6 @@ package _2.ArtFusion.controller.archiveApiController;
 import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
 import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveData;
-import _2.ArtFusion.controller.archiveApiController.archiveform.ArchiveDataForm;
 import _2.ArtFusion.domain.user.User;
 import _2.ArtFusion.exception.NotFoundContentsException;
 import _2.ArtFusion.exception.NotFoundImageException;
@@ -49,13 +48,8 @@ public class ArchiveController {
         try {
             // Pageable 객체 생성
             Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
-
-            // ArchiveService를 통해 PostFormResponse 객체를 가져옴
-            AllArchivesResponse archiveList = archiveService.getArchiveList(pageable);
-
             // ResponseForm 객체 생성 및 반환
-            ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
-            return ResponseEntity.status(HttpStatus.OK).body(body);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseForm.success(archiveService.getArchiveList(pageable)));
         } catch (NotFoundContentsException e) {
             ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.NO_CONTENT, new AllArchivesResponse() , "Ok");
             return ResponseEntity.status(HttpStatus.OK).body(body);
@@ -76,16 +70,10 @@ public class ArchiveController {
                                                                   @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
             User userData = userService.checkUserSession(loginForm);
-
             // Pageable 객체 생성
             Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
-
-            // ArchiveService를 통해 PostFormResponse 객체를 가져옴
-            AllArchivesResponse archiveList = archiveService.getArchiveListForUser(pageable,userData.getNickname());
-
             // ResponseForm 객체 생성 및 반환
-            ResponseForm<AllArchivesResponse> body = new ResponseForm<>(HttpStatus.OK, archiveList, "Ok");
-            return ResponseEntity.status(HttpStatus.OK).body(body);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseForm.success(archiveService.getArchiveListForUser(pageable,userData.getNickname())));
         } catch (NotFoundUserException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
@@ -108,13 +96,8 @@ public class ArchiveController {
     public ResponseEntity<ResponseForm<DetailArchivesResponse>> getArchiveDetail(@PathVariable Long postId,
                                                                                  @PathVariable String nickname) {
         try {
-            // 주어진 nickname과 postId로 아카이브 상세 정보를 조회
-            DetailArchivesResponse detailArchivesResponse = archiveService.getArchive(postId, nickname);
-
             // 응답 객체 생성 (성공적인 조회)
-            ResponseForm<DetailArchivesResponse> responseForm = new ResponseForm<>(HttpStatus.OK, detailArchivesResponse, "아카이브 조회 성공");
-            return ResponseEntity.status(HttpStatus.OK).body(responseForm);
-
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseForm.success(archiveService.getArchive(postId, nickname)));
         } catch (NotFoundContentsException | NotFoundImageException e) {
             log.error("error", e);
             // 조회 실패 시, DetailArchivesResponse 타입으로 null 처리

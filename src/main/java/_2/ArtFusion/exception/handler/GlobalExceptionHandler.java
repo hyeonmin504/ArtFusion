@@ -1,6 +1,7 @@
 package _2.ArtFusion.exception.handler;
 
 import _2.ArtFusion.controller.ResponseForm;
+import _2.ArtFusion.exception.NotFoundUserException;
 import com.theokanning.openai.OpenAiHttpException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,22 @@ import java.util.Map;
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({
+            NotFoundUserException.class
+    })
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ResponseForm<Map<String, Object>>> UserException(Exception ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+
+        log.error("error",ex);
+        ResponseForm<Map<String, Object>> responseForm = new ResponseForm<>(HttpStatus.UNAUTHORIZED, body, "올바른 입력값이 아닙니다");
+        return new ResponseEntity<>(responseForm, HttpStatus.UNAUTHORIZED);
+    }
 
     @ExceptionHandler({
             IllegalArgumentException.class,
