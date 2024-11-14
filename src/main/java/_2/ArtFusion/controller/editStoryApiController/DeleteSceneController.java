@@ -42,15 +42,14 @@ public class DeleteSceneController {
         }
             sceneEditService.deleteScene(sceneId);
 
-            ResponseForm<Object> body = new ResponseForm<>(OK, null, "OK");
-            return ResponseEntity.status(OK).body(body);
+            return ResponseEntity.status(OK).body(ResponseForm.success(null));
         } catch (NotFoundContentsException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
+            ResponseForm body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
             return ResponseEntity.status(NOT_ACCEPTABLE).body(body);
         } catch (NotFoundUserException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
+            ResponseForm body = ResponseForm.unauthorizedResponse(e.getMessage());
             return ResponseEntity.status(UNAUTHORIZED).body(body);
         }
     }
@@ -72,8 +71,7 @@ public class DeleteSceneController {
             }
             archiveService.deleteStoryBoard(storyId);
 
-            ResponseForm<Object> body = new ResponseForm<>(OK, null, "200 ok");
-            return ResponseEntity.status(OK).body(body);
+            return ResponseEntity.status(OK).body(ResponseForm.success(null));
         } catch (NotFoundContentsException e) {
             log.info("error", e);
             ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, "스토리가 존재하지 않습니다.");

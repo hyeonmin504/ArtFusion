@@ -2,6 +2,7 @@ package _2.ArtFusion.controller.generateStoryApiController;
 
 import _2.ArtFusion.config.session.SessionLoginForm;
 import _2.ArtFusion.controller.ResponseForm;
+import _2.ArtFusion.controller.generateStoryApiController.storyForm.ActorAndStoryIdForm;
 import _2.ArtFusion.controller.generateStoryApiController.storyForm.GenerateTemporaryForm;
 import _2.ArtFusion.domain.scene.SceneFormat;
 import _2.ArtFusion.domain.storyboard.StoryBoard;
@@ -53,44 +54,19 @@ public class TemporaryStoryController {
     @GetMapping("/story/temporary/{storyId}") //테스트 완료
     public ResponseEntity<ResponseForm> getTemporaryImageRequest(@PathVariable Long storyId,
                                                                  @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
-
         try {
             User userData = userService.checkUserSession(loginForm);
 
             //SceneFormat 데이터를 가저오기
-
             StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
-
             log.info("storyBoard={}",storyBoard);
-
-            /**
-             * 해당 작품을 폼으로 변환 하는 로직
-             */
-            List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
-
-            for (SceneFormat format : storyBoard.getSceneFormats()) {
-                log.info("sceneFormat 생성");
-                SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getSceneImage().getId(),
-                        format.getSceneSequence(),format.getSceneImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
-                sceneFormatForms.add(sceneFormatForm);
-            }
-
-            StoryBoardForm storyBoardForm = new StoryBoardForm(storyBoard.getId(),sceneFormatForms);
-
-            ResponseForm<StoryBoardForm> body = new ResponseForm<>(OK, storyBoardForm, "Scene data retrieved successfully");
-            return ResponseEntity.status(OK).body(body);
-        } catch (NoResultException e) {
+            return ResponseEntity.status(OK).body(ResponseForm.success(new StoryBoardForm(storyId,getSceneFormatForms(storyBoard)), "Scene data retrieved successfully"));
+        } catch (NoResultException | NotFoundContentsException e) {
             log.error("error",e);
-            ResponseForm<?> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
-            return ResponseEntity.status(NOT_FOUND).body(body);
-        } catch (NotFoundContentsException e) {
-            log.error("error",e);
-            ResponseForm<?> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(NOT_FOUND).body(body);
+            return ResponseEntity.status(NOT_FOUND).body(ResponseForm.notFoundResponse(e.getMessage()));
         } catch (NotFoundUserException e) {
             log.error("error",e);
-            ResponseForm<?> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
-            return ResponseEntity.status(UNAUTHORIZED).body(body);
+            return ResponseEntity.status(UNAUTHORIZED).body(ResponseForm.unauthorizedResponse(e.getMessage()));
         }
     }
 
@@ -104,48 +80,15 @@ public class TemporaryStoryController {
     public Mono<ResponseEntity<ResponseForm<Object>>> generateTemporaryImageRequest(
             @RequestBody @Validated GenerateTemporaryForm form,
             @SessionAttribute(name = "LOGIN_USER", required = false) SessionLoginForm loginForm) {
-        User userData;
-
-        try {
-            userData = userService.checkUserSession(loginForm);
-            //wishCutCnt 를 정채준 경우
-            if (userData.getToken() < form.getWishCutCnt() * 50 || userData.getToken() == 0) {
-                throw new NoTokenException("토큰이 부족합니다");
-            }
-        } catch (NotFoundUserException e) {
-            ResponseForm<Object> responseForm = new ResponseForm<>(UNAUTHORIZED, null, "로그인 먼저 해주세요.");
-            return Mono.just(ResponseEntity.status(UNAUTHORIZED).body(responseForm));
-        } catch (NoTokenException e) {
-            ResponseForm<Object> responseForm = new ResponseForm<>(NOT_ACCEPTABLE, null, e.getMessage());
-            return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(responseForm));
+        User userData = userService.checkUserSession(loginForm);
+        //wishCutCnt 를 정채준 경우
+        if (userData.getToken() < form.getWishCutCnt() * 50 || userData.getToken() == 0) {
+            return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(ResponseForm.notAcceptResponse("토큰이 부족합니다. 현재 토큰 수:" + userData.getToken())));
         }
-
-        log.info("userData={}", userData.getEmail());
-
         log.info("Start generating temporary image request");
         return storyBoardService.generateStoryBoardAndCharacter(form, userData.getId())
                 .flatMap(actorAndStoryIdForm -> {
-                    Long storyId = actorAndStoryIdForm.getStoryId(); // storyId를 설정
-                    log.info("Generated storyId={}", storyId);
-
-                    return sceneFormatWebClientService.processStoryBoard(
-                                    Mono.just(storyId),
-                                    Mono.just(actorAndStoryIdForm.getCharacters()))
-                            .collectList()
-                            .flatMap(sceneFormats -> {
-                                // 반환 값이 없을 경우
-                                if (sceneFormats.isEmpty()) {
-                                    return Mono.error(new NotFoundContentsException("해당 컨텐츠가 없습니다"));
-                                }
-                                if (userData.getToken() < sceneFormats.size() * 50 ) {
-                                    log.info("userData.getToken()={}, sceneFormats.size()={}",userData.getToken(),sceneFormats.size());
-                                    return Mono.error(new NoTokenException("토큰이 부족합니다 현재 토큰=" + userData.getToken()));
-                                }
-                                log.info("Scene formats processed={}", sceneFormats.size());
-
-                                // 이미지 생성
-                                return generateImageProcessor(sceneFormats, userData, storyId); // storyId 전달
-                            });
+                    return resultResponse(actorAndStoryIdForm, userData);
                 })
                 .doOnSuccess(response -> log.info("Temporary image request completed successfully"))
                 .doOnError(e -> log.error("error={}"
@@ -158,6 +101,53 @@ public class TemporaryStoryController {
                     else status = INTERNAL_SERVER_ERROR;
                     ResponseForm<Object> responseForm = new ResponseForm<>(status, null, e.getMessage());
                     return Mono.just(ResponseEntity.status(NOT_ACCEPTABLE).body(responseForm));
+                });
+    }
+
+    /**
+     * 해당 작품을 폼으로 변환 하는 로직
+     */
+    @NotNull
+    private static List<SceneFormatForm> getSceneFormatForms(StoryBoard storyBoard) {
+
+        List<SceneFormatForm> sceneFormatForms = new ArrayList<>();
+
+        for (SceneFormat format : storyBoard.getSceneFormats()) {
+            log.info("sceneFormat 생성");
+            SceneFormatForm sceneFormatForm = new SceneFormatForm(format.getId(),format.getSceneImage().getId(),
+                    format.getSceneSequence(),format.getSceneImage().getUrl(),format.getBackground(),format.getDescription(),format.getDialogue());
+            sceneFormatForms.add(sceneFormatForm);
+        }
+        return sceneFormatForms;
+    }
+
+    /**
+     * 토큰 수에 따른 결과 값 반환
+     * @param actorAndStoryIdForm
+     * @param userData
+     * @return
+     */
+    @NotNull
+    private Mono<ResponseEntity<ResponseForm<Object>>> resultResponse(ActorAndStoryIdForm actorAndStoryIdForm, User userData) {
+        Long storyId = actorAndStoryIdForm.getStoryId(); // storyId를 설정
+        log.info("Generated storyId={}", storyId);
+        return sceneFormatWebClientService.processStoryBoard(
+                        Mono.just(storyId),
+                        Mono.just(actorAndStoryIdForm.getCharacters()))
+                .collectList()
+                .flatMap(sceneFormats -> {
+                    // 반환 값이 없을 경우
+                    if (sceneFormats.isEmpty()) {
+                        return Mono.error(new NotFoundContentsException("해당 컨텐츠가 없습니다"));
+                    }
+                    if (userData.getToken() < sceneFormats.size() * 50) {
+                        log.info("userData.getToken()={}, sceneFormats.size()={}", userData.getToken(), sceneFormats.size());
+                        return Mono.error(new NoTokenException("토큰이 부족합니다 현재 토큰=" + userData.getToken()));
+                    }
+                    log.info("Scene formats processed={}", sceneFormats.size());
+
+                    // 이미지 생성
+                    return generateImageProcessor(sceneFormats, userData, storyId); // storyId 전달
                 });
     }
 
@@ -176,8 +166,7 @@ public class TemporaryStoryController {
                     if (failApiResponseForm.getFailedSeq().isEmpty()) {
                         // 이미지 생성 성공
                         log.info("failApiResponseForm.getFailedSeq={}", failApiResponseForm.getFailedSeq());
-                        ResponseForm<Object> body = new ResponseForm<>(OK, storyId, "작품 이미지를 생성했습니다!"); // storyId 반환
-                        return Mono.just(ResponseEntity.status(OK).body(body));
+                        return Mono.just(ResponseEntity.status(OK).body(ResponseForm.success((Object) storyId)));
                     }
 
                     // 이미지 생성에 실패한 장면이 존재할 경우

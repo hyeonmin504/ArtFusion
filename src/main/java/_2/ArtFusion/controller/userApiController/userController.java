@@ -45,7 +45,6 @@ public class userController {
                                                    BindingResult bindingResult) {
         // 유효성 검증 후 발생한 모든 오류 메시지 수집
         if (bindingResult.hasErrors()) {
-            log.info("1");
             List<String> errorMessages = new ArrayList<>();
             bindingResult.getAllErrors().forEach(error -> errorMessages.add(error.getDefaultMessage()));
             ResponseForm<String> responseForm = new ResponseForm<>(HttpStatus.BAD_REQUEST, null, String.join(", ", errorMessages));
@@ -53,7 +52,6 @@ public class userController {
         }
 
         try {
-            log.info("2");
             // 사용자 생성 서비스 호출
             userService.createUser(userCreateForm);
 

@@ -36,36 +36,21 @@ public class GenerateStoryController {
                                                       @SessionAttribute(name = "LOGIN_USER",required = false) SessionLoginForm loginForm) {
         try {
             User userData = userService.checkUserSession(loginForm);
-
-            StoryBoard storyBoard = sceneFormatService.getSceneFormatData(userData.getId(),storyId);
-
-            log.info("storyBoard={}",storyBoard);
-
-            //이미지 저장
-            log.info("uploadImage");
-            StoryBoard savedStoryBoard = imageService.uploadImage(storyBoard);
-
             //post 생성
-            archiveService.registerStoryPost(savedStoryBoard,userData);
-
-            ResponseForm<Object> body = new ResponseForm<>(OK, null, "이미지 저장 완료");
-            return ResponseEntity.status(OK).body(body);
+            archiveService.registerStoryPostBefore(storyId,userData);
+            return ResponseEntity.status(OK).body(ResponseForm.success(null));
         } catch (NotFoundContentsException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(NO_CONTENT, null, e.getMessage());
-            return ResponseEntity.status(NOT_ACCEPTABLE).body(body);
+            return ResponseEntity.status(NOT_ACCEPTABLE).body(ResponseForm.notAcceptResponse(e.getMessage()));
         } catch (TimeOverException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(NOT_FOUND, null, e.getMessage());
-            return ResponseEntity.status(NOT_FOUND).body(body);
+            return ResponseEntity.status(NOT_FOUND).body(ResponseForm.notFoundResponse(e.getMessage()));
         } catch (NotFoundUserException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(UNAUTHORIZED, null, e.getMessage());
-            return ResponseEntity.status(UNAUTHORIZED).body(body);
+            return ResponseEntity.status(UNAUTHORIZED).body(ResponseForm.unauthorizedResponse(e.getMessage()));
         } catch (IOException e) {
             log.error("error",e);
-            ResponseForm<Object> body = new ResponseForm<>(SERVICE_UNAVAILABLE, null, "저장중 오류가 발생했습니다");
-            return ResponseEntity.status(SERVICE_UNAVAILABLE).body(body);
+            return ResponseEntity.status(SERVICE_UNAVAILABLE).body(ResponseForm.requestTimeOutResponse(e.getMessage()));
         }
     }
 }
